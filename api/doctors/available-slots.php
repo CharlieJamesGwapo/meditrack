@@ -32,13 +32,13 @@ try {
         sendJSON(['success' => true, 'slots' => [], 'message' => 'Doctor not available on this day']);
     }
 
-    $schedule = $scheduleStmt->fetch();
+    $schedule = $scheduleStmt->fetch(PDO::FETCH_ASSOC);
 
     // Get booked appointments
     $bookedQuery = "SELECT appointment_time FROM appointments 
                     WHERE doctor_id = :doctor_id 
                     AND appointment_date = :date 
-                    AND status NOT IN ('cancelled', 'no_show')";
+                    AND status NOT IN ('cancelled', 'no_show', 'completed')";
     $bookedStmt = $db->prepare($bookedQuery);
     $bookedStmt->execute([':doctor_id' => $doctor_id, ':date' => $date]);
     $bookedTimes = $bookedStmt->fetchAll(PDO::FETCH_COLUMN);

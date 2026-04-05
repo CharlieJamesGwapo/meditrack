@@ -24,7 +24,7 @@ try {
               FROM appointments 
               WHERE doctor_id = :doctor_id 
               AND appointment_date = :date 
-              AND status NOT IN ('cancelled', 'no_show')";
+              AND status NOT IN ('cancelled', 'no_show', 'completed')";
     
     $stmt = $db->prepare($query);
     $stmt->execute([

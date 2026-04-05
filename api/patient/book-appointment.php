@@ -58,12 +58,12 @@ try {
         sendJSON(['success' => false, 'message' => 'Doctor not found or not available'], 404);
     }
 
-    // Check if time slot is available
-    $checkQuery = "SELECT id FROM appointments 
-                   WHERE doctor_id = :doctor_id 
-                   AND appointment_date = :appointment_date 
-                   AND appointment_time = :appointment_time 
-                   AND status NOT IN ('cancelled')";
+    // Check if time slot is available (exclude only cancelled, no_show, and completed)
+    $checkQuery = "SELECT id FROM appointments
+                   WHERE doctor_id = :doctor_id
+                   AND appointment_date = :appointment_date
+                   AND appointment_time = :appointment_time
+                   AND status NOT IN ('cancelled', 'no_show', 'completed')";
     $checkStmt = $db->prepare($checkQuery);
     $checkStmt->execute([
         ':doctor_id' => $doctorId,
@@ -76,7 +76,7 @@ try {
     }
 
     // Generate appointment number
-    $appointmentNumber = 'APT-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    $appointmentNumber = 'APT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
     // Start transaction
     $db->beginTransaction();
@@ -117,14 +117,14 @@ try {
                         d.department,
                         d.email as doctor_email,
                         du.id as doctor_user_id
-                     FROM patients p
-                     CROSS JOIN doctors d
+                     FROM appointments a
+                     JOIN patients p ON a.patient_id = p.id
+                     JOIN doctors d ON a.doctor_id = d.id
                      LEFT JOIN users du ON d.user_id = du.id
-                     WHERE p.id = :patient_id AND d.id = :doctor_id";
+                     WHERE a.id = :appointment_id";
     $detailsStmt = $db->prepare($detailsQuery);
     $detailsStmt->execute([
-        ':patient_id' => $patientId,
-        ':doctor_id' => $doctorId
+        ':appointment_id' => $appointmentId
     ]);
     $details = $detailsStmt->fetch(PDO::FETCH_ASSOC);
     
@@ -207,7 +207,7 @@ try {
     ]);
 
 } catch (Exception $e) {
-    if ($db->inTransaction()) {
+    if (isset($db) && $db && $db->inTransaction()) {
         $db->rollBack();
     }
     sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);

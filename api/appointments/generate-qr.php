@@ -7,10 +7,12 @@ header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
+    exit;
 }
 
 if (!isLoggedIn()) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+    exit;
 }
 
 $data = json_decode(file_get_contents("php://input"), true);
@@ -18,6 +20,7 @@ $appointmentId = $data['appointment_id'] ?? '';
 
 if (empty($appointmentId)) {
     sendJSON(['success' => false, 'message' => 'Appointment ID required'], 400);
+    exit;
 }
 
 try {
@@ -27,7 +30,7 @@ try {
     // Verify appointment exists and user has access
     $role = getCurrentUserRole();
     $userId = getCurrentUserId();
-    $profileId = $_SESSION['profile_id'];
+    $profileId = $_SESSION['profile_id'] ?? null;
     
     $whereCondition = '';
     if ($role === 'patient') {
@@ -53,23 +56,33 @@ try {
     
     if (!$appointment) {
         sendJSON(['success' => false, 'message' => 'Appointment not found or access denied'], 404);
+        exit;
     }
-    
+
     // Generate QR code
-    $qrGenerator = new QRCodeGenerator($db);
-    $qrResult = $qrGenerator->generateQRCode($appointmentId);
-    
+    try {
+        $qrGenerator = new QRCodeGenerator($db);
+        $qrResult = $qrGenerator->generateQRCode($appointmentId);
+    } catch (Exception $qrEx) {
+        error_log("QR generation failed: " . $qrEx->getMessage());
+        sendJSON(['success' => false, 'message' => 'Failed to generate QR code: ' . $qrEx->getMessage()], 500);
+        exit;
+    }
+
     if ($qrResult) {
         sendJSON([
             'success' => true,
             'qr_code' => $qrResult,
             'appointment' => $appointment
         ]);
+        exit;
     } else {
         sendJSON(['success' => false, 'message' => 'Failed to generate QR code'], 500);
+        exit;
     }
 
 } catch (Exception $e) {
     sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+    exit;
 }
 ?>
