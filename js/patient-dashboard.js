@@ -509,13 +509,14 @@ function renderRecords(records) {
         const diagnosis  = escHtml(rec.diagnosis || '');
         const preview    = diagnosis.length > 100 ? diagnosis.substring(0, 100) + '...' : diagnosis;
         const prescription = escHtml(rec.prescription || '');
-        const labTests   = escHtml(rec.lab_tests || '');
+        const labTests   = escHtml(rec.lab_tests_ordered || '');
         const notes      = escHtml(rec.notes || '');
         const followUp   = rec.follow_up_date ? formatDate(rec.follow_up_date) : '';
-        const bp         = escHtml(rec.vital_bp   || '');
-        const temp       = escHtml(rec.vital_temp || '');
-        const pulse      = escHtml(rec.vital_pulse || '');
-        const weight     = escHtml(rec.vital_weight || '');
+        const vs         = rec.vital_signs || {};
+        const bp         = escHtml(vs.bp || '');
+        const temp       = escHtml(vs.temperature || vs.temp || '');
+        const pulse      = escHtml(vs.heart_rate || '');
+        const weight     = escHtml(vs.weight || '');
 
         const vitalsHtml = (bp || temp || pulse || weight) ? `
             <div class="mt-3">

@@ -228,7 +228,7 @@ function renderAppointmentCard(a) {
     const statusBadge = getStatusBadge(a.status);
     const timeStr     = a.formatted_time || formatTime(a.appointment_time);
     const name        = escapeHtml(a.patient_name || 'Unknown Patient');
-    const age         = a.patient_age ? `, ${a.patient_age} yrs` : '';
+    const age         = a.patient_dob ? `, ${Math.floor((Date.now() - new Date(a.patient_dob).getTime()) / 31557600000)} yrs` : '';
     const gender      = a.patient_gender ? ` • ${a.patient_gender}` : '';
     const reason      = escapeHtml(a.reason_for_visit || 'General Consultation');
     const priority    = a.priority === 'urgent' ? `<span class="ml-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">URGENT</span>` : '';
@@ -335,7 +335,7 @@ async function loadAllAppointments() {
                 <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">${formatTime(a.appointment_time)}</td>
                 <td class="px-4 py-3">
                     <p class="text-sm font-medium text-gray-800">${escapeHtml(a.patient_name || '—')}</p>
-                    ${a.patient_age ? `<p class="text-xs text-gray-400">${a.patient_age} yrs${a.patient_gender ? ' • ' + a.patient_gender : ''}</p>` : ''}
+                    ${a.patient_dob ? `<p class="text-xs text-gray-400">${Math.floor((Date.now() - new Date(a.patient_dob).getTime()) / 31557600000)} yrs${a.patient_gender ? ' • ' + a.patient_gender : ''}</p>` : ''}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-500 hidden sm:table-cell max-w-xs">
                     <span class="line-clamp-1">${escapeHtml(a.reason_for_visit || '—')}</span>
@@ -663,14 +663,14 @@ async function submitMedicalRecord(event) {
                 patient_id:     patientId,
                 chief_complaint: chiefComplaint,
                 symptoms,
-                vital_bp:    bp,
-                vital_temp:  temp,
-                vital_pulse: hr,
-                vital_weight: weight,
-                vital_height: height,
+                bp:              bp,
+                temperature:     temp,
+                heart_rate:      hr,
+                weight:          weight,
+                height:          height,
                 diagnosis,
                 prescription,
-                lab_tests:  labTests,
+                lab_tests_ordered: labTests,
                 notes,
                 follow_up_date: followUp || null
             })

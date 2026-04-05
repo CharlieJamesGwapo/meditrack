@@ -113,6 +113,22 @@ try {
 
     logActivity($db, $userId, $_SESSION['username'] ?? '', 'patient', 'CREATE', 'Appointments', $appointment_id, "Appointment booked: $appointment_number");
 
+    // Send confirmation email
+    try {
+        require_once __DIR__ . '/../../utils/Mailer.php';
+        $mailer = new Mailer();
+        $mailer->sendAppointmentConfirmation(
+            $_SESSION['email'] ?? '',
+            $_SESSION['full_name'] ?? '',
+            $appointment_number,
+            $appointment_date,
+            $appointment_time,
+            $doctor['full_name']
+        );
+    } catch (Exception $e) {
+        error_log("Appointment email error: " . $e->getMessage());
+    }
+
     sendJSON([
         'success'            => true,
         'message'            => 'Appointment booked successfully',
