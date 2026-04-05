@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - MediTrack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .login-gradient {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #ecfdf5 100%);
+        }
+        
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.3);
+            border: 3px solid #10b981;
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .otp-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.5);
+        }
+        
+        .timer {
+            font-size: 18px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .timer.expired {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body class="login-gradient min-h-screen">
+    <div class="min-h-screen flex items-center justify-center py-8 px-4">
+        <div class="max-w-md w-full">
+            <!-- Logo & Header -->
+            <div class="text-center mb-8">
+                <a href="login.html" class="inline-block mb-6">
+                    <div class="logo-container mx-auto">
+                        <img src="../assets/images/logo.jpg" alt="MediTrack Logo">
+                    </div>
+                </a>
+                <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Verify OTP</h1>
+                <p class="text-gray-600 text-sm">Enter the 6-digit code sent to your email</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card py-8 px-6 md:px-8">
+                <div class="mb-6 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                        <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Enter Verification Code</h2>
+                    <p class="text-sm text-gray-600 mb-2">Code sent to: <span id="emailDisplay" class="font-semibold text-green-600"></span></p>
+                    
+                    <!-- Timer -->
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600">Time remaining: <span id="timer" class="timer">10:00</span></p>
+                    </div>
+                </div>
+
+                <form id="verifyOtpForm" class="space-y-5">
+                    <!-- OTP Input -->
+                    <div class="flex justify-center gap-2">
+                        <input type="text" maxlength="1" class="otp-input" id="otp1" pattern="[0-9]" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-input" id="otp2" pattern="[0-9]" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-input" id="otp3" pattern="[0-9]" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-input" id="otp4" pattern="[0-9]" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-input" id="otp5" pattern="[0-9]" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-input" id="otp6" pattern="[0-9]" inputmode="numeric">
+                    </div>
+
+                    <button type="submit" id="verifyBtn"
+                            class="btn-primary w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl text-base font-bold text-white focus:outline-none">
+                        <span id="verifyText">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Verify OTP
+                        </span>
+                        <span id="verifySpinner" class="hidden">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                            Verifying...
+                        </span>
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center space-y-3">
+                    <button id="resendBtn" class="text-sm text-green-600 hover:text-green-500 font-medium disabled:text-gray-400 disabled:cursor-not-allowed">
+                        <i class="fas fa-redo mr-1"></i>
+                        Resend OTP
+                    </button>
+                    <div>
+                        <a href="forgot-password.html" class="text-sm text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left mr-1"></i>
+                            Use different email
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                        <div class="text-xs text-yellow-800">
+                            <p class="font-semibold mb-1">Security Tips:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Never share your OTP with anyone</li>
+                                <li>OTP expires after 10 minutes</li>
+                                <li>Request a new OTP if expired</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if email exists in session storage
+        const email = sessionStorage.getItem('reset_email');
+        if (!email) {
+            window.location.href = 'forgot-password.html';
+        }
+
+        document.getElementById('emailDisplay').textContent = email;
+
+        // OTP Input handling
+        const otpInputs = document.querySelectorAll('.otp-input');
+        
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                
+                // Only allow numbers
+                if (!/^\d*$/.test(value)) {
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Move to next input
+                if (value && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                // Move to previous input on backspace
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+            
+            // Paste handling
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').slice(0, 6);
+                
+                if (!/^\d+$/.test(pastedData)) return;
+                
+                pastedData.split('').forEach((char, i) => {
+                    if (otpInputs[i]) {
+                        otpInputs[i].value = char;
+                    }
+                });
+                
+                if (pastedData.length < 6) {
+                    otpInputs[pastedData.length].focus();
+                } else {
+                    otpInputs[5].focus();
+                }
+            });
+        });
+
+        // Timer countdown
+        let timeLeft = 600; // 10 minutes in seconds
+        const timerElement = document.getElementById('timer');
+        const resendBtn = document.getElementById('resendBtn');
+        
+        const countdown = setInterval(() => {
+            timeLeft--;
+            
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                timerElement.classList.add('expired');
+                timerElement.textContent = 'Expired';
+                resendBtn.disabled = false;
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'OTP Expired',
+                    text: 'Your OTP has expired. Please request a new one.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }, 1000);
+
+        // Form submission
+        const form = document.getElementById('verifyOtpForm');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const verifyText = document.getElementById('verifyText');
+        const verifySpinner = document.getElementById('verifySpinner');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Get OTP value
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otp.length !== 6) {
+                Swal.fire('Error', 'Please enter the complete 6-digit OTP', 'error');
+                return;
+            }
+
+            // Disable form
+            verifyBtn.disabled = true;
+            verifyText.classList.add('hidden');
+            verifySpinner.classList.remove('hidden');
+
+            try {
+                const response = await fetch('../api/auth/verify-otp.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, otp })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    clearInterval(countdown);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'OTP Verified!',
+                        text: 'You can now reset your password',
+                        confirmButtonText: 'Continue'
+                    }).then(() => {
+                        // Store reset token and redirect
+                        sessionStorage.setItem('reset_token', data.reset_token);
+                        window.location.href = 'reset-password.html';
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Invalid OTP', 'error');
+                    // Clear inputs
+                    otpInputs.forEach(input => input.value = '');
+                    otpInputs[0].focus();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Network error. Please try again.', 'error');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyText.classList.remove('hidden');
+                verifySpinner.classList.add('hidden');
+            }
+        });
+
+        // Resend OTP
+        resendBtn.addEventListener('click', async () => {
+            resendBtn.disabled = true;
+
+            try {
+                const response = await fetch('../api/auth/request-otp.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire('Success', 'New OTP sent to your email', 'success');
+                    
+                    // Reset timer
+                    timeLeft = 600;
+                    timerElement.classList.remove('expired');
+                    
+                    // Clear inputs
+                    otpInputs.forEach(input => input.value = '');
+                    otpInputs[0].focus();
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to resend OTP', 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Network error. Please try again.', 'error');
+            } finally {
+                resendBtn.disabled = false;
+            }
+        });
+
+        // Focus first input on load
+        otpInputs[0].focus();
+    </script>
+</body>
+</html>

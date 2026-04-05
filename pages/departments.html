@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments - MediTrack</title>
+    <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../js/auth-check.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        .sidebar { transition: transform 0.3s ease; z-index: 40; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .department-card { transition: all 0.3s ease; }
+        .department-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(16, 185, 129, 0.2); }
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item.active { background-color: rgba(255,255,255,0.2); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+    
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-green-600 text-white shadow-2xl">
+        <div class="p-6 border-b border-green-500">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full overflow-hidden bg-white p-1">
+                    <img src="../assets/images/logo.jpg" alt="Logo" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">MediTrack</h1>
+                    <p class="text-xs text-green-100">Admin Panel</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 240px);">
+            <a href="admin-dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-th-large w-5"></i><span class="font-medium">Dashboard</span>
+            </a>
+            <a href="patients.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-users w-5"></i><span class="font-medium">Patients</span>
+            </a>
+            <a href="doctors.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-user-md w-5"></i><span class="font-medium">Doctors</span>
+            </a>
+            <a href="appointments.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-calendar-check w-5"></i><span class="font-medium">Appointments</span>
+            </a>
+            <a href="admin-dashboard.html#archive" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-archive w-5"></i><span class="font-medium">Archive</span>
+            </a>
+            <a href="departments.html" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-hospital w-5"></i><span class="font-medium">Departments</span>
+            </a>
+            <a href="reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-chart-bar w-5"></i><span class="font-medium">Reports</span>
+            </a>
+            <a href="settings.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-cog w-5"></i><span class="font-medium">Settings</span>
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-500 bg-green-600">
+            <div class="flex items-center space-x-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <i class="fas fa-user-shield text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold text-sm">Admin User</p>
+                    <p class="text-xs text-green-100">Administrator</p>
+                </div>
+            </div>
+            <button id="logoutBtn" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+        </div>
+    </aside>
+    
+    <div class="md:ml-64 min-h-screen">
+        <nav class="bg-white shadow-md sticky top-0 z-20">
+            <div class="px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-green-600">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-800">Departments Management</h2>
+                    <div class="flex items-center space-x-4">
+                        <button id="refreshBtn" class="text-gray-600 hover:text-green-600 transition-colors">
+                            <i class="fas fa-sync-alt text-xl"></i>
+                        </button>
+                        <div class="hidden sm:flex items-center space-x-2 text-gray-600">
+                            <i class="fas fa-clock text-green-600"></i>
+                            <span id="realTimeClock" class="text-sm font-medium"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="p-4 sm:p-6 lg:p-8">
+            <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-lg p-6 text-white mb-6 fade-in">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold mb-2">
+                            <i class="fas fa-hospital mr-3"></i>Departments Management
+                        </h1>
+                        <p class="text-green-100">Manage hospital departments and their information</p>
+                    </div>
+                    <button id="addDepartmentBtn" class="mt-4 md:mt-0 bg-white text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-50 transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Add Department
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Total Departments</p>
+                            <p id="totalDepartments" class="text-3xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="bg-blue-100 rounded-full p-4">
+                            <i class="fas fa-hospital text-blue-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Active Doctors</p>
+                            <p id="totalDoctors" class="text-3xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="bg-green-100 rounded-full p-4">
+                            <i class="fas fa-user-md text-green-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Total Patients</p>
+                            <p id="totalPatients" class="text-3xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="bg-purple-100 rounded-full p-4">
+                            <i class="fas fa-users text-purple-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Appointments Today</p>
+                            <p id="todayAppointments" class="text-3xl font-bold text-gray-900">0</p>
+                        </div>
+                        <div class="bg-yellow-100 rounded-full p-4">
+                            <i class="fas fa-calendar-check text-yellow-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-4 mb-6 fade-in">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <input type="text" id="searchInput" placeholder="Search departments..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button id="viewToggle" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-th-large mr-2"></i>Grid View
+                    </button>
+                </div>
+            </div>
+
+            <div id="departmentsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-green-600 text-4xl mb-4"></i>
+                    <p class="text-gray-600">Loading departments...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="departmentModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeDepartmentModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full relative z-10">
+                <div class="bg-green-600 text-white px-6 py-4 rounded-t-xl">
+                    <h3 id="modalTitle" class="text-xl font-bold"><i class="fas fa-hospital mr-2"></i>Add New Department</h3>
+                </div>
+                <form id="departmentForm" class="p-6">
+                    <input type="hidden" id="departmentId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Department Name *</label>
+                            <input type="text" id="departmentName" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="e.g., Cardiology">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Department Code *</label>
+                            <input type="text" id="departmentCode" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="e.g., CARD">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="departmentDescription" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Department description..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Head of Department</label>
+                            <input type="text" id="departmentHead" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Dr. Name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+                            <input type="tel" id="departmentContact" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="+1234567890">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location/Floor</label>
+                        <input type="text" id="departmentLocation" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500" placeholder="e.g., Building A, 3rd Floor">
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeDepartmentModal()" class="px-6 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"><i class="fas fa-save mr-2"></i>Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/departments.js"></script>
+</body>
+</html>

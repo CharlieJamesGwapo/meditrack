@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MediTrack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
+    <link rel="manifest" href="../assets/images/site.webmanifest">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../js/auth-check.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        body { overflow-x: hidden; }
+        
+        .sidebar { transition: transform 0.3s ease; z-index: 40; }
+        .sidebar-overlay { transition: opacity 0.3s ease; }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+        }
+        
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .counter { animation: countUp 0.5s ease-out; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+        
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item.active { background-color: rgba(255,255,255,0.2); }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden sidebar-overlay"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-green-600 text-white shadow-2xl">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-green-500">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full overflow-hidden bg-white p-1 shadow-lg">
+                    <img src="../assets/images/logo.jpg" alt="MediTrack Logo" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">MediTrack</h1>
+                    <p class="text-xs text-green-100">Admin Panel</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Menu -->
+        <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 240px);">
+            <a href="#dashboard" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="dashboard">
+                <i class="fas fa-th-large w-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+            <a href="#patients" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="patients">
+                <i class="fas fa-users w-5"></i>
+                <span class="font-medium">Patients</span>
+            </a>
+            <a href="#doctors" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="doctors">
+                <i class="fas fa-user-md w-5"></i>
+                <span class="font-medium">Doctors</span>
+            </a>
+            <a href="#appointments" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="appointments">
+                <i class="fas fa-calendar-check w-5"></i>
+                <span class="font-medium">Appointments</span>
+            </a>
+            <a href="#archive" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="archive">
+                <i class="fas fa-archive w-5"></i>
+                <span class="font-medium">Archive</span>
+            </a>
+            <a href="#departments" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="departments">
+                <i class="fas fa-hospital w-5"></i>
+                <span class="font-medium">Departments</span>
+            </a>
+            <a href="#reports" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500" data-section="reports">
+                <i class="fas fa-chart-bar w-5"></i>
+                <span class="font-medium">Reports</span>
+            </a>
+        </nav>
+        
+        <!-- User Info at Bottom -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-500 bg-green-600">
+            <div class="flex items-center space-x-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <i class="fas fa-user-shield text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <p id="sidebarUserName" class="font-semibold text-sm">Admin User</p>
+                    <p class="text-xs text-green-100">Administrator</p>
+                </div>
+            </div>
+            <button id="logoutBtn" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="md:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <nav class="bg-white shadow-md sticky top-0 z-20">
+            <div class="px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-green-600">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                    <h2 id="pageTitle" class="text-xl font-bold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <button id="refreshBtn" class="text-gray-600 hover:text-green-600 transition-colors" title="Refresh Dashboard">
+                            <i class="fas fa-sync-alt text-xl"></i>
+                        </button>
+                        <div class="hidden sm:flex items-center space-x-2 text-gray-600">
+                            <i class="fas fa-clock text-green-600"></i>
+                            <span id="realTimeClock" class="text-sm font-medium"></span>
+                        </div>
+                        <button class="relative text-gray-600 hover:text-green-600">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="p-4 sm:p-6 lg:p-8">
+            <!-- Welcome Banner -->
+            <div class="bg-green-600 rounded-xl shadow-lg p-6 text-white mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold mb-2">Welcome Back, Admin! 👋</h1>
+                        <p class="text-green-100">Here's what's happening with your hospital today</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 text-right">
+                        <p class="text-sm text-green-100">Last Login</p>
+                        <p id="lastLogin" class="font-semibold">Just now</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+                <!-- Total Patients -->
+                <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Total Patients</p>
+                            <p id="totalPatients" class="counter text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-xs text-green-600 mt-1">
+                                <i class="fas fa-arrow-up"></i> +12% from last month
+                            </p>
+                        </div>
+                        <div class="bg-blue-100 rounded-full p-4">
+                            <i class="fas fa-users text-blue-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Total Doctors -->
+                <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Total Doctors</p>
+                            <p id="totalDoctors" class="counter text-3xl font-bold text-gray-900">3</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-check-circle"></i> All active
+                            </p>
+                        </div>
+                        <div class="bg-green-100 rounded-full p-4">
+                            <i class="fas fa-user-md text-green-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Today's Appointments -->
+                <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Today's Appointments</p>
+                            <p id="todayAppointments" class="counter text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-xs text-blue-600 mt-1">
+                                <i class="fas fa-calendar-day"></i> <span id="currentDate"></span>
+                            </p>
+                        </div>
+                        <div class="bg-yellow-100 rounded-full p-4">
+                            <i class="fas fa-calendar-check text-yellow-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Total Visits -->
+                <div class="stat-card bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 mb-1">Total Visits</p>
+                            <p id="totalVisits" class="counter text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-xs text-purple-600 mt-1">
+                                <i class="fas fa-chart-line"></i> This month
+                            </p>
+                        </div>
+                        <div class="bg-purple-100 rounded-full p-4">
+                            <i class="fas fa-file-medical text-purple-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <button onclick="viewAllPatients()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2">
+                    <i class="fas fa-users"></i>
+                    <span>View Patients</span>
+                </button>
+                <button onclick="viewAllDoctors()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2">
+                    <i class="fas fa-user-md"></i>
+                    <span>View Doctors</span>
+                </button>
+                <button onclick="viewArchive()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2">
+                    <i class="fas fa-archive"></i>
+                    <span>Archive</span>
+                </button>
+                <button onclick="generateReport()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2">
+                    <i class="fas fa-file-download"></i>
+                    <span>Generate Report</span>
+                </button>
+            </div>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+                <button class="tab-btn active border-b-2 border-purple-600 py-4 px-1 text-sm font-medium text-purple-600" data-tab="overview">
+                    <i class="fas fa-chart-line mr-2"></i>Overview
+                </button>
+                <button class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="appointments">
+                    <i class="fas fa-calendar-alt mr-2"></i>Appointments
+                </button>
+                <button class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="users">
+                    <i class="fas fa-users-cog mr-2"></i>Users
+                </button>
+                <button class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="audit">
+                    <i class="fas fa-history mr-2"></i>Audit Logs
+                </button>
+            </nav>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overviewTab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Recent Appointments</h3>
+                    <div id="recentAppointments" class="space-y-3">
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">System Activity</h3>
+                    <div id="systemActivity" class="space-y-3">
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments Tab -->
+        <div id="appointmentsTab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">All Appointments</h2>
+                <div class="mb-4 flex space-x-2">
+                    <input type="date" id="appointmentDateFilter" class="px-3 py-2 border border-gray-300 rounded-md">
+                    <select id="appointmentStatusFilter" class="px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">All Status</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="checked_in">Checked In</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button id="filterAppointments" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+                        <i class="fas fa-filter mr-2"></i>Filter
+                    </button>
+                </div>
+                <div id="allAppointments" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Archive Tab -->
+        <div id="archiveTab" class="tab-content hidden">
+            <div class="bg-gradient-to-br from-green-50 to-white rounded-xl shadow-lg p-6 border-2 border-green-200">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-green-600 rounded-full p-3">
+                            <i class="fas fa-archive text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Archive Center</h2>
+                            <p class="text-gray-600">View and manage archived records</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="refreshArchive(true)" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105 shadow-md">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Archive Type Selector -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <button onclick="loadArchivedPatients()" class="bg-white hover:bg-green-50 border-2 border-green-500 text-gray-900 rounded-xl p-6 font-semibold transition-all transform hover:scale-105 shadow-md">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-green-100 rounded-full p-3">
+                                    <i class="fas fa-users text-green-600 text-2xl"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-lg font-bold">Archived Patients</p>
+                                    <p class="text-sm text-gray-600" id="archivedPatientsCount">Loading...</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-green-600"></i>
+                        </div>
+                    </button>
+                    
+                    <button onclick="loadArchivedDoctors()" class="bg-white hover:bg-green-50 border-2 border-green-500 text-gray-900 rounded-xl p-6 font-semibold transition-all transform hover:scale-105 shadow-md">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-green-100 rounded-full p-3">
+                                    <i class="fas fa-user-md text-green-600 text-2xl"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-lg font-bold">Archived Doctors</p>
+                                    <p class="text-sm text-gray-600" id="archivedDoctorsCount">Loading...</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-green-600"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Archive Content Area -->
+                <div id="archiveContentArea" class="bg-white rounded-xl shadow-md p-6 border border-green-200">
+                    <div class="text-center py-12">
+                        <i class="fas fa-archive text-green-600 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Select Archive Type</h3>
+                        <p class="text-gray-600">Choose Archived Patients or Archived Doctors to view records</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="usersTab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">System Users</h2>
+                <div class="mb-4">
+                    <select id="userRoleFilter" class="px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">All Roles</option>
+                        <option value="patient">Patients</option>
+                        <option value="doctor">Doctors</option>
+                        <option value="reception">Reception</option>
+                        <option value="admin">Admins</option>
+                    </select>
+                </div>
+                <div id="usersList" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Login</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Tab -->
+        <div id="auditTab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">Audit Logs</h2>
+                <div id="auditLogs" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <script src="../js/admin-dashboard.js"></script> -->
+    <script>
+        // Configuration is now in admin-dashboard-enhanced.js to avoid duplicate declarations
+        
+        // Real-Time Clock
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            document.getElementById('realTimeClock').textContent = now.toLocaleString('en-US', options);
+            
+            const dateOptions = { month: 'short', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', dateOptions);
+            
+            const systemStartTime = document.getElementById('systemStartTime');
+            if (systemStartTime && !systemStartTime.textContent) {
+                systemStartTime.textContent = now.toLocaleString('en-US', options);
+            }
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('hidden');
+        });
+        
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.add('hidden');
+        });
+        
+        // Navigation Active State with Page Redirects
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = item.getAttribute('data-section');
+                
+                // Define page mappings
+                const pageMap = {
+                    'dashboard': 'admin-dashboard.html',
+                    'patients': 'patients.html',
+                    'doctors': 'doctors.html',
+                    'appointments': 'appointments.html',
+                    'departments': 'departments.html',
+                    'reports': 'reports.html',
+                    'settings': 'settings.html'
+                };
+                
+                // Handle archive section (show tab content)
+                if (section === 'archive') {
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                    
+                    // Show archive tab
+                    const archiveTab = document.getElementById('archiveTab');
+                    if (archiveTab) {
+                        archiveTab.classList.remove('hidden');
+                    }
+                    
+                    document.getElementById('pageTitle').textContent = 'Archive';
+                    
+                    // Load archive data
+                    refreshArchive();
+                    
+                    if (window.innerWidth < 768) {
+                        sidebar.classList.remove('active');
+                        sidebarOverlay.classList.add('hidden');
+                    }
+                    return;
+                }
+                
+                // If page exists, redirect to it
+                if (pageMap[section] && section !== 'dashboard') {
+                    window.location.href = pageMap[section];
+                    return;
+                }
+                
+                // Otherwise, update UI for dashboard
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Show dashboard content
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                const overviewTab = document.getElementById('overviewTab');
+                if (overviewTab) {
+                    overviewTab.classList.remove('hidden');
+                }
+                
+                document.getElementById('pageTitle').textContent = 
+                    section.charAt(0).toUpperCase() + section.slice(1);
+                
+                if (window.innerWidth < 768) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.add('hidden');
+                }
+            });
+        });
+        
+        // Animate Counters
+        function animateCounter(element, target) {
+            if (!element) return;
+            let current = parseInt(element.textContent) || 0;
+            const increment = Math.ceil((target - current) / 50);
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= target) || (increment < 0 && current <= target)) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 20);
+        }
+        
+        // Fetch Dashboard Statistics
+        async function fetchDashboardStats() {
+            try {
+                console.log('Fetching stats from:', `${API_BASE_URL}/admin/stats.php`);
+                const response = await fetch(`${API_BASE_URL}/admin/stats.php`);
+                console.log('Stats response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Stats data received:', data);
+                
+                if (data.error) {
+                    console.error('API Error:', data.error);
+                }
+                
+                // Update counters with animation
+                animateCounter(document.getElementById('totalPatients'), data.totalPatients || 0);
+                animateCounter(document.getElementById('totalDoctors'), data.totalDoctors || 0);
+                animateCounter(document.getElementById('todayAppointments'), data.todayAppointments || 0);
+                animateCounter(document.getElementById('totalVisits'), data.totalVisits || 0);
+                
+                console.log('✅ Stats updated successfully!');
+            } catch (error) {
+                console.error('❌ Error fetching stats:', error);
+                console.error('Error details:', error.message);
+                // Use default values if API fails
+                animateCounter(document.getElementById('totalPatients'), 0);
+                animateCounter(document.getElementById('totalDoctors'), 0);
+                animateCounter(document.getElementById('todayAppointments'), 0);
+                animateCounter(document.getElementById('totalVisits'), 0);
+            }
+        }
+        
+        // Fetch Recent Appointments
+        async function fetchRecentAppointments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/recent-appointments.php`);
+                if (!response.ok) throw new Error('Failed to fetch appointments');
+                
+                const appointments = await response.json();
+                const container = document.getElementById('recentAppointments');
+                
+                if (appointments.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-calendar-times text-4xl mb-2"></i>
+                            <p>No recent appointments</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = appointments.map(apt => `
+                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-sm">${apt.patientName}</p>
+                            <p class="text-xs text-gray-500">Dr. ${apt.doctorName} • ${apt.time}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full ${
+                            apt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                            apt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                        }">${apt.status}</span>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+                document.getElementById('recentAppointments').innerHTML = `
+                    <div class="text-center py-4 text-gray-500">
+                        <p class="text-sm">Unable to load appointments</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Fetch System Activity
+        async function fetchSystemActivity() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/activity.php`);
+                if (!response.ok) throw new Error('Failed to fetch activity');
+                
+                const activities = await response.json();
+                const container = document.getElementById('systemActivity');
+                
+                if (activities.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-history text-4xl mb-2"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = activities.map(activity => `
+                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 rounded-full ${
+                            activity.type === 'success' ? 'bg-green-100' :
+                            activity.type === 'warning' ? 'bg-yellow-100' :
+                            activity.type === 'error' ? 'bg-red-100' :
+                            'bg-blue-100'
+                        } flex items-center justify-center flex-shrink-0">
+                            <i class="fas ${
+                                activity.type === 'success' ? 'fa-check text-green-600' :
+                                activity.type === 'warning' ? 'fa-exclamation text-yellow-600' :
+                                activity.type === 'error' ? 'fa-times text-red-600' :
+                                'fa-info text-blue-600'
+                            } text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-sm">${activity.title}</p>
+                            <p class="text-xs text-gray-500">${activity.description}</p>
+                            <p class="text-xs text-gray-400 mt-1">${activity.time}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error fetching activity:', error);
+                // Show default activity
+                const now = new Date().toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                document.getElementById('systemActivity').innerHTML = `
+                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-check text-green-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">System Started</p>
+                            <p class="text-xs text-gray-500">Dashboard loaded successfully</p>
+                            <p class="text-xs text-gray-400 mt-1">${now}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user text-blue-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">Admin Login</p>
+                            <p class="text-xs text-gray-500">Administrator logged in</p>
+                            <p class="text-xs text-gray-400 mt-1">${now}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load All Users
+        async function loadAllUsers() {
+            try {
+                console.log('Fetching users from:', `${API_BASE_URL}/admin/users-simple.php`);
+                const response = await fetch(`${API_BASE_URL}/admin/users-simple.php`);
+                console.log('Users response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Users data received:', data);
+                
+                const users = Array.isArray(data) ? data : (data.users || []); // Handle both formats
+                console.log('Parsed users count:', users.length);
+                
+                const tbody = document.getElementById('usersTableBody');
+                
+                if (!users || users.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">
+                                <i class="fas fa-users text-4xl mb-2"></i>
+                                <p>No users found</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = users.map(user => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-green-600 text-sm"></i>
+                                </div>
+                                <span class="font-medium">${user.username}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full ${
+                                user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                user.role === 'doctor' ? 'bg-green-100 text-green-700' :
+                                user.role === 'reception' ? 'bg-blue-100 text-blue-700' :
+                                'bg-gray-100 text-gray-700'
+                            }">${user.role}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full ${
+                                user.status === 'active' ? 'bg-green-100 text-green-700' :
+                                'bg-red-100 text-red-700'
+                            }">${user.status}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.lastLogin || 'Never'}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-gray-500">
+                            <p class="text-sm">Unable to load users</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Load All Appointments
+        async function loadAllAppointments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/appointments.php`);
+                if (!response.ok) throw new Error('Failed to fetch appointments');
+                
+                const appointments = await response.json();
+                const container = document.getElementById('allAppointments');
+                
+                if (appointments.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-calendar-times text-4xl mb-2"></i>
+                            <p>No appointments found</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = appointments.map(apt => `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold">${apt.patientName}</h4>
+                                <p class="text-sm text-gray-600">Dr. ${apt.doctorName}</p>
+                            </div>
+                            <span class="px-3 py-1 text-xs rounded-full ${
+                                apt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                                apt.status === 'checked_in' ? 'bg-yellow-100 text-yellow-700' :
+                                apt.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                'bg-red-100 text-red-700'
+                            }">${apt.status}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 space-x-4">
+                            <span><i class="fas fa-calendar mr-1"></i>${apt.date}</span>
+                            <span><i class="fas fa-clock mr-1"></i>${apt.time}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+                document.getElementById('allAppointments').innerHTML = `
+                    <div class="text-center py-4 text-gray-500">
+                        <p class="text-sm">Unable to load appointments</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize Dashboard
+        async function initDashboard() {
+            console.log('Initializing dashboard...');
+            
+            // Load all data
+            await Promise.all([
+                fetchDashboardStats(),
+                fetchRecentAppointments(),
+                fetchSystemActivity(),
+                loadAllUsers(),
+                loadAllAppointments()
+            ]);
+            
+            console.log('Dashboard initialized!');
+        }
+        
+        // Auto-refresh data
+        function startAutoRefresh() {
+            setInterval(async () => {
+                console.log('Auto-refreshing data...');
+                await fetchDashboardStats();
+                await fetchRecentAppointments();
+                await fetchSystemActivity();
+            }, REFRESH_INTERVAL);
+        }
+        
+        // Tab Switching
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+                
+                // Update button states
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'border-purple-600', 'text-purple-600');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                button.classList.add('active', 'border-purple-600', 'text-purple-600');
+                button.classList.remove('border-transparent', 'text-gray-500');
+                
+                // Update content visibility
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(`${tabName}Tab`).classList.remove('hidden');
+            });
+        });
+        
+        // Filter Appointments
+        document.getElementById('filterAppointments')?.addEventListener('click', async () => {
+            const date = document.getElementById('appointmentDateFilter').value;
+            const status = document.getElementById('appointmentStatusFilter').value;
+            
+            try {
+                const params = new URLSearchParams();
+                if (date) params.append('date', date);
+                if (status) params.append('status', status);
+                
+                const response = await fetch(`${API_BASE_URL}/admin/appointments.php?${params}`);
+                const appointments = await response.json();
+                
+                // Update appointments list
+                loadAllAppointments();
+            } catch (error) {
+                console.error('Error filtering appointments:', error);
+            }
+        });
+        
+        // Filter Users by Role
+        document.getElementById('userRoleFilter')?.addEventListener('change', async (e) => {
+            const role = e.target.value;
+            
+            try {
+                const params = role ? `?role=${role}` : '';
+                const response = await fetch(`${API_BASE_URL}/admin/users-simple.php${params}`);
+                const data = await response.json();
+                const users = Array.isArray(data) ? data : (data.users || []);
+                const tbody = document.getElementById('usersTableBody');
+                
+                if (!users || users.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">
+                                <p>No users found for this role</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Update table with filtered users
+                tbody.innerHTML = users.map(user => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-green-600 text-sm"></i>
+                                </div>
+                                <span class="font-medium">${user.username}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full ${
+                                user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                user.role === 'doctor' ? 'bg-green-100 text-green-700' :
+                                user.role === 'reception' ? 'bg-blue-100 text-blue-700' :
+                                'bg-gray-100 text-gray-700'
+                            }">${user.role}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full ${
+                                user.status === 'active' ? 'bg-green-100 text-green-700' :
+                                'bg-red-100 text-red-700'
+                            }">${user.status}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.lastLogin}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error filtering users:', error);
+            }
+        });
+        
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await fetch(`${API_BASE_URL}/logout.php`, { method: 'POST' });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Set last login time
+        document.getElementById('lastLogin').textContent = new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            await initDashboard();
+            startAutoRefresh();
+        });
+        
+        // Admin Action Functions
+        function viewAllPatients() {
+            Swal.fire({
+                title: 'View All Patients',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-4">Loading patient data...</p>
+                        <div id="patientsList"></div>
+                    </div>
+                `,
+                width: '800px',
+                showConfirmButton: false,
+                didOpen: async () => {
+                    try {
+                        const response = await fetch('../api/admin/get-all-patients.php');
+                        const data = await response.json();
+                        const list = document.getElementById('patientsList');
+                        
+                        if (data.success && data.patients.length > 0) {
+                            list.innerHTML = data.patients.map(p => `
+                                <div class="border-b py-3 flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold">${p.full_name}</p>
+                                        <p class="text-sm text-gray-600">${p.email} • ${p.contact_number}</p>
+                                    </div>
+                                    <button onclick="archivePatient(${p.id})" class="text-orange-600 hover:text-orange-800">
+                                        <i class="fas fa-archive"></i> Archive
+                                    </button>
+                                </div>
+                            `).join('');
+                        } else {
+                            list.innerHTML = '<p class="text-gray-500">No patients found</p>';
+                        }
+                    } catch (error) {
+                        document.getElementById('patientsList').innerHTML = '<p class="text-red-500">Error loading patients</p>';
+                    }
+                }
+            });
+        }
+        
+        function viewAllDoctors() {
+            Swal.fire({
+                title: 'View All Doctors',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-4">Loading doctor data...</p>
+                        <div id="doctorsList"></div>
+                    </div>
+                `,
+                width: '800px',
+                showConfirmButton: false,
+                didOpen: async () => {
+                    try {
+                        const response = await fetch('../api/admin/get-all-doctors.php');
+                        const data = await response.json();
+                        const list = document.getElementById('doctorsList');
+                        
+                        if (data.success && data.doctors.length > 0) {
+                            list.innerHTML = data.doctors.map(d => `
+                                <div class="border-b py-3 flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold">${d.full_name}</p>
+                                        <p class="text-sm text-gray-600">${d.specialization} • ${d.department_name}</p>
+                                    </div>
+                                    <button onclick="archiveDoctor(${d.id})" class="text-orange-600 hover:text-orange-800">
+                                        <i class="fas fa-archive"></i> Archive
+                                    </button>
+                                </div>
+                            `).join('');
+                        } else {
+                            list.innerHTML = '<p class="text-gray-500">No doctors found</p>';
+                        }
+                    } catch (error) {
+                        document.getElementById('doctorsList').innerHTML = '<p class="text-red-500">Error loading doctors</p>';
+                    }
+                }
+            });
+        }
+        
+        function viewArchive() {
+            // Navigate to Archive tab
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(nav => nav.classList.remove('active'));
+            
+            // Activate archive nav item
+            const archiveNav = document.querySelector('.nav-item[data-section="archive"]');
+            if (archiveNav) {
+                archiveNav.classList.add('active');
+            }
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            
+            // Show archive tab
+            const archiveTab = document.getElementById('archiveTab');
+            if (archiveTab) {
+                archiveTab.classList.remove('hidden');
+            }
+            
+            // Update page title
+            document.getElementById('pageTitle').textContent = 'Archive';
+            
+            // Load archive data
+            refreshArchive();
+        }
+        
+        function archivePatient(patientId) {
+            Swal.fire({
+                title: 'Archive Patient?',
+                text: 'This will move the patient to the archive.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f97316',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Archive',
+                cancelButtonText: 'Cancel'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('../api/admin/archive-patient.php', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({patient_id: patientId})
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Archived!', 'Patient has been archived.', 'success');
+                            viewAllPatients(); // Refresh list
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to archive patient', 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', 'Server error occurred', 'error');
+                    }
+                }
+            });
+        }
+        
+        function archiveDoctor(doctorId) {
+            Swal.fire({
+                title: 'Archive Doctor?',
+                text: 'This will move the doctor to the archive.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f97316',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Archive',
+                cancelButtonText: 'Cancel'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('../api/admin/archive-doctor.php', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({doctor_id: doctorId})
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Archived!', 'Doctor has been archived.', 'success');
+                            viewAllDoctors(); // Refresh list
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to archive doctor', 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', 'Server error occurred', 'error');
+                    }
+                }
+            });
+        }
+        
+        function generateReport() {
+            Swal.fire({
+                title: '📊 Generate Report',
+                html: `
+                    <div class="text-left">
+                        <select id="reportType" class="w-full border rounded px-3 py-2 mb-4">
+                            <option value="patients">Patients Report</option>
+                            <option value="doctors">Doctors Report</option>
+                            <option value="appointments">Appointments Report</option>
+                            <option value="summary">System Summary</option>
+                        </select>
+                        <button onclick="downloadReport()" class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                            <i class="fas fa-download mr-2"></i>Download Report
+                        </button>
+                    </div>
+                `,
+                showConfirmButton: false
+            });
+        }
+        
+        function downloadReport() {
+            const reportType = document.getElementById('reportType').value;
+            Swal.fire({
+                title: 'Generating Report...',
+                html: 'Please wait while we prepare your report',
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            }).then(() => {
+                Swal.fire('Success!', `${reportType} report has been generated and downloaded.`, 'success');
+                // Here you would actually trigger the download
+                window.location.href = `../api/admin/generate-report.php?type=${reportType}`;
+            });
+        }
+        
+        // Archive Functions
+        async function loadArchivedPatients() {
+            const contentArea = document.getElementById('archiveContentArea');
+            contentArea.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-green-600 text-4xl"></i><p class="mt-4 text-gray-600">Loading archived patients...</p></div>';
+            
+            try {
+                const response = await fetch('../api/admin/get-archived-patients.php');
+                const data = await response.json();
+                
+                if (data.success && data.patients.length > 0) {
+                    contentArea.innerHTML = `
+                        <div class="mb-4 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-900">
+                                <i class="fas fa-users text-green-600 mr-2"></i>Archived Patients (${data.patients.length})
+                            </h3>
+                        </div>
+                        <div class="space-y-3">
+                            ${data.patients.map(p => `
+                                <div class="border-2 border-green-200 rounded-lg p-4 hover:bg-green-50 transition-all">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="bg-green-100 rounded-full p-3">
+                                                <i class="fas fa-user text-green-600 text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-gray-900">${p.full_name}</p>
+                                                <p class="text-sm text-gray-600">${p.email} • ${p.contact_number}</p>
+                                                <p class="text-xs text-gray-500">Archived on: ${p.archived_date}</p>
+                                            </div>
+                                        </div>
+                                        <button onclick="restorePatient(${p.id})" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105">
+                                            <i class="fas fa-undo mr-2"></i>Restore
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    contentArea.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-inbox text-green-600 text-6xl mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Archived Patients</h3>
+                            <p class="text-gray-600">There are no archived patients at this time</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                contentArea.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+                        <p class="text-gray-600">Failed to load archived patients</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadArchivedDoctors() {
+            const contentArea = document.getElementById('archiveContentArea');
+            contentArea.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-green-600 text-4xl"></i><p class="mt-4 text-gray-600">Loading archived doctors...</p></div>';
+            
+            try {
+                const response = await fetch('../api/admin/get-archived-doctors.php');
+                const data = await response.json();
+                
+                if (data.success && data.doctors.length > 0) {
+                    contentArea.innerHTML = `
+                        <div class="mb-4 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-900">
+                                <i class="fas fa-user-md text-green-600 mr-2"></i>Archived Doctors (${data.doctors.length})
+                            </h3>
+                        </div>
+                        <div class="space-y-3">
+                            ${data.doctors.map(d => `
+                                <div class="border-2 border-green-200 rounded-lg p-4 hover:bg-green-50 transition-all">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="bg-green-100 rounded-full p-3">
+                                                <i class="fas fa-user-md text-green-600 text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-gray-900">${d.full_name}</p>
+                                                <p class="text-sm text-gray-600">${d.specialization} • ${d.department_name}</p>
+                                                <p class="text-xs text-gray-500">Archived on: ${d.archived_date}</p>
+                                            </div>
+                                        </div>
+                                        <button onclick="restoreDoctor(${d.id})" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all transform hover:scale-105">
+                                            <i class="fas fa-undo mr-2"></i>Restore
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    contentArea.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-inbox text-green-600 text-6xl mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Archived Doctors</h3>
+                            <p class="text-gray-600">There are no archived doctors at this time</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                contentArea.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-6xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+                        <p class="text-gray-600">Failed to load archived doctors</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function refreshArchive(showNotification = false) {
+            // Update counts
+            try {
+                const patientsResponse = await fetch('../api/admin/get-archived-patients.php');
+                const patientsData = await patientsResponse.json();
+                const patientsCount = patientsData.patients?.length || 0;
+                
+                const patientsCountEl = document.getElementById('archivedPatientsCount');
+                if (patientsCountEl) {
+                    patientsCountEl.textContent = `${patientsCount} archived`;
+                }
+                
+                const doctorsResponse = await fetch('../api/admin/get-archived-doctors.php');
+                const doctorsData = await doctorsResponse.json();
+                const doctorsCount = doctorsData.doctors?.length || 0;
+                
+                const doctorsCountEl = document.getElementById('archivedDoctorsCount');
+                if (doctorsCountEl) {
+                    doctorsCountEl.textContent = `${doctorsCount} archived`;
+                }
+                
+                if (showNotification) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Refreshed!',
+                        text: 'Archive data updated',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            } catch (error) {
+                if (showNotification) {
+                    Swal.fire('Error', 'Failed to refresh archive data', 'error');
+                }
+            }
+        }
+        
+        async function restorePatient(patientId) {
+            const result = await Swal.fire({
+                title: 'Restore Patient?',
+                text: 'This will restore the patient to active status.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Restore',
+                cancelButtonText: 'Cancel'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch('../api/admin/restore-patient.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({patient_id: patientId})
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire('Restored!', 'Patient has been restored.', 'success');
+                        loadArchivedPatients(); // Refresh list
+                    } else {
+                        Swal.fire('Error', data.message || 'Failed to restore patient', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Server error occurred', 'error');
+                }
+            }
+        }
+        
+        async function restoreDoctor(doctorId) {
+            const result = await Swal.fire({
+                title: 'Restore Doctor?',
+                text: 'This will restore the doctor to active status.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Restore',
+                cancelButtonText: 'Cancel'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch('../api/admin/restore-doctor.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({doctor_id: doctorId})
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire('Restored!', 'Doctor has been restored.', 'success');
+                        loadArchivedDoctors(); // Refresh list
+                    } else {
+                        Swal.fire('Error', data.message || 'Failed to restore doctor', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Server error occurred', 'error');
+                }
+            }
+        }
+        
+        // Load archive counts on page load
+        window.addEventListener('load', () => {
+            refreshArchive();
+        });
+        
+        // Show loading indicator
+        console.log('MediTrack Admin Dashboard v2.0 - Professional Edition with Archive Ready!');
+    </script>
+    
+    <!-- Enhanced Admin Dashboard Script -->
+    <script src="../js/admin-dashboard-enhanced.js"></script>
+</body>
+</html>

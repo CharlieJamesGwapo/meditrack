@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Lookup - MediTrack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
+    <link rel="manifest" href="../assets/images/site.webmanifest">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        body { overflow-x: hidden; background: #f0fdf4; }
+        
+        /* QR Scanner Animation */
+        .scanner-line {
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(200px); }
+            100% { transform: translateY(0); }
+        }
+        
+        /* Pulse animation */
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        
+        /* Card hover effects */
+        .lookup-card { transition: all 0.3s ease; }
+        .lookup-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2); }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f0fdf4; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+        
+        /* QR Code display */
+        .qr-display {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        /* SweetAlert2 custom styling */
+        .swal2-popup {
+            border-radius: 1rem;
+        }
+        .swal2-confirm {
+            background-color: #10b981 !important;
+        }
+        .swal2-cancel {
+            background-color: #6b7280 !important;
+        }
+    </style>
+    <script src="../js/auth-check.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-green-100 p-1 shadow-md mr-3">
+                        <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full">
+                    </div>
+                    <span class="text-xl font-bold text-gray-800">MediTrack</span>
+                    <span class="ml-2 text-sm text-green-600 font-semibold">QR Lookup</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:flex items-center space-x-2 text-gray-600">
+                        <i class="fas fa-clock text-green-600"></i>
+                        <span id="realTimeClock" class="text-sm font-medium"></span>
+                    </div>
+                    <span class="pulse px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-semibold">
+                        <i class="fas fa-circle text-xs mr-1"></i>Online
+                    </span>
+                    <a href="patient-dashboard.html" class="text-green-600 hover:text-green-700">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-2xl p-6 text-white mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2">QR Code Lookup</h1>
+                    <p class="text-green-100">Quickly find appointments and patient information using QR codes</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-qrcode text-6xl text-green-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- QR Scanner Section -->
+            <div class="lookup-card bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-camera text-green-600 mr-3"></i>
+                    Scan QR Code
+                </h2>
+                
+                <!-- Scanner View -->
+                <div class="mb-6">
+                    <div class="relative bg-gray-100 rounded-lg overflow-hidden" style="height: 300px;">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fas fa-qrcode text-6xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600">Position QR code within frame</p>
+                            </div>
+                        </div>
+                        <div class="scanner-line absolute top-0 left-0 right-0 h-1 bg-green-500"></div>
+                    </div>
+                </div>
+                
+                <!-- Scanner Controls -->
+                <div class="space-y-4">
+                    <button id="startScanBtn" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                        <i class="fas fa-camera mr-2"></i>Start Camera Scanner
+                    </button>
+                    
+                    <div class="relative">
+                        <i class="fas fa-keyboard absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="manualQRInput" placeholder="Or enter QR code manually..." 
+                            class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <button id="lookupBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                        <i class="fas fa-search mr-2"></i>Lookup QR Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="lookup-card bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                    Lookup Results
+                </h2>
+                
+                <div id="resultsContainer">
+                    <!-- Initial State -->
+                    <div class="text-center py-12">
+                        <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-600 text-lg">Scan or enter a QR code to see results</p>
+                        <p class="text-gray-500 text-sm mt-2">Results will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Lookups -->
+        <div class="lookup-card bg-white rounded-xl shadow-md p-6 mt-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-history text-purple-600 mr-3"></i>
+                Recent Lookups
+            </h2>
+            
+            <div id="recentLookupsContainer">
+                <div class="text-center py-8">
+                    <i class="fas fa-history text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-600">No recent lookups</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real-Time Clock
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            document.getElementById('realTimeClock').textContent = now.toLocaleString('en-US', options);
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // QR Lookup functionality
+        let recentLookups = JSON.parse(localStorage.getItem('recentQRLookups') || '[]');
+
+        // Manual QR input
+        const manualQRInput = document.getElementById('manualQRInput');
+        const lookupBtn = document.getElementById('lookupBtn');
+        
+        manualQRInput.addEventListener('input', function() {
+            const value = this.value.trim();
+            lookupBtn.disabled = value.length < 5;
+        });
+
+        manualQRInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim().length >= 5) {
+                performQRLookup(this.value.trim());
+            }
+        });
+
+        lookupBtn.addEventListener('click', function() {
+            const qrCode = manualQRInput.value.trim();
+            if (qrCode.length >= 5) {
+                performQRLookup(qrCode);
+            }
+        });
+
+        // Start scanner button
+        document.getElementById('startScanBtn').addEventListener('click', function() {
+            simulateQRScanner();
+        });
+
+        // Perform QR lookup
+        async function performQRLookup(qrCode) {
+            try {
+                showLoadingState();
+                
+                const response = await fetch(`../api/search/unified-search.php?type=qr&qr_token=${encodeURIComponent(qrCode)}`);
+                const data = await response.json();
+                
+                if (data.success && data.results.qr.success) {
+                    displayQRResults(data.results.qr);
+                    addToRecentLookups(qrCode, data.results.qr.appointment);
+                } else {
+                    showError(data.results.qr?.message || 'QR code not found or invalid');
+                }
+            } catch (error) {
+                console.error('QR lookup error:', error);
+                showError('Failed to lookup QR code. Please try again.');
+            }
+        }
+
+        // Display QR results
+        function displayQRResults(qrData) {
+            const apt = qrData.appointment;
+            const container = document.getElementById('resultsContainer');
+            
+            container.innerHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
+                        <h3 class="font-semibold text-green-800 text-lg">QR Code Valid</h3>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-gray-700 mb-3">Appointment Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">Patient:</span>
+                                <span class="font-medium ml-2">${apt.patient_name}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Doctor:</span>
+                                <span class="font-medium ml-2">Dr. ${apt.doctor_name}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Date:</span>
+                                <span class="font-medium ml-2">${formatDate(apt.appointment_date)}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Time:</span>
+                                <span class="font-medium ml-2">${apt.appointment_time}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Status:</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 ml-2">${apt.status}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Department:</span>
+                                <span class="font-medium ml-2">${apt.department || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-gray-700 mb-3">Patient Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">Contact:</span>
+                                <span class="font-medium ml-2">${apt.patient_contact}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">DOB:</span>
+                                <span class="font-medium ml-2">${formatDate(apt.patient_dob)}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Blood Group:</span>
+                                <span class="font-medium ml-2">${apt.blood_group || 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Allergies:</span>
+                                <span class="font-medium ml-2">${apt.allergies || 'None'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="checkInPatient(${apt.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Check In Patient
+                        </button>
+                        <button onclick="viewFullDetails(${apt.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-eye mr-2"></i>View Full Details
+                        </button>
+                        <button onclick="printQRCode('${manualQRInput.value}')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            <i class="fas fa-print mr-2"></i>Print QR
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Simulate QR scanner
+        function simulateQRScanner() {
+            Swal.fire({
+                title: 'QR Scanner',
+                html: `
+                    <div class="text-center">
+                        <div class="relative bg-gray-100 rounded-lg overflow-hidden mx-auto" style="width: 300px; height: 300px;">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-qrcode text-6xl text-gray-400"></i>
+                            </div>
+                            <div class="scanner-line absolute top-0 left-0 right-0 h-1 bg-green-500"></div>
+                        </div>
+                        <p class="mt-4 text-gray-600">Position QR code within the frame</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Simulate Scan',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            // Simulate scanned QR code
+                            const simulatedToken = 'demo_qr_' + Math.random().toString(36).substr(2, 9);
+                            manualQRInput.value = simulatedToken;
+                            performQRLookup(simulatedToken);
+                            resolve();
+                        }, 2000);
+                    });
+                }
+            });
+        }
+
+        // Helper functions
+        function showLoadingState() {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-4xl text-green-600 mb-4"></i>
+                    <p class="text-gray-600">Looking up QR code...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
+                    <p class="text-red-600 text-lg font-semibold">QR Code Not Found</p>
+                    <p class="text-gray-600 mt-2">${message}</p>
+                    <button onclick="resetLookup()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        function resetLookup() {
+            manualQRInput.value = '';
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-600 text-lg">Scan or enter a QR code to see results</p>
+                    <p class="text-gray-500 text-sm mt-2">Results will appear here</p>
+                </div>
+            `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function addToRecentLookups(qrCode, appointment) {
+            const lookup = {
+                qrCode: qrCode,
+                appointment: appointment,
+                timestamp: new Date().toISOString()
+            };
+            
+            recentLookups.unshift(lookup);
+            if (recentLookups.length > 5) {
+                recentLookups = recentLookups.slice(0, 5);
+            }
+            
+            localStorage.setItem('recentQRLookups', JSON.stringify(recentLookups));
+            displayRecentLookups();
+        }
+
+        function displayRecentLookups() {
+            const container = document.getElementById('recentLookupsContainer');
+            
+            if (recentLookups.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-history text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-600">No recent lookups</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = recentLookups.map(lookup => `
+                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer" onclick="repeatLookup('${lookup.qrCode}')">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-semibold text-gray-800">${lookup.appointment.patient_name}</div>
+                            <div class="text-sm text-gray-600">Dr. ${lookup.appointment.doctor_name} • ${formatDate(lookup.appointment.appointment_date)}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">${new Date(lookup.timestamp).toLocaleTimeString()}</div>
+                            <div class="text-xs text-green-600 font-mono">${lookup.qrCode.substring(0, 10)}...</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function repeatLookup(qrCode) {
+            manualQRInput.value = qrCode;
+            performQRLookup(qrCode);
+        }
+
+        function checkInPatient(appointmentId) {
+            Swal.fire({
+                title: 'Check In Patient',
+                text: 'Are you sure you want to check in this patient?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Check In',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Implementation for patient check-in
+                    Swal.fire('Success!', 'Patient checked in successfully', 'success');
+                }
+            });
+        }
+
+        function viewFullDetails(appointmentId) {
+            // Implementation for viewing full details
+            console.log('View full details for appointment:', appointmentId);
+        }
+
+        function printQRCode(qrCode) {
+            // Implementation for printing QR code
+            console.log('Print QR code:', qrCode);
+        }
+
+        // Initialize
+        displayRecentLookups();
+    </script>
+</body>
+</html>

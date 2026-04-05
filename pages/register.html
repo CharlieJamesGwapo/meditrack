@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MediTrack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
+    <link rel="manifest" href="../assets/images/site.webmanifest">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f0fdf4; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+        
+        /* Autocomplete dropdown */
+        .autocomplete-dropdown {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .autocomplete-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .autocomplete-item:hover {
+            background: #f0fdf4;
+        }
+        
+        .autocomplete-item.selected {
+            background: #dcfce7;
+        }
+        
+        /* Input focus */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        /* Photo preview hover effect */
+        #imagePreview {
+            transition: all 0.3s ease;
+        }
+        
+        #imagePreview:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Button hover effects */
+        button {
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* Camera Modal Responsive */
+        #cameraModal {
+            backdrop-filter: blur(10px);
+        }
+        
+        #cameraVideo {
+            transform: scaleX(-1); /* Mirror effect for selfie */
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+            #cameraModal .bg-white {
+                margin: 0;
+                border-radius: 1rem;
+            }
+            
+            #capturePhotoBtn {
+                width: 70px;
+                height: 70px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
+        /* Pulse animation for capture button */
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+        
+        #capturePhotoBtn {
+            animation: pulse-ring 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <a href="../index.html" class="inline-flex items-center justify-center mb-4">
+                    <div class="w-16 h-16 rounded-full overflow-hidden bg-white shadow-lg p-2 mr-3">
+                        <img src="../assets/images/logo.jpg" alt="MediTrack Logo" class="w-full h-full object-cover rounded-full">
+                    </div>
+                    <span class="text-4xl font-bold text-gray-800">MediTrack</span>
+                </a>
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Create your account</h2>
+                <p class="mt-2 text-sm text-gray-600">Join us for better healthcare management in the Philippines</p>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="bg-white py-8 px-6 shadow-2xl rounded-2xl fade-in border border-green-100">
+                
+                <form id="registerForm" class="space-y-6">
+                    <!-- Profile Picture Upload -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-camera text-green-600 mr-2"></i>Profile Picture (2x2)</h3>
+                        <div class="flex flex-col items-center space-y-4">
+                            <!-- Preview -->
+                            <div class="relative">
+                                <div id="imagePreview" class="w-40 h-40 border-4 border-green-500 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    <i class="fas fa-user text-6xl text-gray-400"></i>
+                                </div>
+                                <button type="button" id="removePhoto" class="hidden absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Upload Options -->
+                            <div class="flex flex-wrap gap-3 justify-center">
+                                <button type="button" id="cameraBtn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-lg">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Take Photo</span>
+                                </button>
+                                <button type="button" id="uploadBtn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-lg">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Upload Photo</span>
+                                </button>
+                            </div>
+                            
+                            <input type="file" id="fileInput" name="profile_picture" accept="image/*" class="hidden">
+                            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+                            <canvas id="photoCanvas" class="hidden"></canvas>
+                            
+                            <!-- Camera Modal -->
+                            <div id="cameraModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+                                <div class="bg-white rounded-2xl max-w-2xl w-full p-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-xl font-bold text-gray-900"><i class="fas fa-camera mr-2 text-green-600"></i>Take Photo</h3>
+                                        <button type="button" id="closeCameraModal" class="text-gray-500 hover:text-red-600 text-2xl">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="relative bg-gray-900 rounded-lg overflow-hidden" style="aspect-ratio: 1/1;">
+                                        <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                                        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                                            <button type="button" id="capturePhotoBtn" class="bg-green-600 text-white px-8 py-3 rounded-full hover:bg-green-700 transition shadow-lg">
+                                                <i class="fas fa-camera text-2xl"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-500 text-center mt-3">
+                                        <i class="fas fa-info-circle text-green-600"></i> Position your face in the center and click capture
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-xs text-gray-500 text-center">
+                                <i class="fas fa-info-circle text-green-600"></i> 
+                                Photo will be automatically resized to 2x2 format (passport size)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Account Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Username *</label>
+                                <input type="text" name="username" required 
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Email *</label>
+                                <input type="email" name="email" required 
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Password *</label>
+                                <div class="relative">
+                                    <input type="password" id="password" name="password" required minlength="6"
+                                           class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                    <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-green-600">
+                                        <i class="fas fa-eye" id="password-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Confirm Password *</label>
+                                <div class="relative">
+                                    <input type="password" id="confirm_password" name="confirm_password" required 
+                                           class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                    <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-green-600">
+                                        <i class="fas fa-eye" id="confirm_password-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Full Name *</label>
+                                <input type="text" id="fullNameInput" name="full_name" required 
+                                       pattern="[A-Za-zÑñ\s.'-]+" 
+                                       title="Please enter letters only (A-Z, a-z)"
+                                       placeholder="e.g., Juan Dela Cruz"
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Letters only (no numbers)</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Date of Birth *</label>
+                                <input type="date" id="dateOfBirthInput" name="date_of_birth" required 
+                                       min="1900-01-01"
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Must be a valid birth date (age 1-120 years)</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Gender *</label>
+                                <select name="gender" required 
+                                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Male or Female only</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Contact Number *</label>
+                                <input type="tel" id="contactNumberInput" name="contact_number" required 
+                                       placeholder="+63 9XX XXX XXXX"
+                                       maxlength="16"
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Philippine mobile number (numbers only)</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Blood Group</label>
+                                <select name="blood_group" 
+                                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                    <option value="">Select Blood Group</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-map-marker-alt text-green-600 mr-2"></i>Address Information (Philippines)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Street Address</label>
+                                <textarea name="address" rows="2" placeholder="House/Unit No., Street Name"
+                                          class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Region *</label>
+                                <select id="regionSelect" name="region" required
+                                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                    <option value="">Select Region</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Province *</label>
+                                <select id="provinceSelect" name="province" required disabled
+                                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition bg-gray-50">
+                                    <option value="">Select Province</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">City/Municipality *</label>
+                                <select id="citySelect" name="city" required disabled
+                                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition bg-gray-50">
+                                    <option value="">Select City/Municipality</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Barangay</label>
+                                <select id="barangaySelect" name="barangay" disabled
+                                        class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition bg-gray-50">
+                                    <option value="">Select Barangay</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Available for Bislig City</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">ZIP Code *</label>
+                                <input type="text" id="zipInput" name="zip_code" required readonly
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-gray-50 cursor-not-allowed">
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Auto-filled based on selected city</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Contact -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Emergency Contact Name</label>
+                                <input type="text" id="emergencyNameInput" name="emergency_contact_name" 
+                                       pattern="[A-Za-zÑñ\s.'-]+" 
+                                       title="Please enter letters only (A-Z, a-z)"
+                                       placeholder="e.g., Maria Santos"
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Letters only (no numbers)</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Emergency Contact Number</label>
+                                <input type="tel" id="emergencyNumberInput" name="emergency_contact_number" 
+                                       placeholder="+63 9XX XXX XXXX"
+                                       maxlength="16"
+                                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+                                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle text-green-600"></i> Philippine mobile number (numbers only)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Medical Information</h3>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Allergies (if any)</label>
+                            <textarea name="allergies" rows="2" 
+                                      placeholder="List any known allergies..."
+                                      class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" 
+                                class="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-lg shadow-lg text-base font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition transform hover:scale-105">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            <span id="registerText">Create Account</span>
+                            <span id="registerSpinner" class="hidden ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account? 
+                        <a href="login.html" class="font-medium text-green-600 hover:text-green-700 transition">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Philippines Location Database (Region → Province → City → ZIP)
+        const philippinesData = {
+            "NCR": {
+                name: "National Capital Region (NCR)",
+                provinces: {
+                    "Metro Manila": {
+                        cities: [
+                            { name: "Manila", zip: "1000" },
+                            { name: "Quezon City", zip: "1100" },
+                            { name: "Caloocan", zip: "1400" },
+                            { name: "Las Piñas", zip: "1740" },
+                            { name: "Makati", zip: "1200" },
+                            { name: "Malabon", zip: "1470" },
+                            { name: "Mandaluyong", zip: "1550" },
+                            { name: "Marikina", zip: "1800" },
+                            { name: "Muntinlupa", zip: "1770" },
+                            { name: "Navotas", zip: "1485" },
+                            { name: "Parañaque", zip: "1700" },
+                            { name: "Pasay", zip: "1300" },
+                            { name: "Pasig", zip: "1600" },
+                            { name: "Pateros", zip: "1620" },
+                            { name: "San Juan", zip: "1500" },
+                            { name: "Taguig", zip: "1630" },
+                            { name: "Valenzuela", zip: "1440" }
+                        ]
+                    }
+                }
+            },
+            "CAR": {
+                name: "Cordillera Administrative Region (CAR)",
+                provinces: {
+                    "Benguet": {
+                        cities: [
+                            { name: "Baguio City", zip: "2600" },
+                            { name: "La Trinidad", zip: "2601" },
+                            { name: "Itogon", zip: "2604" },
+                            { name: "Sablan", zip: "2614" },
+                            { name: "Tuba", zip: "2603" },
+                            { name: "Tublay", zip: "2605" }
+                        ]
+                    },
+                    "Abra": {
+                        cities: [
+                            { name: "Bangued", zip: "2800" },
+                            { name: "Boliney", zip: "2815" },
+                            { name: "Bucay", zip: "2801" },
+                            { name: "Bucloc", zip: "2816" }
+                        ]
+                    }
+                }
+            },
+            "Region I": {
+                name: "Ilocos Region (Region I)",
+                provinces: {
+                    "Ilocos Norte": {
+                        cities: [
+                            { name: "Laoag City", zip: "2900" },
+                            { name: "Batac City", zip: "2906" },
+                            { name: "Paoay", zip: "2902" },
+                            { name: "Sarrat", zip: "2903" }
+                        ]
+                    },
+                    "Ilocos Sur": {
+                        cities: [
+                            { name: "Vigan City", zip: "2700" },
+                            { name: "Candon City", zip: "2710" },
+                            { name: "Bantay", zip: "2727" },
+                            { name: "Caoayan", zip: "2702" }
+                        ]
+                    },
+                    "La Union": {
+                        cities: [
+                            { name: "San Fernando City", zip: "2500" },
+                            { name: "Agoo", zip: "2504" },
+                            { name: "Bauang", zip: "2501" },
+                            { name: "San Juan", zip: "2514" }
+                        ]
+                    },
+                    "Pangasinan": {
+                        cities: [
+                            { name: "Dagupan City", zip: "2400" },
+                            { name: "Alaminos City", zip: "2404" },
+                            { name: "San Carlos City", zip: "2420" },
+                            { name: "Urdaneta City", zip: "2428" }
+                        ]
+                    }
+                }
+            },
+            "Region III": {
+                name: "Central Luzon (Region III)",
+                provinces: {
+                    "Bulacan": {
+                        cities: [
+                            { name: "Malolos City", zip: "3000" },
+                            { name: "Meycauayan City", zip: "3020" },
+                            { name: "San Jose del Monte City", zip: "3023" },
+                            { name: "Marilao", zip: "3019" }
+                        ]
+                    },
+                    "Pampanga": {
+                        cities: [
+                            { name: "San Fernando City", zip: "2000" },
+                            { name: "Angeles City", zip: "2009" },
+                            { name: "Mabalacat City", zip: "2010" },
+                            { name: "Mexico", zip: "2021" }
+                        ]
+                    },
+                    "Tarlac": {
+                        cities: [
+                            { name: "Tarlac City", zip: "2300" },
+                            { name: "Concepcion", zip: "2316" },
+                            { name: "Capas", zip: "2333" },
+                            { name: "Bamban", zip: "2317" }
+                        ]
+                    }
+                }
+            },
+            "Region IV-A": {
+                name: "CALABARZON (Region IV-A)",
+                provinces: {
+                    "Cavite": {
+                        cities: [
+                            { name: "Bacoor City", zip: "4102" },
+                            { name: "Cavite City", zip: "4100" },
+                            { name: "Dasmariñas City", zip: "4114" },
+                            { name: "Imus City", zip: "4103" },
+                            { name: "Tagaytay City", zip: "4120" }
+                        ]
+                    },
+                    "Laguna": {
+                        cities: [
+                            { name: "Calamba City", zip: "4027" },
+                            { name: "San Pablo City", zip: "4000" },
+                            { name: "Santa Rosa City", zip: "4026" },
+                            { name: "Biñan City", zip: "4024" }
+                        ]
+                    },
+                    "Batangas": {
+                        cities: [
+                            { name: "Batangas City", zip: "4200" },
+                            { name: "Lipa City", zip: "4217" },
+                            { name: "Tanauan City", zip: "4232" },
+                            { name: "Santo Tomas", zip: "4234" }
+                        ]
+                    },
+                    "Rizal": {
+                        cities: [
+                            { name: "Antipolo City", zip: "1870" },
+                            { name: "Cainta", zip: "1900" },
+                            { name: "Taytay", zip: "1920" },
+                            { name: "Binangonan", zip: "1940" }
+                        ]
+                    },
+                    "Quezon": {
+                        cities: [
+                            { name: "Lucena City", zip: "4301" },
+                            { name: "Tayabas City", zip: "4327" },
+                            { name: "Sariaya", zip: "4322" },
+                            { name: "Candelaria", zip: "4323" }
+                        ]
+                    }
+                }
+            },
+            "Region VII": {
+                name: "Central Visayas (Region VII)",
+                provinces: {
+                    "Cebu": {
+                        cities: [
+                            { name: "Cebu City", zip: "6000" },
+                            { name: "Mandaue City", zip: "6014" },
+                            { name: "Lapu-Lapu City", zip: "6015" },
+                            { name: "Talisay City", zip: "6045" }
+                        ]
+                    },
+                    "Bohol": {
+                        cities: [
+                            { name: "Tagbilaran City", zip: "6300" },
+                            { name: "Ubay", zip: "6315" },
+                            { name: "Trinidad", zip: "6316" },
+                            { name: "Tubigon", zip: "6329" }
+                        ]
+                    }
+                }
+            },
+            "Region XI": {
+                name: "Davao Region (Region XI)",
+                provinces: {
+                    "Davao del Sur": {
+                        cities: [
+                            { name: "Davao City", zip: "8000" },
+                            { name: "Digos City", zip: "8002" },
+                            { name: "Bansalan", zip: "8005" },
+                            { name: "Hagonoy", zip: "8006" }
+                        ]
+                    },
+                    "Davao del Norte": {
+                        cities: [
+                            { name: "Tagum City", zip: "8100" },
+                            { name: "Panabo City", zip: "8105" },
+                            { name: "Samal City", zip: "8119" },
+                            { name: "Asuncion", zip: "8102" }
+                        ]
+                    }
+                }
+            },
+            "Region XIII": {
+                name: "Caraga Administrative Region (Region XIII)",
+                provinces: {
+                    "Surigao del Sur": {
+                        cities: [
+                            { 
+                                name: "Bislig City", 
+                                zip: "8311",
+                                barangays: [
+                                    "Bucto",
+                                    "Burboanan",
+                                    "Caguyao",
+                                    "Coleto",
+                                    "Comawas",
+                                    "Kahayag",
+                                    "Labisma",
+                                    "Lawigan",
+                                    "Maharlika",
+                                    "Mangagoy",
+                                    "Mone",
+                                    "Pamaypayan",
+                                    "Pamanlinan",
+                                    "Poblacion (Bislig Proper)",
+                                    "San Antonio",
+                                    "San Fernando",
+                                    "San Isidro (Bagnan)",
+                                    "San Jose",
+                                    "San Roque (Cadanglasan)",
+                                    "San Vicente",
+                                    "Santa Cruz",
+                                    "Sibaroy",
+                                    "Tabon",
+                                    "Tumanan"
+                                ]
+                            },
+                            { name: "Tandag City", zip: "8300" },
+                            { name: "Lianga", zip: "8307" },
+                            { name: "Hinatuan", zip: "8310" }
+                        ]
+                    },
+                    "Agusan del Norte": {
+                        cities: [
+                            { name: "Butuan City", zip: "8600" },
+                            { name: "Cabadbaran City", zip: "8605" },
+                            { name: "Nasipit", zip: "8602" }
+                        ]
+                    },
+                    "Agusan del Sur": {
+                        cities: [
+                            { name: "Bayugan City", zip: "8502" },
+                            { name: "Prosperidad", zip: "8500" },
+                            { name: "San Francisco", zip: "8501" }
+                        ]
+                    },
+                    "Surigao del Norte": {
+                        cities: [
+                            { name: "Surigao City", zip: "8400" },
+                            { name: "Dapa", zip: "8417" },
+                            { name: "Siargao", zip: "8419" }
+                        ]
+                    }
+                }
+            }
+        };
+
+        const registerForm = document.getElementById('registerForm');
+        const registerText = document.getElementById('registerText');
+        const registerSpinner = document.getElementById('registerSpinner');
+        const regionSelect = document.getElementById('regionSelect');
+        const provinceSelect = document.getElementById('provinceSelect');
+        const citySelect = document.getElementById('citySelect');
+        const barangaySelect = document.getElementById('barangaySelect');
+        const zipInput = document.getElementById('zipInput');
+        
+        // Photo upload elements
+        const imagePreview = document.getElementById('imagePreview');
+        const fileInput = document.getElementById('fileInput');
+        const cameraInput = document.getElementById('cameraInput');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const removePhoto = document.getElementById('removePhoto');
+        const photoCanvas = document.getElementById('photoCanvas');
+        
+        let currentPhotoBlob = null;
+
+        // Camera stream variable
+        let cameraStream = null;
+        
+        // Photo Upload Functions
+        uploadBtn.addEventListener('click', () => {
+            console.log('Upload button clicked');
+            fileInput.click();
+        });
+        
+        // Camera button - Open camera modal or use file input as fallback
+        cameraBtn.addEventListener('click', async () => {
+            console.log('Camera button clicked');
+            
+            // Check if device has camera support
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    await openCameraModal();
+                } catch (error) {
+                    console.log('Camera not available, using file input:', error);
+                    // Fallback to file input with camera preference
+                    cameraInput.click();
+                }
+            } else {
+                // No camera API support, use file input
+                console.log('Camera API not supported, using file input');
+                cameraInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', handlePhotoUpload);
+        cameraInput.addEventListener('change', handlePhotoUpload);
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            console.log('Photo selected:', file.name, file.type, file.size);
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File',
+                    text: 'Please select an image file (JPG, PNG, etc.)',
+                    confirmButtonColor: '#10b981'
+                });
+                e.target.value = '';
+                return;
+            }
+            
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'Please select an image smaller than 5MB',
+                    confirmButtonColor: '#10b981'
+                });
+                e.target.value = '';
+                return;
+            }
+            
+            // Show loading
+            Swal.fire({
+                title: 'Processing Photo...',
+                html: 'Resizing to 2x2 format',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    resizeImageTo2x2(img);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resizeImageTo2x2(img) {
+            const canvas = photoCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // 2x2 passport size: 51mm x 51mm (approximately 600x600 pixels at 300 DPI)
+            const size = 600;
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Calculate dimensions to maintain aspect ratio and center crop
+            let width = img.width;
+            let height = img.height;
+            let x = 0;
+            let y = 0;
+            
+            if (width > height) {
+                x = (width - height) / 2;
+                width = height;
+            } else {
+                y = (height - width) / 2;
+                height = width;
+            }
+            
+            // Draw with white background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, 600, 600);
+            ctx.drawImage(img, x, y, width, height, 0, 0, 600, 600);
+            
+            // Convert to blob
+            canvas.toBlob(function(blob) {
+                currentPhotoBlob = blob;
+                console.log('Photo processed:', blob.size, 'bytes');
+                
+                // Display preview
+                const url = URL.createObjectURL(blob);
+                imagePreview.innerHTML = `<img src="${url}" class="w-full h-full object-cover rounded-lg" alt="Profile Picture">`;
+                removePhoto.classList.remove('hidden');
+                
+                // Close loading
+                Swal.close();
+                
+                // Show success
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Photo Ready!',
+                    text: 'Your 2x2 photo has been processed',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Camera Modal Functions
+        async function openCameraModal() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            
+            try {
+                // Request camera access
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 1280 },
+                        height: { ideal: 1280 }
+                    } 
+                });
+                
+                video.srcObject = cameraStream;
+                modal.classList.remove('hidden');
+                
+                console.log('Camera opened successfully');
+            } catch (error) {
+                console.error('Camera access error:', error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Camera Access Denied',
+                    html: `
+                        <p class="text-gray-600 mb-3">Unable to access camera. Please:</p>
+                        <ul class="text-left text-sm text-gray-600 space-y-2">
+                            <li>• Allow camera permissions in your browser</li>
+                            <li>• Make sure no other app is using the camera</li>
+                            <li>• Or use the "Upload Photo" option instead</li>
+                        </ul>
+                    `,
+                    confirmButtonColor: '#10b981',
+                    confirmButtonText: 'Use Upload Instead'
+                }).then(() => {
+                    fileInput.click();
+                });
+                
+                throw error;
+            }
+        }
+        
+        function closeCameraModal() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            
+            // Stop camera stream
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            video.srcObject = null;
+            modal.classList.add('hidden');
+            
+            console.log('Camera closed');
+        }
+        
+        // Close camera modal button
+        document.getElementById('closeCameraModal').addEventListener('click', closeCameraModal);
+        
+        // Capture photo from camera
+        document.getElementById('capturePhotoBtn').addEventListener('click', () => {
+            const video = document.getElementById('cameraVideo');
+            const canvas = photoCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to video size
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0);
+            
+            // Close camera modal
+            closeCameraModal();
+            
+            // Show processing
+            Swal.fire({
+                title: 'Processing Photo...',
+                html: 'Resizing to 2x2 format',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Convert canvas to image and process
+            canvas.toBlob((blob) => {
+                const img = new Image();
+                img.onload = function() {
+                    resizeImageTo2x2(img);
+                };
+                img.src = URL.createObjectURL(blob);
+            }, 'image/jpeg', 0.95);
+        });
+        
+        removePhoto.addEventListener('click', function() {
+            currentPhotoBlob = null;
+            imagePreview.innerHTML = '<i class="fas fa-user text-6xl text-gray-400"></i>';
+            removePhoto.classList.add('hidden');
+            fileInput.value = '';
+            cameraInput.value = '';
+        });
+
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const eye = document.getElementById(fieldId + '-eye');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                eye.classList.remove('fa-eye');
+                eye.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                eye.classList.remove('fa-eye-slash');
+                eye.classList.add('fa-eye');
+            }
+        }
+
+        // Initialize Regions
+        function loadRegions() {
+            Object.keys(philippinesData).forEach(regionCode => {
+                const option = document.createElement('option');
+                option.value = regionCode;
+                option.textContent = philippinesData[regionCode].name;
+                regionSelect.appendChild(option);
+            });
+        }
+
+        // Region Change Event
+        regionSelect.addEventListener('change', function() {
+            const regionCode = this.value;
+            
+            // Reset dependent fields
+            provinceSelect.innerHTML = '<option value="">Select Province</option>';
+            citySelect.innerHTML = '<option value="">Select City/Municipality</option>';
+            zipInput.value = '';
+            
+            if (regionCode) {
+                provinceSelect.disabled = false;
+                provinceSelect.classList.remove('bg-gray-50');
+                
+                const provinces = philippinesData[regionCode].provinces;
+                Object.keys(provinces).forEach(provinceName => {
+                    const option = document.createElement('option');
+                    option.value = provinceName;
+                    option.textContent = provinceName;
+                    provinceSelect.appendChild(option);
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Region Selected!',
+                    text: `${philippinesData[regionCode].name} selected`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                    background: '#10b981',
+                    color: '#fff'
+                });
+            } else {
+                provinceSelect.disabled = true;
+                provinceSelect.classList.add('bg-gray-50');
+                citySelect.disabled = true;
+                citySelect.classList.add('bg-gray-50');
+            }
+        });
+
+        // Province Change Event
+        provinceSelect.addEventListener('change', function() {
+            const regionCode = regionSelect.value;
+            const provinceName = this.value;
+            
+            // Reset dependent fields
+            citySelect.innerHTML = '<option value="">Select City/Municipality</option>';
+            barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+            barangaySelect.disabled = true;
+            barangaySelect.classList.add('bg-gray-50');
+            zipInput.value = '';
+            
+            if (provinceName && regionCode) {
+                citySelect.disabled = false;
+                citySelect.classList.remove('bg-gray-50');
+                
+                const cities = philippinesData[regionCode].provinces[provinceName].cities;
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.name;
+                    option.dataset.zip = city.zip;
+                    option.textContent = city.name;
+                    citySelect.appendChild(option);
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Province Selected!',
+                    text: `${provinceName} selected`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                    background: '#10b981',
+                    color: '#fff'
+                });
+            } else {
+                citySelect.disabled = true;
+                citySelect.classList.add('bg-gray-50');
+            }
+        });
+
+        // City Change Event - Auto-fill ZIP Code and load barangays
+        citySelect.addEventListener('change', function() {
+            const regionCode = regionSelect.value;
+            const provinceName = provinceSelect.value;
+            const cityName = this.value;
+            
+            // Reset barangay
+            barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+            barangaySelect.disabled = true;
+            barangaySelect.classList.add('bg-gray-50');
+            
+            if (cityName && regionCode && provinceName) {
+                const cities = philippinesData[regionCode].provinces[provinceName].cities;
+                const selectedCity = cities.find(city => city.name === cityName);
+                
+                if (selectedCity) {
+                    // Auto-fill ZIP code
+                    zipInput.value = selectedCity.zip;
+                    
+                    // Load barangays if available (Bislig City)
+                    if (selectedCity.barangays && selectedCity.barangays.length > 0) {
+                        barangaySelect.disabled = false;
+                        barangaySelect.classList.remove('bg-gray-50');
+                        
+                        selectedCity.barangays.forEach(barangay => {
+                            const option = document.createElement('option');
+                            option.value = barangay;
+                            option.textContent = barangay;
+                            barangaySelect.appendChild(option);
+                        });
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Bislig City Selected!',
+                            html: `<strong>${cityName}</strong><br>ZIP Code: <strong>${selectedCity.zip}</strong><br><small class="text-green-100">24 barangays available</small>`,
+                            timer: 2500,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end',
+                            background: '#10b981',
+                            color: '#fff'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'ZIP Code Auto-filled!',
+                            html: `<strong>${cityName}</strong><br>ZIP Code: <strong>${selectedCity.zip}</strong>`,
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end',
+                            background: '#10b981',
+                            color: '#fff'
+                        });
+                    }
+                }
+            }
+        });
+        
+        // Barangay Change Event
+        barangaySelect.addEventListener('change', function() {
+            if (this.value) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Barangay Selected!',
+                    text: this.value,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                    background: '#10b981',
+                    color: '#fff'
+                });
+            }
+        });
+
+        // Form Submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Create FormData for file upload
+            const formData = new FormData();
+            
+            // Add all form fields
+            const formElements = registerForm.elements;
+            for (let element of formElements) {
+                if (element.name && element.type !== 'file' && element.type !== 'submit') {
+                    formData.append(element.name, element.value);
+                }
+            }
+            
+            // Add profile picture if exists
+            if (currentPhotoBlob) {
+                formData.append('profile_picture', currentPhotoBlob, 'profile_2x2.jpg');
+            }
+
+            // Validate password match
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirm_password');
+            
+            if (password !== confirmPassword) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Password Mismatch',
+                    text: 'Passwords do not match!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+
+            formData.delete('confirm_password');
+
+            registerText.classList.add('hidden');
+            registerSpinner.classList.remove('hidden');
+
+            try {
+                const response = await fetch('../api/auth/register.php', {
+                    method: 'POST',
+                    body: formData // Send as FormData for file upload
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success with confetti effect
+                    Swal.fire({
+                        icon: 'success',
+                        title: '🎉 Registration Successful!',
+                        html: `
+                            <div class="text-center">
+                                <p class="text-lg font-semibold text-gray-800 mb-2">Welcome to MediTrack!</p>
+                                <p class="text-gray-600 mb-3">Your account has been created successfully.</p>
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                                    <p class="text-sm text-green-800">
+                                        <i class="fas fa-envelope mr-2"></i>
+                                        A confirmation email has been sent to your email address.
+                                    </p>
+                                </div>
+                                <p class="text-sm text-gray-500">Redirecting to login page...</p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'Go to Login',
+                        allowOutsideClick: false,
+                        timer: 5000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        window.location.href = 'login.html';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Registration Failed',
+                        html: `<p class="text-gray-600">${result.message || 'Please try again'}</p>`,
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'Try Again'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.',
+                    confirmButtonColor: '#10b981'
+                });
+            } finally {
+                registerText.classList.remove('hidden');
+                registerSpinner.classList.add('hidden');
+            }
+        });
+
+        // Enhanced real-time form validation with visual feedback
+        document.querySelectorAll('input[required], select[required]').forEach(field => {
+            // Validation on blur
+            field.addEventListener('blur', function() {
+                validateField(this);
+            });
+            
+            // Real-time validation on input
+            field.addEventListener('input', function() {
+                if (this.value) {
+                    validateField(this);
+                }
+            });
+        });
+        
+        function validateField(field) {
+            const value = field.value.trim();
+            
+            // Remove previous validation classes
+            field.classList.remove('border-red-500', 'border-green-500', 'border-yellow-500');
+            
+            if (!value && field.hasAttribute('required')) {
+                field.classList.add('border-red-500');
+                return false;
+            }
+            
+            // Email validation
+            if (field.type === 'email' && value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    field.classList.add('border-red-500');
+                    return false;
+                } else {
+                    field.classList.add('border-green-500');
+                    return true;
+                }
+            }
+            
+            // Phone validation
+            if (field.name === 'contact_number' && value) {
+                const phoneRegex = /^[0-9+\-\s()]{10,}$/;
+                if (!phoneRegex.test(value)) {
+                    field.classList.add('border-yellow-500');
+                } else {
+                    field.classList.add('border-green-500');
+                }
+            }
+            
+            // Password strength indicator
+            if (field.name === 'password' && value) {
+                if (value.length < 6) {
+                    field.classList.add('border-red-500');
+                } else if (value.length < 8) {
+                    field.classList.add('border-yellow-500');
+                } else {
+                    field.classList.add('border-green-500');
+                }
+            }
+            
+            // Confirm password match
+            if (field.name === 'confirm_password' && value) {
+                const password = document.querySelector('input[name="password"]').value;
+                if (value !== password) {
+                    field.classList.add('border-red-500');
+                } else {
+                    field.classList.add('border-green-500');
+                }
+            }
+            
+            // Default validation for other fields
+            if (value && !field.classList.contains('border-red-500') && !field.classList.contains('border-green-500')) {
+                field.classList.add('border-green-500');
+            }
+            
+            return true;
+        }
+
+        // Date of Birth Validation - Enhanced
+        const dateOfBirthInput = document.getElementById('dateOfBirthInput');
+        if (dateOfBirthInput) {
+            // Set max date to today (cannot be born in the future)
+            const today = new Date();
+            const maxDate = today.toISOString().split('T')[0];
+            dateOfBirthInput.setAttribute('max', maxDate);
+            
+            // Set min date to 120 years ago
+            const minDate = new Date();
+            minDate.setFullYear(today.getFullYear() - 120);
+            const minDateStr = minDate.toISOString().split('T')[0];
+            dateOfBirthInput.setAttribute('min', minDateStr);
+            
+            // Validate on change
+            dateOfBirthInput.addEventListener('change', function() {
+                validateDateOfBirth(this);
+            });
+            
+            // Validate on blur
+            dateOfBirthInput.addEventListener('blur', function() {
+                if (this.value) {
+                    validateDateOfBirth(this);
+                }
+            });
+            
+            // Prevent manual typing of invalid years
+            dateOfBirthInput.addEventListener('input', function(e) {
+                const value = this.value;
+                
+                // Check if value matches date format
+                if (value && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const parts = value.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const day = parseInt(parts[2]);
+                    
+                    // Validate year range (1900-current year)
+                    const currentYear = new Date().getFullYear();
+                    if (year < 1900 || year > currentYear) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Year',
+                            text: `Year must be between 1900 and ${currentYear}`,
+                            confirmButtonColor: '#10b981',
+                            timer: 3000
+                        });
+                        this.value = '';
+                        this.classList.add('border-red-500', 'shake');
+                        setTimeout(() => this.classList.remove('shake'), 500);
+                        return;
+                    }
+                    
+                    // Validate month (1-12)
+                    if (month < 1 || month > 12) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Month',
+                            text: 'Month must be between 01 and 12',
+                            confirmButtonColor: '#10b981',
+                            timer: 3000
+                        });
+                        this.value = '';
+                        this.classList.add('border-red-500', 'shake');
+                        setTimeout(() => this.classList.remove('shake'), 500);
+                        return;
+                    }
+                    
+                    // Validate day (1-31, considering month)
+                    const daysInMonth = new Date(year, month, 0).getDate();
+                    if (day < 1 || day > daysInMonth) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Day',
+                            text: `Day must be between 01 and ${daysInMonth} for the selected month`,
+                            confirmButtonColor: '#10b981',
+                            timer: 3000
+                        });
+                        this.value = '';
+                        this.classList.add('border-red-500', 'shake');
+                        setTimeout(() => this.classList.remove('shake'), 500);
+                        return;
+                    }
+                }
+            });
+            
+            // Prevent typing non-numeric characters in date input
+            dateOfBirthInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                const value = this.value;
+                
+                // Allow numbers and dash
+                if (!/[0-9\-]/.test(char)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Prevent more than 4 digits in year
+                if (value.length < 4 && char !== '-') {
+                    const year = value.split('-')[0];
+                    if (year && year.length >= 4) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
+        }
+        
+        // Validation function for date of birth
+        function validateDateOfBirth(input) {
+            const value = input.value;
+            
+            if (!value) {
+                input.classList.remove('border-green-500', 'border-yellow-500');
+                input.classList.add('border-red-500');
+                return false;
+            }
+            
+            const selectedDate = new Date(value);
+            const todayDate = new Date();
+            const minDate = new Date();
+            minDate.setFullYear(todayDate.getFullYear() - 120);
+            
+            // Check if valid date
+            if (isNaN(selectedDate.getTime())) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date',
+                    text: 'Please enter a valid date',
+                    confirmButtonColor: '#10b981'
+                });
+                input.value = '';
+                input.classList.add('border-red-500', 'shake');
+                setTimeout(() => input.classList.remove('shake'), 500);
+                return false;
+            }
+            
+            // Check if date is in the future
+            if (selectedDate > todayDate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date',
+                    text: 'Birth date cannot be in the future!',
+                    confirmButtonColor: '#10b981'
+                });
+                input.value = '';
+                input.classList.add('border-red-500', 'shake');
+                setTimeout(() => input.classList.remove('shake'), 500);
+                return false;
+            }
+            
+            // Check if date is too old (more than 120 years ago)
+            if (selectedDate < minDate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date',
+                    text: 'Birth date cannot be more than 120 years ago!',
+                    confirmButtonColor: '#10b981'
+                });
+                input.value = '';
+                input.classList.add('border-red-500', 'shake');
+                setTimeout(() => input.classList.remove('shake'), 500);
+                return false;
+            }
+            
+            // Check if person is at least 1 year old
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(todayDate.getFullYear() - 1);
+            
+            if (selectedDate > oneYearAgo) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Age Verification',
+                    text: 'Patient must be at least 1 year old.',
+                    confirmButtonColor: '#10b981'
+                });
+                input.classList.remove('border-red-500', 'border-green-500');
+                input.classList.add('border-yellow-500');
+                return false;
+            }
+            
+            // Valid date - show success
+            input.classList.remove('border-red-500', 'border-yellow-500');
+            input.classList.add('border-green-500');
+            
+            // Calculate and show age
+            const age = todayDate.getFullYear() - selectedDate.getFullYear();
+            const monthDiff = todayDate.getMonth() - selectedDate.getMonth();
+            const actualAge = monthDiff < 0 || (monthDiff === 0 && todayDate.getDate() < selectedDate.getDate()) ? age - 1 : age;
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Valid Birth Date',
+                text: `Age: ${actualAge} years old`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end',
+                background: '#10b981',
+                color: '#fff'
+            });
+            
+            return true;
+        }
+        
+        // Professional Input Validation
+        
+        // Full Name - Characters Only
+        const fullNameInput = document.getElementById('fullNameInput');
+        if (fullNameInput) {
+            fullNameInput.addEventListener('input', function(e) {
+                // Remove any numbers or special characters except spaces, dots, hyphens, apostrophes
+                let value = e.target.value;
+                let cleaned = value.replace(/[^A-Za-zÑñ\s.'-]/g, '');
+                
+                if (value !== cleaned) {
+                    e.target.value = cleaned;
+                    // Visual feedback
+                    e.target.classList.add('shake');
+                    setTimeout(() => e.target.classList.remove('shake'), 500);
+                }
+            });
+            
+            fullNameInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                if (!/[A-Za-zÑñ\s.'-]/.test(char)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        // Emergency Contact Name - Characters Only
+        const emergencyNameInput = document.getElementById('emergencyNameInput');
+        if (emergencyNameInput) {
+            emergencyNameInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                let cleaned = value.replace(/[^A-Za-zÑñ\s.'-]/g, '');
+                
+                if (value !== cleaned) {
+                    e.target.value = cleaned;
+                    e.target.classList.add('shake');
+                    setTimeout(() => e.target.classList.remove('shake'), 500);
+                }
+            });
+            
+            emergencyNameInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                if (!/[A-Za-zÑñ\s.'-]/.test(char)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        // Contact Number - Auto-format with +63 prefix
+        const contactNumberInput = document.getElementById('contactNumberInput');
+        if (contactNumberInput) {
+            // Set initial value
+            contactNumberInput.value = '+63 ';
+            
+            contactNumberInput.addEventListener('focus', function() {
+                if (this.value === '') {
+                    this.value = '+63 ';
+                }
+            });
+            
+            contactNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                // Always keep +63 prefix
+                if (!value.startsWith('+63')) {
+                    value = '+63 ' + value.replace(/[^0-9]/g, '');
+                }
+                
+                // Remove all non-digits except the + at start
+                let numbers = value.substring(3).replace(/[^0-9]/g, '');
+                
+                // Format: +63 9XX XXX XXXX
+                if (numbers.length > 0) {
+                    let formatted = '+63 ';
+                    if (numbers.length <= 3) {
+                        formatted += numbers;
+                    } else if (numbers.length <= 6) {
+                        formatted += numbers.substring(0, 3) + ' ' + numbers.substring(3);
+                    } else {
+                        formatted += numbers.substring(0, 3) + ' ' + 
+                                   numbers.substring(3, 6) + ' ' + 
+                                   numbers.substring(6, 10);
+                    }
+                    e.target.value = formatted;
+                } else {
+                    e.target.value = '+63 ';
+                }
+                
+                // Prevent cursor from going before +63
+                if (e.target.selectionStart < 4) {
+                    e.target.setSelectionRange(4, 4);
+                }
+            });
+            
+            contactNumberInput.addEventListener('keydown', function(e) {
+                // Prevent deletion of +63 prefix
+                if ((e.key === 'Backspace' || e.key === 'Delete') && 
+                    this.selectionStart <= 4 && this.selectionEnd <= 4) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            contactNumberInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                // Only allow numbers
+                if (!/[0-9]/.test(char)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        // Emergency Contact Number - Auto-format with +63 prefix
+        const emergencyNumberInput = document.getElementById('emergencyNumberInput');
+        if (emergencyNumberInput) {
+            // Set initial value
+            emergencyNumberInput.value = '+63 ';
+            
+            emergencyNumberInput.addEventListener('focus', function() {
+                if (this.value === '') {
+                    this.value = '+63 ';
+                }
+            });
+            
+            emergencyNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                // Always keep +63 prefix
+                if (!value.startsWith('+63')) {
+                    value = '+63 ' + value.replace(/[^0-9]/g, '');
+                }
+                
+                // Remove all non-digits except the + at start
+                let numbers = value.substring(3).replace(/[^0-9]/g, '');
+                
+                // Format: +63 9XX XXX XXXX
+                if (numbers.length > 0) {
+                    let formatted = '+63 ';
+                    if (numbers.length <= 3) {
+                        formatted += numbers;
+                    } else if (numbers.length <= 6) {
+                        formatted += numbers.substring(0, 3) + ' ' + numbers.substring(3);
+                    } else {
+                        formatted += numbers.substring(0, 3) + ' ' + 
+                                   numbers.substring(3, 6) + ' ' + 
+                                   numbers.substring(6, 10);
+                    }
+                    e.target.value = formatted;
+                } else {
+                    e.target.value = '+63 ';
+                }
+                
+                // Prevent cursor from going before +63
+                if (e.target.selectionStart < 4) {
+                    e.target.setSelectionRange(4, 4);
+                }
+            });
+            
+            emergencyNumberInput.addEventListener('keydown', function(e) {
+                // Prevent deletion of +63 prefix
+                if ((e.key === 'Backspace' || e.key === 'Delete') && 
+                    this.selectionStart <= 4 && this.selectionEnd <= 4) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            emergencyNumberInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                // Only allow numbers
+                if (!/[0-9]/.test(char)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            loadRegions();
+            console.log('MediTrack Registration - Philippines Edition with Professional Validation Ready!');
+            
+            // Welcome message
+            Swal.fire({
+                title: 'Welcome to MediTrack!',
+                html: '<p class="text-gray-600">Register now for better healthcare management in the Philippines</p>',
+                icon: 'info',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Get Started',
+                timer: 3000
+            });
+        });
+    </script>
+</body>
+</html>

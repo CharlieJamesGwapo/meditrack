@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Search - MediTrack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
+    <link rel="manifest" href="../assets/images/site.webmanifest">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        body { overflow-x: hidden; background: #f0fdf4; }
+        
+        /* Mobile-specific styles */
+        .mobile-container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+        
+        /* Search input mobile optimization */
+        .mobile-search-input {
+            font-size: 16px; /* Prevents zoom on iOS */
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        
+        /* Touch-friendly buttons */
+        .mobile-button {
+            min-height: 44px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Card mobile optimization */
+        .mobile-card {
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Bottom navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 8px 0;
+            z-index: 50;
+        }
+        
+        /* Safe area for mobile */
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 80px);
+        }
+        
+        /* Swipeable cards */
+        .swipeable-card {
+            transition: transform 0.3s ease;
+        }
+        
+        .swipeable-card:active {
+            transform: scale(0.98);
+        }
+        
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #10b981;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 40;
+        }
+        
+        /* Pull to refresh indicator */
+        .pull-refresh {
+            position: absolute;
+            top: -60px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0fdf4;
+        }
+        
+        /* Search suggestions */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 30;
+        }
+        
+        /* Voice search button */
+        .voice-search-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #10b981;
+            font-size: 20px;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #f0fdf4; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 2px; }
+        
+        /* SweetAlert2 mobile optimization */
+        .swal2-popup {
+            border-radius: 1rem;
+            margin: 20px;
+        }
+        .swal2-confirm {
+            background-color: #10b981 !important;
+            font-size: 16px !important;
+            padding: 12px 24px !important;
+        }
+        
+        /* Loading states */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .mobile-container {
+                padding: 0.75rem;
+            }
+            
+            .mobile-card {
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-container {
+                max-width: 768px;
+                margin: 0 auto;
+            }
+            
+            .bottom-nav {
+                display: none;
+            }
+            
+            .fab {
+                display: none;
+            }
+        }
+    </style>
+    <script src="../js/auth-check.js"></script>
+</head>
+<body class="bg-gray-50 safe-area-bottom">
+    <!-- Pull to Refresh -->
+    <div id="pullRefresh" class="pull-refresh">
+        <i class="fas fa-sync-alt text-green-600 text-xl"></i>
+    </div>
+
+    <!-- Mobile Container -->
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="bg-white rounded-2xl shadow-sm p-4 mb-4 sticky top-0 z-20">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-green-100 p-1">
+                        <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full">
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Search</h1>
+                        <p class="text-xs text-green-600">Find appointments & records</p>
+                    </div>
+                </div>
+                <button onclick="openFilters()" class="p-2 bg-gray-100 rounded-lg">
+                    <i class="fas fa-filter text-gray-600"></i>
+                </button>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="relative">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="mobileSearchInput" placeholder="Search appointments, records, or QR codes..." 
+                    class="mobile-search-input w-full pl-12 pr-20 border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <button onclick="startVoiceSearch()" class="voice-search-btn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="clearMobileSearch" onclick="clearSearch()" class="voice-search-btn hidden">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <!-- Search Suggestions -->
+                <div id="searchSuggestions" class="search-suggestions hidden">
+                    <!-- Suggestions will be populated here -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-4 gap-3 mb-6">
+            <button onclick="quickSearch('appointments')" class="mobile-card bg-green-50 text-green-700 text-center">
+                <i class="fas fa-calendar-alt text-2xl mb-2"></i>
+                <div class="text-xs font-medium">Appointments</div>
+            </button>
+            <button onclick="quickSearch('records')" class="mobile-card bg-blue-50 text-blue-700 text-center">
+                <i class="fas fa-file-medical text-2xl mb-2"></i>
+                <div class="text-xs font-medium">Records</div>
+            </button>
+            <button onclick="quickSearch('qr')" class="mobile-card bg-purple-50 text-purple-700 text-center">
+                <i class="fas fa-qrcode text-2xl mb-2"></i>
+                <div class="text-xs font-medium">QR Scan</div>
+            </button>
+            <button onclick="quickSearch('doctors')" class="mobile-card bg-orange-50 text-orange-700 text-center">
+                <i class="fas fa-user-md text-2xl mb-2"></i>
+                <div class="text-xs font-medium">Doctors</div>
+            </button>
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResults" class="mb-20">
+            <!-- Initial State -->
+            <div id="initialState" class="text-center py-12">
+                <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-600 text-lg">Start searching</p>
+                <p class="text-gray-500 text-sm mt-2">Type to search appointments, records, or scan QR codes</p>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden">
+                <div class="space-y-3">
+                    <div class="mobile-card skeleton h-20"></div>
+                    <div class="mobile-card skeleton h-20"></div>
+                    <div class="mobile-card skeleton h-20"></div>
+                </div>
+            </div>
+            
+            <!-- Results Container -->
+            <div id="resultsContainer" class="space-y-3 hidden">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button onclick="openQRScanner()" class="fab">
+        <i class="fas fa-qrcode text-xl"></i>
+    </button>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="grid grid-cols-5 gap-1">
+            <button onclick="navigateTo('dashboard')" class="mobile-button flex flex-col items-center py-2 text-gray-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Home</span>
+            </button>
+            <button onclick="navigateTo('appointments')" class="mobile-button flex flex-col items-center py-2 text-gray-600">
+                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+                <span class="text-xs">Appointments</span>
+            </button>
+            <button onclick="navigateTo('search')" class="mobile-button flex flex-col items-center py-2 text-green-600">
+                <i class="fas fa-search text-xl mb-1"></i>
+                <span class="text-xs">Search</span>
+            </button>
+            <button onclick="navigateTo('records')" class="mobile-button flex flex-col items-center py-2 text-gray-600">
+                <i class="fas fa-file-medical text-xl mb-1"></i>
+                <span class="text-xs">Records</span>
+            </button>
+            <button onclick="navigateTo('profile')" class="mobile-button flex flex-col items-center py-2 text-gray-600">
+                <i class="fas fa-user text-xl mb-1"></i>
+                <span class="text-xs">Profile</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Mobile Search Functionality
+        let searchTimeout;
+        let isRefreshing = false;
+        let startY = 0;
+        let currentSearchType = 'all';
+        let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+
+        // Initialize
+        window.addEventListener('load', () => {
+            initializeMobileSearch();
+            setupPullToRefresh();
+            setupVoiceSearch();
+        });
+
+        function initializeMobileSearch() {
+            const searchInput = document.getElementById('mobileSearchInput');
+            const clearBtn = document.getElementById('clearMobileSearch');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                // Show/hide clear button
+                if (query) {
+                    clearBtn.classList.remove('hidden');
+                    performMobileSearch(query);
+                } else {
+                    clearBtn.classList.add('hidden');
+                    showInitialState();
+                }
+                
+                // Show suggestions
+                if (query.length >= 2) {
+                    showSearchSuggestions(query);
+                } else {
+                    hideSearchSuggestions();
+                }
+            });
+
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length >= 2) {
+                    showSearchSuggestions(this.value.trim());
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#mobileSearchInput') && !e.target.closest('#searchSuggestions')) {
+                    hideSearchSuggestions();
+                }
+            });
+        }
+
+        // Mobile search with debouncing
+        function performMobileSearch(query) {
+            clearTimeout(searchTimeout);
+            showLoadingState();
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    // Add to search history
+                    addToSearchHistory(query);
+                    
+                    const response = await fetch(`../api/search/unified-search.php?q=${encodeURIComponent(query)}&type=${currentSearchType}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displayMobileResults(data.results, data.type);
+                    } else {
+                        showSearchError(data.message);
+                    }
+                } catch (error) {
+                    console.error('Mobile search error:', error);
+                    showSearchError('Search failed. Please try again.');
+                }
+            }, 300);
+        }
+
+        // Display mobile results
+        function displayMobileResults(results, type) {
+            const container = document.getElementById('resultsContainer');
+            const resultsDiv = document.getElementById('searchResults');
+            
+            let html = '';
+            
+            if (type === 'qr') {
+                if (results.qr && results.qr.success) {
+                    html += displayMobileQRResult(results.qr);
+                } else {
+                    html += `<div class="mobile-card text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-2"></i>
+                        <p class="text-red-600">${results.qr?.message || 'QR code not found'}</p>
+                    </div>`;
+                }
+            } else {
+                // Display appointments
+                if (results.appointments && results.appointments.data.length > 0) {
+                    html += '<div class="mb-4"><h3 class="font-semibold text-gray-700 mb-2">Appointments</h3>';
+                    results.appointments.data.forEach(apt => {
+                        html += displayMobileAppointment(apt);
+                    });
+                    html += '</div>';
+                }
+                
+                // Display medical records
+                if (results.records && results.records.data.length > 0) {
+                    html += '<div><h3 class="font-semibold text-gray-700 mb-2">Medical Records</h3>';
+                    results.records.data.forEach(record => {
+                        html += displayMobileRecord(record);
+                    });
+                    html += '</div>';
+                }
+                
+                if (!html) {
+                    html = `<div class="mobile-card text-center">
+                        <i class="fas fa-search text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-600">No results found</p>
+                    </div>`;
+                }
+            }
+            
+            container.innerHTML = html;
+            resultsDiv.classList.remove('hidden');
+            hideLoadingState();
+        }
+
+        // Mobile appointment display
+        function displayMobileAppointment(apt) {
+            const statusColor = apt.status === 'confirmed' ? 'green' : 
+                              apt.status === 'pending' ? 'yellow' : 
+                              apt.status === 'completed' ? 'blue' : 'red';
+            
+            return `
+                <div class="mobile-card swipeable-card bg-white" onclick="viewAppointmentDetails(${apt.id})">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h5 class="font-semibold text-gray-800">${apt.patient_name || 'Appointment'}</h5>
+                                <span class="px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-700">
+                                    ${apt.status}
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div><i class="fas fa-user-md w-4 text-green-600"></i> Dr. ${apt.doctor_name}</div>
+                                <div><i class="fas fa-calendar w-4 text-blue-600"></i> ${formatDate(apt.appointment_date)}</div>
+                                <div><i class="fas fa-clock w-4 text-purple-600"></i> ${apt.appointment_time}</div>
+                            </div>
+                        </div>
+                        ${apt.token_hash ? `
+                        <div class="ml-3">
+                            <button onclick="event.stopPropagation(); showMobileQR('${apt.token_hash}')" class="p-2 bg-green-100 text-green-600 rounded-lg">
+                                <i class="fas fa-qrcode"></i>
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mobile record display
+        function displayMobileRecord(record) {
+            return `
+                <div class="mobile-card swipeable-card bg-white" onclick="viewRecordDetails(${record.id})">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h5 class="font-semibold text-gray-800 mb-2">${record.patient_name}</h5>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div><i class="fas fa-user-md w-4 text-green-600"></i> Dr. ${record.doctor_name}</div>
+                                <div><i class="fas fa-calendar w-4 text-blue-600"></i> ${formatDate(record.visit_date)}</div>
+                                ${record.diagnosis ? `<div><i class="fas fa-stethoscope w-4 text-purple-600"></i> ${record.diagnosis}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mobile QR result display
+        function displayMobileQRResult(qrData) {
+            const apt = qrData.appointment;
+            return `
+                <div class="mobile-card bg-green-50 border border-green-200">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
+                        <h4 class="font-semibold text-green-800">QR Code Valid</h4>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 mb-3">
+                        <div class="text-sm space-y-2">
+                            <div><strong>Patient:</strong> ${apt.patient_name}</div>
+                            <div><strong>Doctor:</strong> Dr. ${apt.doctor_name}</div>
+                            <div><strong>Date:</strong> ${formatDate(apt.appointment_date)}</div>
+                            <div><strong>Time:</strong> ${apt.appointment_time}</div>
+                        </div>
+                    </div>
+                    <button onclick="checkInPatient(${apt.id})" class="mobile-button bg-green-600 text-white w-full">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Check In Patient
+                    </button>
+                </div>
+            `;
+        }
+
+        // Search suggestions
+        function showSearchSuggestions(query) {
+            const suggestions = getSearchSuggestions(query);
+            const container = document.getElementById('searchSuggestions');
+            
+            if (suggestions.length === 0) {
+                hideSearchSuggestions();
+                return;
+            }
+            
+            container.innerHTML = suggestions.map(suggestion => `
+                <div class="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0" onclick="applySuggestion('${suggestion}')">
+                    <div class="flex items-center">
+                        <i class="fas fa-search text-gray-400 mr-3"></i>
+                        <span>${suggestion}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.classList.remove('hidden');
+        }
+
+        function hideSearchSuggestions() {
+            document.getElementById('searchSuggestions').classList.add('hidden');
+        }
+
+        function getSearchSuggestions(query) {
+            const recentSearches = searchHistory.slice(0, 5);
+            const commonSearches = ['today', 'upcoming', 'completed', 'dr. smith', 'cardiology', 'checkup'];
+            
+            const suggestions = [
+                ...recentSearches.filter(s => s.toLowerCase().includes(query.toLowerCase())),
+                ...commonSearches.filter(s => s.toLowerCase().includes(query.toLowerCase()))
+            ];
+            
+            return [...new Set(suggestions)].slice(0, 5);
+        }
+
+        function applySuggestion(suggestion) {
+            document.getElementById('mobileSearchInput').value = suggestion;
+            hideSearchSuggestions();
+            performMobileSearch(suggestion);
+        }
+
+        function addToSearchHistory(query) {
+            searchHistory.unshift(query);
+            if (searchHistory.length > 10) {
+                searchHistory = searchHistory.slice(0, 10);
+            }
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        }
+
+        // Voice search
+        function setupVoiceSearch() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                // Voice search is available
+            } else {
+                // Hide voice search button if not supported
+                document.querySelector('.voice-search-btn').style.display = 'none';
+            }
+        }
+
+        function startVoiceSearch() {
+            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+                Swal.fire('Not Supported', 'Voice search is not supported on this device', 'info');
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                Swal.fire({
+                    title: 'Listening...',
+                    html: '<i class="fas fa-microphone text-4xl text-red-500 animate-pulse"></i>',
+                    showConfirmButton: false,
+                    allowOutsideClick: false
+                });
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                Swal.close();
+                document.getElementById('mobileSearchInput').value = transcript;
+                performMobileSearch(transcript);
+            };
+            
+            recognition.onerror = function(event) {
+                Swal.close();
+                Swal.fire('Error', 'Voice search failed. Please try again.', 'error');
+            };
+            
+            recognition.onend = function() {
+                Swal.close();
+            };
+            
+            recognition.start();
+        }
+
+        // Pull to refresh
+        function setupPullToRefresh() {
+            const pullRefresh = document.getElementById('pullRefresh');
+            let touchStartY = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchmove', function(e) {
+                const touchY = e.touches[0].clientY;
+                const diff = touchY - touchStartY;
+                
+                if (diff > 60 && window.scrollY === 0) {
+                    pullRefresh.style.transform = `translateY(${Math.min(diff - 60, 60)}px)`;
+                }
+            });
+            
+            document.addEventListener('touchend', function(e) {
+                const touchY = e.changedTouches[0].clientY;
+                const diff = touchY - touchStartY;
+                
+                if (diff > 100 && window.scrollY === 0) {
+                    refreshData();
+                }
+                
+                pullRefresh.style.transform = 'translateY(0)';
+            });
+        }
+
+        function refreshData() {
+            if (isRefreshing) return;
+            
+            isRefreshing = true;
+            const pullRefresh = document.getElementById('pullRefresh');
+            pullRefresh.innerHTML = '<i class="fas fa-sync-alt text-green-600 text-xl animate-spin"></i>';
+            
+            // Simulate data refresh
+            setTimeout(() => {
+                isRefreshing = false;
+                pullRefresh.innerHTML = '<i class="fas fa-sync-alt text-green-600 text-xl"></i>';
+                pullRefresh.style.transform = 'translateY(0)';
+                
+                Swal.fire({
+                    toast: true,
+                    position: 'top',
+                    icon: 'success',
+                    title: 'Data refreshed',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }, 1500);
+        }
+
+        // Quick search
+        function quickSearch(type) {
+            currentSearchType = type;
+            const searchInput = document.getElementById('mobileSearchInput');
+            
+            if (type === 'qr') {
+                openQRScanner();
+            } else {
+                searchInput.focus();
+                searchInput.placeholder = `Search ${type}...`;
+            }
+        }
+
+        // QR Scanner
+        function openQRScanner() {
+            Swal.fire({
+                title: 'QR Scanner',
+                html: `
+                    <div class="text-center">
+                        <div class="relative bg-gray-100 rounded-lg overflow-hidden mx-auto" style="width: 250px; height: 250px;">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-qrcode text-5xl text-gray-400"></i>
+                            </div>
+                            <div class="scanner-line absolute top-0 left-0 right-0 h-1 bg-green-500" style="animation: scan 2s linear infinite;"></div>
+                        </div>
+                        <p class="mt-4 text-gray-600">Position QR code within frame</p>
+                        <div class="mt-4">
+                            <input type="text" id="qrManualInput" placeholder="Enter QR code manually" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Lookup',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => {
+                    const qrCode = document.getElementById('qrManualInput').value;
+                    if (!qrCode) {
+                        Swal.showValidationMessage('Please enter a QR code');
+                        return false;
+                    }
+                    return qrCode;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentSearchType = 'qr';
+                    performMobileSearch(result.value);
+                }
+            });
+        }
+
+        // Navigation
+        function navigateTo(page) {
+            const pages = {
+                'dashboard': 'patient-dashboard.html',
+                'appointments': 'appointments.html',
+                'search': 'mobile-search.html',
+                'records': 'medical-records.html',
+                'profile': 'profile.html'
+            };
+            
+            if (pages[page]) {
+                window.location.href = pages[page];
+            }
+        }
+
+        // Helper functions
+        function showInitialState() {
+            document.getElementById('initialState').classList.remove('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+        }
+
+        function showLoadingState() {
+            document.getElementById('initialState').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+        }
+
+        function hideLoadingState() {
+            document.getElementById('initialState').classList.add('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.remove('hidden');
+        }
+
+        function showSearchError(message) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="mobile-card text-center">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-2"></i>
+                    <p class="text-red-600">${message}</p>
+                    <button onclick="performMobileSearch(document.getElementById('mobileSearchInput').value)" class="mobile-button bg-blue-600 text-white mt-3">
+                        <i class="fas fa-redo mr-2"></i>Retry
+                    </button>
+                </div>
+            `;
+            hideLoadingState();
+        }
+
+        function clearSearch() {
+            document.getElementById('mobileSearchInput').value = '';
+            document.getElementById('clearMobileSearch').classList.add('hidden');
+            showInitialState();
+        }
+
+        function openFilters() {
+            Swal.fire({
+                title: 'Search Filters',
+                html: `
+                    <div class="text-left">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search Type</label>
+                            <select id="filterType" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                <option value="all">All</option>
+                                <option value="appointments">Appointments</option>
+                                <option value="records">Medical Records</option>
+                                <option value="qr">QR Codes</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                            <input type="date" id="filterDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="filterStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                <option value="">All Status</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Apply Filters',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Apply filters logic here
+                    const filterType = document.getElementById('filterType').value;
+                    currentSearchType = filterType;
+                    
+                    Swal.fire('Filters Applied', 'Search filters have been applied', 'success');
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function viewAppointmentDetails(id) {
+            // Implementation for viewing appointment details
+            console.log('View appointment:', id);
+        }
+
+        function viewRecordDetails(id) {
+            // Implementation for viewing record details
+            console.log('View record:', id);
+        }
+
+        function showMobileQR(tokenHash) {
+            // Implementation for showing QR code
+            console.log('Show QR code:', tokenHash);
+        }
+
+        function checkInPatient(appointmentId) {
+            // Implementation for patient check-in
+            console.log('Check in patient:', appointmentId);
+        }
+    </script>
+</body>
+</html>

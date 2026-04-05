@@ -1,0 +1,14 @@
+{
+    "name": "meditrack/healthcare-system",
+    "description": "Modern Healthcare Management System",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "endroid/qr-code": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MediTrack\\": "src/"
+        }
+    }
+}

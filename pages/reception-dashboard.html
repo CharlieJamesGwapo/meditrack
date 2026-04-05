@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reception Dashboard - MediTrack</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
+    <link rel="manifest" href="../assets/images/site.webmanifest">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        body { overflow-x: hidden; background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); }
+        
+        /* Professional Animations */
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        /* Professional Cards */
+        .card-professional {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-professional:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0.5rem;
+        }
+        
+        .sidebar-item:hover {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .sidebar-item.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .status-scheduled { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+        .status-checked_in { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+        .status-in_progress { background: linear-gradient(135deg, #dbeafe, #93c5fd); color: #1e40af; }
+        .status-completed { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #5b21b6; }
+        
+        /* Professional Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        /* Scanner Styles */
+        #qr-reader {
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 3px solid #10b981;
+        }
+        
+        .scanner-container {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        
+        /* Communication Panel */
+        .chat-bubble {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            margin: 0.5rem 0;
+            position: relative;
+        }
+        
+        .chat-bubble.sent {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 0.25rem;
+        }
+        
+        .chat-bubble.received {
+            background: #f3f4f6;
+            color: #374151;
+            border-bottom-left-radius: 0.25rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 50;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+            }
+            
+            .card-professional {
+                margin: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .chat-bubble {
+                max-width: 90%;
+            }
+        }
+        
+        /* Loading States */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Professional Form Styles */
+        .form-input {
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .form-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            background: white;
+        }
+        
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        /* Ensure all buttons and interactive elements are clickable */
+        button, a, input, select, textarea {
+            pointer-events: auto;
+            position: relative;
+        }
+        
+        /* Ensure proper stacking context */
+        .content-section {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 z-50 md:translate-x-0">
+        <div class="p-6">
+            <!-- Logo -->
+            <div class="flex items-center mb-8">
+                <div class="w-12 h-12 rounded-full overflow-hidden bg-green-100 p-1 shadow-md mr-3">
+                    <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">MediTrack</h2>
+                    <p class="text-sm text-green-600 font-semibold">Reception Portal</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="space-y-2">
+                <a href="#" class="sidebar-item active flex items-center px-4 py-3 text-gray-700" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt mr-3"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 text-gray-700" data-section="checkin">
+                    <i class="fas fa-qrcode mr-3"></i>
+                    <span>QR Check-in</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 text-gray-700" data-section="patients">
+                    <i class="fas fa-users mr-3"></i>
+                    <span>Patient Management</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 text-gray-700" data-section="appointments">
+                    <i class="fas fa-calendar-alt mr-3"></i>
+                    <span>Appointments</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 text-gray-700" data-section="communication">
+                    <i class="fas fa-comments mr-3"></i>
+                    <span>Communication</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-4 py-3 text-gray-700" data-section="account">
+                    <i class="fas fa-user-cog mr-3"></i>
+                    <span>Account Settings</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- User Info -->
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-green-600"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="userName" class="text-sm font-semibold text-gray-700"></p>
+                    <p class="text-xs text-gray-500">Reception Staff</p>
+                </div>
+                <button id="logoutBtn" class="ml-auto text-gray-400 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content ml-64 min-h-screen">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="mobileMenuBtn" class="md:hidden mr-4 text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 id="pageTitle" class="text-2xl font-bold text-gray-900">Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button id="notificationBtn" class="text-gray-600 hover:text-gray-900 relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span id="notificationBadge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                        </button>
+                    </div>
+                    <!-- Current Time -->
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span id="currentTime"></span>
+                    </div>
+                    <span id="userName" class="text-gray-700 font-medium"></span>
+                    <button id="logoutBtn" class="text-gray-600 hover:text-red-600 transition">
+                        <i class="fas fa-sign-out-alt text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="p-6">
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="content-section">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                <i class="fas fa-calendar-check text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Today's Appointments</p>
+                                <p id="todayCount" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                <i class="fas fa-user-check text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Checked In</p>
+                                <p id="checkedInCount" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                <i class="fas fa-clock text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Pending</p>
+                                <p id="pendingCount" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                                <i class="fas fa-check-circle text-white text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500">Completed</p>
+                                <p id="completedCount" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Scanner and Appointments Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- QR Scanner -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">
+                            <i class="fas fa-qrcode mr-2 text-green-600"></i>QR Code Scanner
+                        </h3>
+                        
+                        <div id="scannerAlert" class="hidden mb-4 p-4 rounded-lg"></div>
+                        
+                        <div class="mb-6">
+                            <button id="startScanBtn" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-semibold transition mb-3">
+                                <i class="fas fa-camera mr-2"></i>Start Camera Scan
+                            </button>
+                            <button id="stopScanBtn" class="hidden w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 font-semibold transition mb-3">
+                                <i class="fas fa-stop mr-2"></i>Stop Scanner
+                            </button>
+                        </div>
+                        
+                        <div id="qr-reader" class="hidden mb-6"></div>
+                        
+                        <div class="border-t pt-6">
+                            <p class="text-sm text-gray-600 mb-3">Or enter token manually:</p>
+                            <input type="text" id="manualToken" placeholder="Enter QR token hash" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <button id="manualCheckInBtn" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-semibold transition">
+                                <i class="fas fa-check mr-2"></i>Check In Patient
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Today's Appointments -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-900">Today's Appointments</h3>
+                            <button id="refreshBtn" class="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 w-full">
+                                <option value="">All Status</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="checked_in">Checked In</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div id="appointmentsList" class="space-y-4 max-h-96 overflow-y-auto">
+                            <div class="text-center py-8">
+                                <i class="fas fa-spinner fa-spin text-2xl text-green-600 mb-2"></i>
+                                <p class="text-gray-600">Loading appointments...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Check-in Section -->
+            <div id="checkinSection" class="content-section" style="display: none;">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">QR Code Check-in</h3>
+                    <p class="text-gray-600 mb-6">Use this section for dedicated QR code scanning and patient check-in.</p>
+                    <div class="text-center py-8">
+                        <i class="fas fa-qrcode text-4xl text-green-600 mb-4"></i>
+                        <p class="text-gray-600">QR scanning functionality is available in the Dashboard section.</p>
+                        <button onclick="switchSection('dashboard')" class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                            Go to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Details Modal -->
+    <div id="patientModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-lg rounded-xl bg-white max-h-screen overflow-y-auto">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">Patient Details & Triage</h3>
+                    <button id="closePatientModal" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Patient Information -->
+                    <div>
+                        <div id="patientDetails" class="mb-6"></div>
+                    </div>
+                    
+                    <!-- Triage Form -->
+                    <div>
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-6">
+                            <h4 class="text-lg font-semibold text-green-800 mb-4">
+                                <i class="fas fa-clipboard-check mr-2"></i>Triage Assessment
+                            </h4>
+                            
+                            <form id="triageForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Chief Complaint</label>
+                                    <textarea id="chiefComplaint" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Patient's main concern..."></textarea>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Blood Pressure</label>
+                                        <input type="text" id="bloodPressure" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="120/80">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Temperature (°C)</label>
+                                        <input type="number" id="temperature" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="36.5">
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Heart Rate (bpm)</label>
+                                        <input type="number" id="heartRate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="72">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+                                        <input type="number" id="weight" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="70.0">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                                    <select id="priorityLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        <option value="low">Low - Routine</option>
+                                        <option value="medium">Medium - Urgent</option>
+                                        <option value="high">High - Emergency</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                                    <textarea id="triageNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Any additional observations or notes..."></textarea>
+                                </div>
+                                
+                                <div class="flex gap-3 pt-4">
+                                    <button type="button" id="saveTriageBtn" class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-semibold transition">
+                                        <i class="fas fa-save mr-2"></i>Save Triage
+                                    </button>
+                                    <button type="button" id="clearTriageBtn" class="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition">
+                                        Clear
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check-in Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-1/3 mx-auto p-5 border w-11/12 md:w-1/3 shadow-lg rounded-xl bg-white">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                    <i class="fas fa-check text-green-600 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Check-in Successful!</h3>
+                <p id="successMessage" class="text-gray-600 mb-6"></p>
+                <button id="closeSuccessModal" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth-check.js"></script>
+    <script src="../js/reception-dashboard-complete.js"></script>
+</body>
+</html>

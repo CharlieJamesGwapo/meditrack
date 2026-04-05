@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - MediTrack</title>
+    <link rel="icon" type="image/png" href="../assets/images/logo.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        body { overflow-x: hidden; }
+        .sidebar { transition: transform 0.3s ease; z-index: 40; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+        }
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item.active { background-color: rgba(255,255,255,0.2); }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-green-600 text-white shadow-2xl">
+        <div class="p-6 border-b border-green-500">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full overflow-hidden bg-white p-1 shadow-lg">
+                    <img src="../assets/images/logo.jpg" alt="MediTrack Logo" class="w-full h-full object-cover rounded-full">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">MediTrack</h1>
+                    <p class="text-xs text-green-100">Admin Panel</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="p-4 space-y-2 overflow-y-auto" style="max-height: calc(100vh - 240px);">
+            <a href="admin-dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-th-large w-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </a>
+            <a href="patients.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-users w-5"></i>
+                <span class="font-medium">Patients</span>
+            </a>
+            <a href="doctors.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-user-md w-5"></i>
+                <span class="font-medium">Doctors</span>
+            </a>
+            <a href="appointments.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-calendar-check w-5"></i>
+                <span class="font-medium">Appointments</span>
+            </a>
+            <a href="departments.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-hospital w-5"></i>
+                <span class="font-medium">Departments</span>
+            </a>
+            <a href="reports.html" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-chart-bar w-5"></i>
+                <span class="font-medium">Reports</span>
+            </a>
+            <a href="history-log.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-history w-5"></i>
+                <span class="font-medium">History Log</span>
+            </a>
+            <a href="settings.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-500">
+                <i class="fas fa-cog w-5"></i>
+                <span class="font-medium">Settings</span>
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-500 bg-green-600">
+            <div class="flex items-center space-x-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <i class="fas fa-user-shield text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold text-sm">Admin User</p>
+                    <p class="text-xs text-green-100">Administrator</p>
+                </div>
+            </div>
+            <button id="logoutBtn" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="md:ml-64 min-h-screen">
+        <!-- Top Navigation Bar -->
+        <nav class="bg-white shadow-md sticky top-0 z-20">
+            <div class="px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-green-600">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-800">Reports & Analytics</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="hidden sm:flex items-center space-x-2 text-gray-600">
+                            <i class="fas fa-clock text-green-600"></i>
+                            <span id="realTimeClock" class="text-sm font-medium"></span>
+                        </div>
+                        <span class="pulse px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-semibold">
+                            <i class="fas fa-circle text-xs mr-1"></i>Live
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Reports Content -->
+        <div class="p-4 sm:p-6 lg:p-8">
+            <!-- Header -->
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Reports & Analytics Dashboard</h1>
+                <p class="text-gray-600">Comprehensive insights and data visualization</p>
+            </div>
+
+            <!-- Date Filter -->
+            <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calendar text-green-600"></i>
+                        <span class="font-semibold text-gray-700">Date Range:</span>
+                    </div>
+                    <button onclick="setDateRange('today')" id="btnToday" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold transition hover:bg-green-700 text-sm">
+                        Today
+                    </button>
+                    <button onclick="setDateRange('week')" id="btnWeek" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-200 text-sm">
+                        This Week
+                    </button>
+                    <button onclick="setDateRange('month')" id="btnMonth" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-200 text-sm">
+                        This Month
+                    </button>
+                    <button onclick="setDateRange('year')" id="btnYear" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-200 text-sm">
+                        This Year
+                    </button>
+                    <button onclick="exportReport()" class="ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center space-x-2 text-sm">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-calendar-check text-2xl"></i>
+                        </div>
+                        <i class="fas fa-arrow-up text-sm"></i>
+                    </div>
+                    <p class="text-sm font-medium opacity-90 mb-1">Total Appointments</p>
+                    <p id="totalAppointments" class="text-4xl font-bold">0</p>
+                    <p class="text-xs opacity-75 mt-2">+12% from last period</p>
+                </div>
+                
+                <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <i class="fas fa-arrow-up text-sm"></i>
+                    </div>
+                    <p class="text-sm font-medium opacity-90 mb-1">Total Patients</p>
+                    <p id="totalPatients" class="text-4xl font-bold">0</p>
+                    <p class="text-xs opacity-75 mt-2">+8% from last period</p>
+                </div>
+                
+                <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-user-md text-2xl"></i>
+                        </div>
+                        <i class="fas fa-arrow-up text-sm"></i>
+                    </div>
+                    <p class="text-sm font-medium opacity-90 mb-1">Active Doctors</p>
+                    <p id="totalDoctors" class="text-4xl font-bold">0</p>
+                    <p class="text-xs opacity-75 mt-2">+3% from last period</p>
+                </div>
+                
+                <div class="stat-card bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-hospital text-2xl"></i>
+                        </div>
+                        <i class="fas fa-minus text-sm"></i>
+                    </div>
+                    <p class="text-sm font-medium opacity-90 mb-1">Departments</p>
+                    <p id="totalDepartments" class="text-4xl font-bold">0</p>
+                    <p class="text-xs opacity-75 mt-2">No change</p>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Appointments Trend Chart -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Appointments Trend</h3>
+                    <canvas id="appointmentsTrendChart" height="250"></canvas>
+                </div>
+                
+                <!-- Status Distribution Chart -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Status Distribution</h3>
+                    <canvas id="statusDistributionChart" height="250"></canvas>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Department Analytics Chart -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Department Analytics</h3>
+                    <canvas id="departmentChart" height="250"></canvas>
+                </div>
+                
+                <!-- Patient Demographics Chart -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Patient Demographics</h3>
+                    <canvas id="demographicsChart" height="250"></canvas>
+                </div>
+            </div>
+
+            <!-- Doctor Performance Table -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Doctor Performance</h3>
+                    <button onclick="loadReportsData()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center space-x-2 text-sm">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Doctor</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Appointments</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Patients</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorPerformanceTable" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                    <i class="fas fa-spinner fa-spin text-3xl text-green-600 mb-2"></i>
+                                    <p>Loading data...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '../api';
+        let currentDateRange = 'today';
+        let charts = {};
+        
+        // Real-Time Clock
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            document.getElementById('realTimeClock').textContent = now.toLocaleString('en-US', options);
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('hidden');
+        });
+        
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.add('hidden');
+        });
+        
+        // Set Date Range
+        function setDateRange(range) {
+            currentDateRange = range;
+            
+            // Update button styles
+            ['btnToday', 'btnWeek', 'btnMonth', 'btnYear'].forEach(id => {
+                const btn = document.getElementById(id);
+                btn.classList.remove('bg-green-600', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            
+            const activeBtn = document.getElementById('btn' + range.charAt(0).toUpperCase() + range.slice(1));
+            activeBtn.classList.remove('bg-gray-100', 'text-gray-700');
+            activeBtn.classList.add('bg-green-600', 'text-white');
+            
+            loadReportsData();
+        }
+        
+        // Load Reports Data
+        async function loadReportsData() {
+            try {
+                // Show loading state
+                showLoadingState();
+                
+                // Fetch data from API
+                const response = await fetch(`${API_BASE_URL}/admin/reports-data.php?range=${currentDateRange}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch reports data');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateDashboard(result);
+                } else {
+                    showErrorState(result.message || 'Failed to load data');
+                }
+                
+            } catch (error) {
+                console.error('Error loading reports data:', error);
+                showErrorState(error.message);
+            }
+        }
+        
+        // Show Loading State
+        function showLoadingState() {
+            document.getElementById('totalAppointments').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            document.getElementById('totalPatients').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            document.getElementById('totalDoctors').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            document.getElementById('totalDepartments').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+        
+        // Show Error State
+        function showErrorState(message) {
+            document.getElementById('totalAppointments').textContent = '0';
+            document.getElementById('totalPatients').textContent = '0';
+            document.getElementById('totalDoctors').textContent = '0';
+            document.getElementById('totalDepartments').textContent = '0';
+            
+            // Show empty charts
+            updateDashboard({
+                overview: {
+                    totalAppointments: 0,
+                    totalPatients: 0,
+                    totalDoctors: 0,
+                    totalDepartments: 0
+                },
+                appointmentsTrend: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    data: [0, 0, 0, 0, 0, 0, 0]
+                },
+                statusDistribution: {
+                    labels: ['No Data'],
+                    data: [1]
+                },
+                departmentAnalytics: {
+                    labels: ['No Data'],
+                    data: [1]
+                },
+                demographics: {
+                    labels: ['No Data'],
+                    data: [1]
+                },
+                doctorPerformance: []
+            });
+            
+            console.error('Reports Error:', message);
+        }
+        
+        // Update Dashboard
+        function updateDashboard(data) {
+            // Update overview stats
+            document.getElementById('totalAppointments').textContent = data.overview.totalAppointments;
+            document.getElementById('totalPatients').textContent = data.overview.totalPatients;
+            document.getElementById('totalDoctors').textContent = data.overview.totalDoctors;
+            document.getElementById('totalDepartments').textContent = data.overview.totalDepartments;
+            
+            // Update charts
+            updateAppointmentsTrendChart(data.appointmentsTrend);
+            updateStatusDistributionChart(data.statusDistribution);
+            updateDepartmentChart(data.departmentAnalytics);
+            updateDemographicsChart(data.demographics);
+            
+            // Update doctor performance table
+            updateDoctorPerformanceTable(data.doctorPerformance);
+        }
+        
+        // Appointments Trend Chart
+        function updateAppointmentsTrendChart(data) {
+            const ctx = document.getElementById('appointmentsTrendChart').getContext('2d');
+            
+            if (charts.appointmentsTrend) {
+                charts.appointmentsTrend.destroy();
+            }
+            
+            charts.appointmentsTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Appointments',
+                        data: data.data,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 5
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Status Distribution Chart
+        function updateStatusDistributionChart(data) {
+            const ctx = document.getElementById('statusDistributionChart').getContext('2d');
+            
+            if (charts.statusDistribution) {
+                charts.statusDistribution.destroy();
+            }
+            
+            charts.statusDistribution = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [
+                            '#10b981',
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#ef4444'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Department Chart
+        function updateDepartmentChart(data) {
+            const ctx = document.getElementById('departmentChart').getContext('2d');
+            
+            if (charts.department) {
+                charts.department.destroy();
+            }
+            
+            charts.department = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Appointments',
+                        data: data.data,
+                        backgroundColor: '#10b981',
+                        borderRadius: 8,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Demographics Chart
+        function updateDemographicsChart(data) {
+            const ctx = document.getElementById('demographicsChart').getContext('2d');
+            
+            if (charts.demographics) {
+                charts.demographics.destroy();
+            }
+            
+            charts.demographics = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(239, 68, 68, 0.7)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update Doctor Performance Table
+        function updateDoctorPerformanceTable(doctors) {
+            const tbody = document.getElementById('doctorPerformanceTable');
+            
+            if (doctors.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                            <p>No data available</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = doctors.map(doctor => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-user-md text-green-600"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-gray-900">${doctor.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm text-gray-700">${doctor.department}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${doctor.appointments}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${doctor.patients}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <i class="fas fa-star text-yellow-400 mr-1"></i>
+                            <span class="text-sm font-semibold text-gray-900">${doctor.rating}</span>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Export Report
+        function exportReport() {
+            alert('Export functionality will download a PDF report with all current data and charts.');
+            // In production, this would generate and download a PDF
+        }
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Auto-refresh every 60 seconds
+        setInterval(loadReportsData, 60000);
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            loadReportsData();
+        });
+        
+        console.log('Reports Page - Ready! Auto-refresh every 60 seconds');
+    </script>
+</body>
+</html>
