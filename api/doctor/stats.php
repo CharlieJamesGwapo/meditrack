@@ -7,6 +7,14 @@ require_once '../../config/database.php';
 require_once '../../config/config.php';
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // Check authentication
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
@@ -43,7 +51,7 @@ try {
     // Count checked-in appointments
     $checkedInQuery = "SELECT COUNT(*) as count FROM appointments 
                        WHERE doctor_id = :doctor_id 
-                       AND status = 'checked-in'
+                       AND status = 'checked_in'
                        AND appointment_date = CURDATE()";
     $checkedInStmt = $db->prepare($checkedInQuery);
     $checkedInStmt->execute([':doctor_id' => $doctorId]);

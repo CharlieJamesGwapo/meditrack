@@ -70,9 +70,10 @@ try {
         $doctor['rating'] = 4.5 + (rand(0, 8) / 10); // Temporary random rating 4.5-5.3
         $doctor['rating'] = round($doctor['rating'], 1);
         
-        // Format profile image path
+        // Format profile image path - use APP_URL for absolute path
         if (!empty($doctor['profile_image'])) {
-            $doctor['profile_image_url'] = '../../uploads/' . $doctor['profile_image'];
+            $baseUrl = defined('APP_URL') ? APP_URL : '';
+            $doctor['profile_image_url'] = $baseUrl . '/uploads/' . $doctor['profile_image'];
         } else {
             $doctor['profile_image_url'] = null;
         }

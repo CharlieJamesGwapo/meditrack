@@ -11,6 +11,21 @@ class QRCodeGenerator {
         $this->db = $db;
     }
     
+    /**
+     * Get the server base URL from settings or auto-detect
+     */
+    private function getServerBaseUrl() {
+        if (defined('APP_URL')) {
+            return APP_URL;
+        }
+        $ip = $_SERVER['SERVER_ADDR'] ?? gethostbyname(gethostname());
+        if ($ip === '::1') $ip = '127.0.0.1';
+        $port = $_SERVER['SERVER_PORT'] ?? '80';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $portSuffix = ($port === '80' || $port === '443') ? '' : ':' . $port;
+        return "{$scheme}://{$ip}{$portSuffix}/meditrack";
+    }
+
     public function generateQRCode($appointment_id) {
         try {
             // Create QR payload
@@ -19,26 +34,26 @@ class QRCodeGenerator {
                 'timestamp' => time(),
                 'random' => bin2hex(random_bytes(16))
             ];
-            
+
             $payloadJson = json_encode($payload);
             $secretKey = defined('SECRET_KEY') ? SECRET_KEY : 'meditrack_secret_2024';
             $signature = hash_hmac('sha256', $payloadJson, $secretKey);
             $tokenHash = hash('sha256', $payloadJson . $signature);
-            
+
             // Calculate expiry
             $expiryHours = defined('QR_EXPIRY_HOURS') ? QR_EXPIRY_HOURS : 24;
             $expiresAt = date('Y-m-d H:i:s', strtotime('+' . $expiryHours . ' hours'));
-            
+
             // Store in database (update if exists)
-            $query = "INSERT INTO qr_tokens (appointment_id, qr_payload, signature, token_hash, expires_at) 
+            $query = "INSERT INTO qr_tokens (appointment_id, qr_payload, signature, token_hash, expires_at)
                       VALUES (:appointment_id, :qr_payload, :signature, :token_hash, :expires_at)
-                      ON DUPLICATE KEY UPDATE 
+                      ON DUPLICATE KEY UPDATE
                       qr_payload = VALUES(qr_payload),
                       signature = VALUES(signature),
                       token_hash = VALUES(token_hash),
                       expires_at = VALUES(expires_at),
                       is_used = 0";
-            
+
             $stmt = $this->db->prepare($query);
             $stmt->execute([
                 ':appointment_id' => $appointment_id,
@@ -47,95 +62,80 @@ class QRCodeGenerator {
                 ':token_hash' => $tokenHash,
                 ':expires_at' => $expiresAt
             ]);
-            
-            // Generate QR code using Google Charts API
+
+            // Build the QR content: a URL that works on the local network
+            $baseUrl = $this->getServerBaseUrl();
+            $qrContent = "{$baseUrl}/pages/qr-checkin.html?token={$tokenHash}";
+
+            // Generate QR code image
             $qrSize = defined('QR_SIZE') ? QR_SIZE : 300;
-            $qrData = urlencode($tokenHash);
-            
-            // Google Charts QR Code API URL
-            $qrImageUrl = "https://chart.googleapis.com/chart?chs={$qrSize}x{$qrSize}&cht=qr&chl={$qrData}&choe=UTF-8";
-            
-            // Get image data
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 10,
-                    'ignore_errors' => true
-                ]
-            ]);
-            
-            $imageData = @file_get_contents($qrImageUrl, false, $context);
-            
-            if ($imageData !== false && !empty($imageData)) {
-                // Successfully got QR image from Google
-                $qrImageBase64 = base64_encode($imageData);
-                
-                return [
-                    'token_hash' => $tokenHash,
-                    'qr_image' => 'data:image/png;base64,' . $qrImageBase64,
-                    'expires_at' => $expiresAt,
-                    'method' => 'google_charts'
-                ];
-            } else {
-                // Fallback: Generate simple QR using SVG
-                $qrImageSvg = $this->generateSimpleQR($tokenHash, $qrSize);
-                
-                return [
-                    'token_hash' => $tokenHash,
-                    'qr_image' => $qrImageSvg,
-                    'expires_at' => $expiresAt,
-                    'method' => 'svg_fallback'
-                ];
-            }
-            
+            $qrImageData = $this->generateQRImage($qrContent, $qrSize);
+
+            return [
+                'token_hash' => $tokenHash,
+                'qr_image' => $qrImageData,
+                'qr_url' => $qrContent,
+                'expires_at' => $expiresAt,
+                'server_url' => $baseUrl
+            ];
+
         } catch (Exception $e) {
             error_log("QR Generation Error: " . $e->getMessage());
             throw new Exception("Failed to generate QR code: " . $e->getMessage());
         }
     }
-    
+
     /**
-     * Generate a simple QR-like pattern using SVG
+     * Generate QR image - returns base64 data URI or falls back to direct URL
+     * Designed to NEVER crash, even if the server blocks all outbound HTTP requests.
      */
-    private function generateSimpleQR($data, $size = 300) {
-        $hash = hash('sha256', $data);
-        $gridSize = 25;
-        $cellSize = $size / $gridSize;
-        
-        $svg = '<?xml version="1.0" encoding="UTF-8"?>';
-        $svg .= '<svg xmlns="http://www.w3.org/2000/svg" width="' . $size . '" height="' . $size . '" viewBox="0 0 ' . $size . ' ' . $size . '">';
-        $svg .= '<rect width="' . $size . '" height="' . $size . '" fill="white"/>';
-        
-        // Generate pattern based on hash
-        for ($row = 0; $row < $gridSize; $row++) {
-            for ($col = 0; $col < $gridSize; $col++) {
-                $index = ($row * $gridSize + $col) % strlen($hash);
-                $value = hexdec($hash[$index]);
-                
-                if ($value % 2 === 0) {
-                    $x = $col * $cellSize;
-                    $y = $row * $cellSize;
-                    $svg .= '<rect x="' . $x . '" y="' . $y . '" width="' . $cellSize . '" height="' . $cellSize . '" fill="black"/>';
+    private function generateQRImage($data, $size = 300) {
+        $encodedData = urlencode($data);
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data={$encodedData}&format=png";
+
+        // Try cURL first
+        if (function_exists('curl_init')) {
+            try {
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $qrUrl,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 10,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_USERAGENT => 'MediTrack/1.0'
+                ]);
+                $imageData = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $error = curl_error($ch);
+                curl_close($ch);
+
+                if (!$error && $httpCode === 200 && $imageData && strlen($imageData) > 100) {
+                    return 'data:image/png;base64,' . base64_encode($imageData);
                 }
+            } catch (Exception $e) {
+                error_log("QR cURL error: " . $e->getMessage());
             }
         }
-        
-        // Add corner markers
-        $markerSize = $cellSize * 7;
-        $markers = [
-            ['x' => 0, 'y' => 0],
-            ['x' => $size - $markerSize, 'y' => 0],
-            ['x' => 0, 'y' => $size - $markerSize]
-        ];
-        
-        foreach ($markers as $marker) {
-            $svg .= '<rect x="' . $marker['x'] . '" y="' . $marker['y'] . '" width="' . $markerSize . '" height="' . $markerSize . '" fill="black"/>';
-            $svg .= '<rect x="' . ($marker['x'] + $cellSize) . '" y="' . ($marker['y'] + $cellSize) . '" width="' . ($markerSize - 2 * $cellSize) . '" height="' . ($markerSize - 2 * $cellSize) . '" fill="white"/>';
-            $svg .= '<rect x="' . ($marker['x'] + $cellSize * 2) . '" y="' . ($marker['y'] + $cellSize * 2) . '" width="' . ($markerSize - 4 * $cellSize) . '" height="' . ($markerSize - 4 * $cellSize) . '" fill="black"/>';
+
+        // Try file_get_contents
+        if (ini_get('allow_url_fopen')) {
+            try {
+                $context = stream_context_create([
+                    'http' => ['timeout' => 8, 'ignore_errors' => true],
+                    'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+                ]);
+                $imageData = @file_get_contents($qrUrl, false, $context);
+                if ($imageData && strlen($imageData) > 100) {
+                    return 'data:image/png;base64,' . base64_encode($imageData);
+                }
+            } catch (Exception $e) {
+                error_log("QR file_get_contents error: " . $e->getMessage());
+            }
         }
-        
-        $svg .= '</svg>';
-        
-        return 'data:image/svg+xml;base64,' . base64_encode($svg);
+
+        // Fallback: return the URL directly - browser will load it as img src
+        return $qrUrl;
     }
     
     public function validateQRCode($tokenHash, $userId = null) {

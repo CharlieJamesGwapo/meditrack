@@ -1,13 +1,21 @@
 <?php
-session_start();
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 require_once '../../config/database.php';
 require_once '../../config/config.php';
 
-header('Content-Type: application/json');
-
-// Check if user is logged in and is admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+// Check authentication
+if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
 }
 
 try {
@@ -55,11 +63,11 @@ try {
     $overview['totalPatients'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Total Doctors
-    $stmt = $db->query("SELECT COUNT(*) as count FROM doctors");
+    $stmt = $db->query("SELECT COUNT(*) as count FROM users WHERE role = 'doctor'");
     $overview['totalDoctors'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Total Departments
-    $stmt = $db->query("SELECT COUNT(DISTINCT department) as count FROM doctors WHERE department IS NOT NULL");
+    $stmt = $db->query("SELECT COUNT(*) as count FROM departments");
     $overview['totalDepartments'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Appointments Trend (last 7 days)
@@ -110,20 +118,22 @@ try {
     $deptData = [];
     
     $stmt = $db->prepare("
-        SELECT d.department, COUNT(a.id) as count 
-        FROM doctors d 
-        LEFT JOIN appointments a ON d.id = a.doctor_id AND a.appointment_date BETWEEN :start AND :end
-        WHERE d.department IS NOT NULL
-        GROUP BY d.department
-        ORDER BY count DESC
-        LIMIT 5
+        SELECT 
+            d.name as dept_name,
+            COUNT(a.id) as appointment_count 
+        FROM departments d
+        LEFT JOIN doctors doc ON d.name = doc.department
+        LEFT JOIN appointments a ON doc.id = a.doctor_id AND a.appointment_date BETWEEN :start AND :end
+        GROUP BY d.id, d.name
+        ORDER BY appointment_count DESC
+        LIMIT 8
     ");
     $stmt->execute([':start' => $startDate, ':end' => $endDate]);
     $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     foreach ($departments as $dept) {
-        $deptLabels[] = $dept['department'];
-        $deptData[] = (int)$dept['count'];
+        $deptLabels[] = $dept['dept_name'];
+        $deptData[] = (int)$dept['appointment_count'];
     }
     
     // If no data, provide empty arrays
@@ -168,16 +178,18 @@ try {
     
     $stmt = $db->prepare("
         SELECT 
-            d.full_name as name,
-            d.department,
+            u.username as name,
+            d.department as department,
             COUNT(DISTINCT a.id) as appointments,
             COUNT(DISTINCT a.patient_id) as patients,
             COALESCE(AVG(CASE WHEN a.status = 'completed' THEN 5 ELSE 4 END), 4.5) as rating
-        FROM doctors d
+        FROM users u
+        LEFT JOIN doctors d ON d.user_id = u.id AND u.role = 'doctor'
         LEFT JOIN appointments a ON d.id = a.doctor_id AND a.appointment_date BETWEEN :start AND :end
-        GROUP BY d.id, d.full_name, d.department
+        WHERE u.role = 'doctor'
+        GROUP BY u.id, u.username, d.department
         HAVING appointments > 0
-        ORDER BY appointments DESC
+        ORDER BY appointments DESC, patients DESC
         LIMIT 10
     ");
     $stmt->execute([':start' => $startDate, ':end' => $endDate]);
@@ -206,7 +218,15 @@ try {
     
     echo json_encode($response);
     
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage()
+    ]);
 } catch (Exception $e) {
-    error_log("Reports data error: " . $e->getMessage());
-    sendJSON(['success' => false, 'message' => 'Error fetching reports data: ' . $e->getMessage()], 500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error: ' . $e->getMessage()
+    ]);
 }
+?>

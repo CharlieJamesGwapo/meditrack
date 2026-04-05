@@ -4,35 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Dashboard - MediTrack</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
     <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
     <link rel="manifest" href="../assets/images/site.webmanifest">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
         body { overflow-x: hidden; background: #f0fdf4; }
-        
+
         /* Pulse animation for online status */
         .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: .5; }
         }
-        
+
         /* Card hover effects */
         .appointment-card { transition: all 0.3s ease; }
         .appointment-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2); }
-        
+
         /* Notification badge pulse */
         .notification-badge {
             animation: notificationPulse 2s infinite;
@@ -41,13 +43,13 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
         }
-        
+
         /* Custom scrollbar - green theme */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f0fdf4; }
         ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #059669; }
-        
+
         /* SweetAlert2 custom styling */
         .swal2-popup {
             border-radius: 1rem;
@@ -58,6 +60,91 @@
         .swal2-cancel {
             background-color: #6b7280 !important;
         }
+
+        /* Mobile Bottom Nav */
+        @media (max-width: 767px) {
+            body { padding-bottom: 80px; }
+            .mobile-nav-btn.active { color: #10b981; }
+            .mobile-nav-btn { transition: color 0.2s; }
+            .mobile-nav-btn:active { transform: scale(0.95); }
+
+            /* Hide desktop tab nav on mobile */
+            .desktop-tabs { display: none !important; }
+
+            /* Stats grid 2x2 on mobile */
+            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .stats-grid > div { padding: 1rem !important; }
+            .stats-grid .text-2xl { font-size: 1.25rem !important; }
+
+            /* Search tabs scrollable */
+            .search-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; }
+            .search-tabs::-webkit-scrollbar { display: none; }
+            .search-tabs button { white-space: nowrap; flex-shrink: 0; }
+
+            /* Full-screen modals on mobile */
+            .modal-content-mobile {
+                position: fixed !important;
+                inset: 0 !important;
+                margin: 0 !important;
+                top: 0 !important;
+                border-radius: 0 !important;
+                max-height: 100vh !important;
+                overflow-y: auto !important;
+                width: 100% !important;
+            }
+
+            /* Touch-friendly inputs */
+            input, select, textarea { font-size: 16px !important; min-height: 44px; }
+            button { min-height: 44px; }
+
+            /* Welcome section compact on mobile */
+            .welcome-section { padding: 1rem !important; }
+            .welcome-section h1 { font-size: 1.5rem !important; }
+            .welcome-section .w-24 { width: 4rem !important; height: 4rem !important; }
+
+            /* Doctor cards single column */
+            .doctor-grid { grid-template-columns: 1fr !important; }
+
+            /* Appointment cards */
+            .appointment-card .grid-cols-2 { grid-template-columns: 1fr !important; }
+
+            /* Nav compact */
+            .nav-brand-text { display: none; }
+
+            /* Prevent iOS zoom */
+            input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="date"], select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Safe area for notched phones */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            @media (max-width: 767px) {
+                body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+                #mobileBottomNav { padding-bottom: env(safe-area-inset-bottom); }
+            }
+        }
+
+        /* Touch improvements */
+        * { -webkit-tap-highlight-color: transparent; }
+        @media (hover: none) and (pointer: coarse) {
+            .appointment-card:hover { transform: none; box-shadow: none; }
+            button:active { opacity: 0.8; }
+        }
+
+        /* QR Full Screen Modal */
+        .qr-fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .qr-fullscreen img { max-width: 80vw; max-height: 80vw; }
     </style>
     <script src="../js/auth-check.js"></script>
 </head>
@@ -71,7 +158,7 @@
                         <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full">
                     </div>
                     <span class="text-xl font-bold text-gray-800">MediTrack</span>
-                    <span class="ml-2 text-sm text-green-600 font-semibold">Patient Portal</span>
+                    <span class="ml-2 text-sm text-green-600 font-semibold nav-brand-text">Patient Portal</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="hidden sm:flex items-center space-x-2 text-gray-600">
@@ -89,7 +176,7 @@
                             <span id="userName" class="hidden sm:block text-gray-700 font-medium"></span>
                             <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
                         </button>
-                        
+
                         <!-- Dropdown Menu -->
                         <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                             <div class="p-4 border-b border-gray-200">
@@ -131,7 +218,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Welcome Section with Profile -->
-        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-2xl p-6 text-white mb-8">
+        <div class="welcome-section bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-2xl p-6 text-white mb-8">
             <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <div id="welcomeProfilePic" class="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden">
                     <i class="fas fa-user"></i>
@@ -156,7 +243,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
@@ -209,9 +296,9 @@
                 <i class="fas fa-search text-green-600 mr-3"></i>
                 Quick Search
             </h2>
-            
+
             <!-- Search Tabs -->
-            <div class="flex space-x-4 mb-4 border-b">
+            <div class="search-tabs flex space-x-4 mb-4 border-b">
                 <button class="search-tab-btn active px-4 py-2 border-b-2 border-green-600 text-green-600 font-medium" data-search-type="all">
                     <i class="fas fa-globe mr-2"></i>All
                 </button>
@@ -225,31 +312,31 @@
                     <i class="fas fa-qrcode mr-2"></i>QR Lookup
                 </button>
             </div>
-            
+
             <!-- Search Input -->
             <div id="searchInputContainer" class="mb-4">
                 <div class="relative">
                     <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="unifiedSearchInput" placeholder="Search appointments, records, or enter QR code..." 
+                    <input type="text" id="unifiedSearchInput" placeholder="Search appointments, records, or enter QR code..."
                         class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     <button id="clearSearchBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             </div>
-            
+
             <!-- QR Scanner Input -->
             <div id="qrInputContainer" class="mb-4 hidden">
                 <div class="relative">
                     <i class="fas fa-qrcode absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="qrTokenInput" placeholder="Enter QR code or scan..." 
+                    <input type="text" id="qrTokenInput" placeholder="Enter QR code or scan..."
                         class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     <button id="scanQRBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
                         <i class="fas fa-camera mr-1"></i>Scan
                     </button>
                 </div>
             </div>
-            
+
             <!-- Search Results -->
             <div id="searchResults" class="hidden">
                 <div class="border-t pt-4">
@@ -262,7 +349,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="mb-6 border-b border-gray-200">
+        <div class="mb-6 border-b border-gray-200 desktop-tabs">
             <nav class="-mb-px flex space-x-8">
                 <button class="tab-btn active border-b-2 border-green-600 py-4 px-1 text-sm font-medium text-green-600" data-tab="doctors">
                     <i class="fas fa-user-md mr-2"></i>Find Doctors
@@ -307,7 +394,7 @@
                     <div class="md:col-span-2">
                         <div class="relative">
                             <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="searchDoctors" placeholder="Search by name or specialization..." 
+                            <input type="text" id="searchDoctors" placeholder="Search by name or specialization..."
                                 class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 oninput="filterDoctors()">
                         </div>
@@ -318,7 +405,7 @@
                 </div>
             </div>
 
-            <div id="doctorsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="doctorsList" class="doctor-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div class="col-span-full text-center py-12">
                     <i class="fas fa-spinner fa-spin text-5xl text-green-600 mb-4"></i>
                     <p class="text-gray-600 text-lg">Loading doctors...</p>
@@ -356,14 +443,14 @@
 
     <!-- Profile Modal -->
     <div id="profileModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white modal-content-mobile">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-900">My Profile</h3>
                 <button onclick="closeProfileModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
-            
+
             <form id="profileForm" class="space-y-6">
                 <!-- Profile Picture Section -->
                 <div class="flex flex-col items-center mb-6">
@@ -375,7 +462,7 @@
                         <i class="fas fa-camera mr-2"></i>Change Picture
                     </button>
                 </div>
-                
+
                 <!-- Personal Information -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -391,7 +478,7 @@
                         <input type="text" id="profileLastName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
@@ -402,24 +489,8 @@
                         <input type="tel" id="profilePhone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
                     </div>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Specialization *</label>
-                        <input type="text" id="profileSpecialization" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Department</label>
-                        <input type="text" id="profileDepartment" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Bio</label>
-                    <textarea id="profileBio" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth</label>
                         <input type="date" id="profileDOB" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
@@ -438,13 +509,33 @@
                             <option value="O-">O-</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+                        <select id="profileGender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Address</label>
                     <textarea id="profileAddress" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
                 </div>
-                
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Emergency Contact Name</label>
+                        <input type="text" id="profileEmergencyName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Emergency Contact Phone</label>
+                        <input type="tel" id="profileEmergencyPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+
                 <div class="flex justify-end space-x-3 pt-4 border-t">
                     <button type="button" onclick="closeProfileModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                         Cancel
@@ -466,7 +557,7 @@
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
-            
+
             <div class="space-y-6">
                 <!-- Account Settings -->
                 <div class="bg-gray-50 p-4 rounded-lg">
@@ -483,7 +574,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Notification Settings -->
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <h4 class="font-semibold text-lg mb-4 flex items-center">
@@ -504,7 +595,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <!-- Privacy Settings -->
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <h4 class="font-semibold text-lg mb-4 flex items-center">
@@ -521,7 +612,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-end space-x-3 pt-4 border-t">
                     <button onclick="closeSettingsModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                         Close
@@ -543,7 +634,7 @@
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <form id="changePasswordForm" class="space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password *</label>
@@ -557,7 +648,7 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password *</label>
                     <input type="password" id="confirmPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
                 </div>
-                
+
                 <div class="flex justify-end space-x-3 pt-4 border-t">
                     <button type="button" onclick="closeChangePasswordModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                         Cancel
@@ -579,7 +670,7 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Confirm Logout</h3>
                 <p class="text-gray-600 mb-6">Are you sure you want to logout? Any unsaved changes will be lost.</p>
-                
+
                 <div class="flex justify-center space-x-3">
                     <button onclick="closeLogoutModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                         Cancel
@@ -598,10 +689,10 @@
             <div class="mt-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Medical Record</h3>
                 <div id="recordAlert" class="hidden mb-4 p-4 rounded-lg"></div>
-                
+
                 <form id="recordForm" class="space-y-4">
                     <input type="hidden" id="appointmentId">
-                    
+
                     <div class="bg-gray-50 p-4 rounded-lg mb-4">
                         <h4 class="font-semibold mb-2">Patient Information</h4>
                         <div id="patientInfo" class="text-sm text-gray-700"></div>
@@ -677,17 +768,17 @@
 
     <!-- Book Appointment Modal -->
     <div id="bookAppointmentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white modal-content-mobile">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-900">Book Appointment</h3>
                 <button onclick="closeBookingModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
-            
+
             <form id="bookingForm" class="space-y-4">
                 <input type="hidden" id="bookingDoctorId">
-                
+
                 <div class="bg-green-50 p-4 rounded-lg mb-4">
                     <h4 class="font-semibold mb-2">Doctor Information</h4>
                     <div id="bookingDoctorInfo" class="text-sm text-gray-700"></div>
@@ -710,7 +801,7 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Reason for Visit *</label>
                     <textarea id="bookingReason" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
                 </div>
-                
+
                 <div class="flex justify-end space-x-3 pt-4 border-t">
                     <button type="button" onclick="closeBookingModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                         Cancel
@@ -723,35 +814,63 @@
         </div>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+        <div class="flex justify-around items-center h-16">
+            <button class="mobile-nav-btn active flex flex-col items-center justify-center w-full h-full text-green-600" data-tab="doctors" onclick="switchMobileTab('doctors')">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs mt-1 font-medium">Home</span>
+            </button>
+            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" data-tab="doctors" onclick="switchMobileTab('doctors')">
+                <i class="fas fa-user-md text-xl"></i>
+                <span class="text-xs mt-1 font-medium">Doctors</span>
+            </button>
+            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" data-tab="appointments" onclick="switchMobileTab('appointments')">
+                <i class="fas fa-calendar-alt text-xl"></i>
+                <span class="text-xs mt-1 font-medium">Bookings</span>
+            </button>
+            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" onclick="generateLatestQR()">
+                <i class="fas fa-qrcode text-xl"></i>
+                <span class="text-xs mt-1 font-medium">QR Code</span>
+            </button>
+            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" data-tab="profile" onclick="switchMobileTab('profile')">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs mt-1 font-medium">Profile</span>
+            </button>
+        </div>
+    </nav>
+
     <script>
-        // Real-Time Clock
+        // Modal & utility functions only. Main logic in patient-dashboard-complete.js
+
+        // Clock (also in external JS but needed immediately)
         function updateClock() {
             const now = new Date();
-            const options = { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
+            const options = {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
             };
             document.getElementById('realTimeClock').textContent = now.toLocaleString('en-US', options);
-            
+
             // Update current date
             const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
             document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', dateOptions);
         }
-        
+
         updateClock();
         setInterval(updateClock, 1000);
-        
+
         // Profile Dropdown Toggle
         document.getElementById('profileMenuBtn').addEventListener('click', function(e) {
             e.stopPropagation();
             const dropdown = document.getElementById('profileDropdown');
             dropdown.classList.toggle('hidden');
         });
-        
+
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('profileDropdown');
@@ -760,27 +879,27 @@
                 dropdown.classList.add('hidden');
             }
         });
-        
+
         // Modal Functions
         function openProfileModal() {
             document.getElementById('profileModal').classList.remove('hidden');
             document.getElementById('profileDropdown').classList.add('hidden');
             loadProfileData();
         }
-        
+
         function closeProfileModal() {
             document.getElementById('profileModal').classList.add('hidden');
         }
-        
+
         function openSettingsModal() {
             document.getElementById('settingsModal').classList.remove('hidden');
             document.getElementById('profileDropdown').classList.add('hidden');
         }
-        
+
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.add('hidden');
         }
-        
+
         function openScheduleModal() {
             Swal.fire({
                 title: 'Schedule Management',
@@ -791,31 +910,31 @@
             });
             document.getElementById('profileDropdown').classList.add('hidden');
         }
-        
+
         function openChangePasswordModal() {
             document.getElementById('changePasswordModal').classList.remove('hidden');
             document.getElementById('settingsModal').classList.add('hidden');
         }
-        
+
         function closeChangePasswordModal() {
             document.getElementById('changePasswordModal').classList.add('hidden');
             document.getElementById('settingsModal').classList.remove('hidden');
         }
-        
+
         function confirmLogout() {
             document.getElementById('logoutModal').classList.remove('hidden');
             document.getElementById('profileDropdown').classList.add('hidden');
         }
-        
+
         function closeLogoutModal() {
             document.getElementById('logoutModal').classList.add('hidden');
         }
-        
+
         function performLogout() {
             // Clear session
             localStorage.clear();
             sessionStorage.clear();
-            
+
             // Show loading
             Swal.fire({
                 title: 'Logging out...',
@@ -825,59 +944,75 @@
                 timer: 1000,
                 timerProgressBar: true
             });
-            
+
             // Redirect to login
             setTimeout(() => {
-                window.location.href = '../pages/login.html';
+                window.location.href = 'login.html';
             }, 1000);
         }
-        
+
         // Profile Picture Preview
         function previewProfilePic(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('profilePicPreview').innerHTML = 
+                    document.getElementById('profilePicPreview').innerHTML =
                         '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('profilePicture').innerHTML = 
+                    document.getElementById('profilePicture').innerHTML =
                         '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('dropdownProfilePic').innerHTML = 
+                    document.getElementById('dropdownProfilePic').innerHTML =
                         '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('welcomeProfilePic').innerHTML = 
+                    document.getElementById('welcomeProfilePic').innerHTML =
                         '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
-        
+
         // Load Profile Data
         function loadProfileData() {
-            // Simulate loading from database
-            const doctorData = {
-                firstName: 'John',
-                middleName: 'Michael',
-                lastName: 'Smith',
-                email: 'dr.smith@meditrack.com',
-                phone: '+1234567890',
-                specialization: 'Cardiologist',
-                department: 'Cardiology',
-                bio: 'Experienced cardiologist with 15 years of practice.'
-            };
-            
-            document.getElementById('profileFirstName').value = doctorData.firstName;
-            document.getElementById('profileMiddleName').value = doctorData.middleName;
-            document.getElementById('profileLastName').value = doctorData.lastName;
-            document.getElementById('profileEmail').value = doctorData.email;
-            document.getElementById('profilePhone').value = doctorData.phone;
-            document.getElementById('profileSpecialization').value = doctorData.specialization;
-            document.getElementById('profileDepartment').value = doctorData.department;
-            document.getElementById('profileBio').value = doctorData.bio;
+            // Use patientProfile global from patient-dashboard-complete.js if available
+            if (typeof patientProfile !== 'undefined' && patientProfile) {
+                const p = patientProfile;
+                document.getElementById('profileFirstName').value = p.first_name || p.firstName || '';
+                document.getElementById('profileMiddleName').value = p.middle_name || p.middleName || '';
+                document.getElementById('profileLastName').value = p.last_name || p.lastName || '';
+                document.getElementById('profileEmail').value = p.email || '';
+                document.getElementById('profilePhone').value = p.contact_number || p.phone || '';
+                document.getElementById('profileDOB').value = p.date_of_birth || p.dob || '';
+                document.getElementById('profileBloodGroup').value = p.blood_group || p.bloodGroup || '';
+                document.getElementById('profileGender').value = p.gender || '';
+                document.getElementById('profileAddress').value = p.address || '';
+                document.getElementById('profileEmergencyName').value = p.emergency_contact_name || p.emergencyContactName || '';
+                document.getElementById('profileEmergencyPhone').value = p.emergency_contact_phone || p.emergencyContactPhone || '';
+            } else {
+                // Fallback: try to fetch from API
+                fetch('../api/patient/get-profile.php')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const p = data.patient || data.profile || {};
+                            document.getElementById('profileFirstName').value = p.first_name || '';
+                            document.getElementById('profileMiddleName').value = p.middle_name || '';
+                            document.getElementById('profileLastName').value = p.last_name || '';
+                            document.getElementById('profileEmail').value = p.email || '';
+                            document.getElementById('profilePhone').value = p.contact_number || p.phone || '';
+                            document.getElementById('profileDOB').value = p.date_of_birth || '';
+                            document.getElementById('profileBloodGroup').value = p.blood_group || '';
+                            document.getElementById('profileGender').value = p.gender || '';
+                            document.getElementById('profileAddress').value = p.address || '';
+                            document.getElementById('profileEmergencyName').value = p.emergency_contact_name || '';
+                            document.getElementById('profileEmergencyPhone').value = p.emergency_contact_phone || '';
+                        }
+                    })
+                    .catch(err => console.error('Error loading profile:', err));
+            }
         }
-        
+
         // Profile Form Submit
         document.getElementById('profileForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             // Show loading
             Swal.fire({
                 title: 'Updating Profile...',
@@ -889,56 +1024,56 @@
                     Swal.showLoading();
                 }
             });
-            
+
             const formData = new FormData();
             formData.append('first_name', document.getElementById('profileFirstName').value);
             formData.append('middle_name', document.getElementById('profileMiddleName').value);
             formData.append('last_name', document.getElementById('profileLastName').value);
             formData.append('email', document.getElementById('profileEmail').value);
             formData.append('phone', document.getElementById('profilePhone').value);
-            formData.append('specialization', document.getElementById('profileSpecialization').value);
-            formData.append('department', document.getElementById('profileDepartment').value);
-            formData.append('bio', document.getElementById('profileBio').value);
-            
+            formData.append('date_of_birth', document.getElementById('profileDOB').value);
+            formData.append('blood_group', document.getElementById('profileBloodGroup').value);
+            formData.append('gender', document.getElementById('profileGender').value);
+            formData.append('address', document.getElementById('profileAddress').value);
+            formData.append('emergency_contact_name', document.getElementById('profileEmergencyName').value);
+            formData.append('emergency_contact_phone', document.getElementById('profileEmergencyPhone').value);
+
             const profilePic = document.getElementById('profilePicInput').files[0];
             if (profilePic) {
                 formData.append('profile_picture', profilePic);
             }
-            
+
             try {
-                // Real API call to save to database
-                const response = await fetch('../api/doctor/update-profile.php', {
+                const response = await fetch('../api/patient/update-profile.php', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
-                        text: 'Profile updated successfully and saved to database',
+                        text: 'Profile updated successfully',
                         confirmButtonColor: '#10b981',
                         timer: 2000
                     });
-                    
+
                     // Update display with new data
                     const fullName = formData.get('first_name') + ' ' + (formData.get('middle_name') ? formData.get('middle_name') + ' ' : '') + formData.get('last_name');
                     document.getElementById('userName').textContent = fullName;
                     document.getElementById('welcomeName').textContent = fullName;
-                    document.getElementById('dropdownName').textContent = 'Dr. ' + fullName;
+                    document.getElementById('dropdownName').textContent = fullName;
                     document.getElementById('dropdownEmail').textContent = formData.get('email');
-                    document.getElementById('specialization').textContent = formData.get('specialization');
-                    document.getElementById('department').textContent = formData.get('department');
-                    document.getElementById('doctorEmail').textContent = formData.get('email');
-                    document.getElementById('doctorPhone').textContent = formData.get('phone');
-                    
+                    if (document.getElementById('patientEmail')) document.getElementById('patientEmail').textContent = formData.get('email');
+                    if (document.getElementById('patientPhone')) document.getElementById('patientPhone').textContent = formData.get('phone');
+
                     // Reload profile to get updated data including new profile picture
                     setTimeout(() => {
-                        loadDoctorProfile();
+                        if (typeof loadDoctorProfile === 'function') loadDoctorProfile();
                     }, 500);
-                    
+
                     closeProfileModal();
                 } else {
                     Swal.fire({
@@ -957,15 +1092,15 @@
                 });
             }
         });
-        
+
         // Change Password Form Submit
         document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             if (newPassword !== confirmPassword) {
                 Swal.fire({
                     icon: 'error',
@@ -975,7 +1110,7 @@
                 });
                 return;
             }
-            
+
             if (newPassword.length < 6) {
                 Swal.fire({
                     icon: 'warning',
@@ -985,7 +1120,7 @@
                 });
                 return;
             }
-            
+
             try {
                 // Simulate API call
                 Swal.fire({
@@ -1006,7 +1141,7 @@
                 });
             }
         });
-        
+
         // Save Settings
         function saveSettings() {
             const settings = {
@@ -1016,7 +1151,7 @@
                 showProfile: document.getElementById('showProfile').checked,
                 onlineBooking: document.getElementById('onlineBooking').checked
             };
-            
+
             // Simulate saving to database
             Swal.fire({
                 icon: 'success',
@@ -1027,36 +1162,36 @@
             });
             closeSettingsModal();
         }
-        
+
         // Idle Timeout Security
         let idleTime = 0;
         let idleInterval;
         let idleWarningShown = false;
         const IDLE_TIMEOUT = 30; // 30 seconds
         const WARNING_TIME = 20; // Show warning at 20 seconds
-        
+
         function resetIdleTimer() {
             idleTime = 0;
             idleWarningShown = false;
         }
-        
+
         function startIdleTimer() {
             // Reset timer on user activity
             document.addEventListener('mousemove', resetIdleTimer);
             document.addEventListener('keypress', resetIdleTimer);
             document.addEventListener('click', resetIdleTimer);
             document.addEventListener('scroll', resetIdleTimer);
-            
+
             // Check idle time every second
             idleInterval = setInterval(function() {
                 idleTime++;
-                
+
                 // Show warning at 20 seconds
                 if (idleTime >= WARNING_TIME && !idleWarningShown) {
                     idleWarningShown = true;
                     showIdleWarning();
                 }
-                
+
                 // Auto logout at 30 seconds
                 if (idleTime >= IDLE_TIMEOUT) {
                     clearInterval(idleInterval);
@@ -1064,10 +1199,10 @@
                 }
             }, 1000);
         }
-        
+
         function showIdleWarning() {
             const timeLeft = IDLE_TIMEOUT - idleTime;
-            
+
             Swal.fire({
                 title: 'Inactivity Warning',
                 html: `You will be logged out in <b>${timeLeft}</b> seconds due to inactivity.<br><br>Do you want to continue your session?`,
@@ -1111,10 +1246,10 @@
                 }
             });
         }
-        
+
         function performIdleLogout() {
             clearInterval(idleInterval);
-            
+
             Swal.fire({
                 title: 'Session Expired',
                 text: 'You have been logged out due to inactivity',
@@ -1128,52 +1263,48 @@
                 window.location.href = '../index.html';
             });
         }
-        
-        // Load Doctor Profile from Database
+
+        // Load Patient Profile from Database
         async function loadDoctorProfile() {
             try {
-                const response = await fetch('../api/doctor/profile.php');
+                const response = await fetch('../api/patient/get-profile.php');
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    const doctor = data.doctor;
-                    
+                    const profile = data.patient || data.profile;
+
                     // Update all display elements
-                    const fullName = `${doctor.first_name || ''} ${doctor.middle_name || ''} ${doctor.last_name || ''}`.trim();
-                    document.getElementById('userName').textContent = fullName;
-                    document.getElementById('welcomeName').textContent = fullName;
-                    document.getElementById('dropdownName').textContent = 'Dr. ' + fullName;
-                    document.getElementById('dropdownEmail').textContent = doctor.email || '';
-                    document.getElementById('specialization').textContent = doctor.specialization || 'Specialist';
-                    document.getElementById('department').textContent = doctor.department || 'Department';
-                    document.getElementById('doctorEmail').textContent = doctor.email || '';
-                    document.getElementById('doctorPhone').textContent = doctor.phone || '';
-                    
+                    const fullName = profile.full_name || profile.username || 'Patient';
+                    const el = (id) => document.getElementById(id);
+                    if (el('userName')) el('userName').textContent = fullName;
+                    if (el('welcomeName')) el('welcomeName').textContent = fullName;
+                    if (el('dropdownName')) el('dropdownName').textContent = fullName;
+                    if (el('dropdownEmail')) el('dropdownEmail').textContent = profile.email || '';
+                    if (el('patientEmail')) el('patientEmail').textContent = profile.email || '';
+                    if (el('patientPhone')) el('patientPhone').textContent = profile.contact_number || profile.phone || '';
+
                     // Update profile pictures if exists
-                    if (doctor.profile_picture) {
-                        const imgSrc = `../uploads/${doctor.profile_picture}`;
+                    const profileImg = profile.profile_image || profile.profile_image_path || profile.profile_picture;
+                    if (profileImg) {
+                        const imgSrc = profileImg.startsWith('http') || profileImg.startsWith('../') ? profileImg : `../uploads/${profileImg}`;
                         const imgHtml = `<img src="${imgSrc}" class="w-full h-full object-cover">`;
-                        document.getElementById('profilePicture').innerHTML = imgHtml;
-                        document.getElementById('dropdownProfilePic').innerHTML = imgHtml;
-                        document.getElementById('welcomeProfilePic').innerHTML = imgHtml;
+                        if (el('profilePicture')) el('profilePicture').innerHTML = imgHtml;
+                        if (el('dropdownProfilePic')) el('dropdownProfilePic').innerHTML = imgHtml;
+                        if (el('welcomeProfilePic')) el('welcomeProfilePic').innerHTML = imgHtml;
                     }
                 } else {
                     // Fallback to default data
-                    const doctorName = 'John Smith';
-                    document.getElementById('userName').textContent = doctorName;
-                    document.getElementById('welcomeName').textContent = doctorName;
-                    document.getElementById('dropdownName').textContent = 'Dr. ' + doctorName;
-                    document.getElementById('dropdownEmail').textContent = 'dr.smith@meditrack.com';
-                    document.getElementById('specialization').textContent = 'Cardiologist';
-                    document.getElementById('department').textContent = 'Cardiology';
-                    document.getElementById('doctorEmail').textContent = 'dr.smith@meditrack.com';
-                    document.getElementById('doctorPhone').textContent = '+1234567890';
+                    const patientName = 'Patient';
+                    document.getElementById('userName').textContent = patientName;
+                    document.getElementById('welcomeName').textContent = patientName;
+                    document.getElementById('dropdownName').textContent = patientName;
+                    document.getElementById('dropdownEmail').textContent = '';
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
             }
         }
-        
+
         // Enhanced Search Functionality
         let currentSearchType = 'all';
         let searchTimeout;
@@ -1188,10 +1319,10 @@
                 });
                 this.classList.add('active', 'border-green-600', 'text-green-600');
                 this.classList.remove('border-transparent', 'text-gray-500');
-                
+
                 // Update search type
                 currentSearchType = this.dataset.searchType;
-                
+
                 // Toggle input containers
                 if (currentSearchType === 'qr') {
                     document.getElementById('searchInputContainer').classList.add('hidden');
@@ -1200,7 +1331,7 @@
                     document.getElementById('searchInputContainer').classList.remove('hidden');
                     document.getElementById('qrInputContainer').classList.add('hidden');
                 }
-                
+
                 // Clear previous results
                 document.getElementById('searchResults').classList.add('hidden');
                 clearSearchInputs();
@@ -1210,17 +1341,17 @@
         // Unified search input
         const searchInput = document.getElementById('unifiedSearchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
-        
+
         searchInput.addEventListener('input', function() {
             const query = this.value.trim();
-            
+
             // Show/hide clear button
             if (query) {
                 clearSearchBtn.classList.remove('hidden');
             } else {
                 clearSearchBtn.classList.add('hidden');
             }
-            
+
             // Debounced search
             clearTimeout(searchTimeout);
             if (query.length >= 2) {
@@ -1245,29 +1376,63 @@
             }
         });
 
-        // Scan QR button
+        // Scan QR button - opens real camera scanner
         document.getElementById('scanQRBtn').addEventListener('click', function() {
-            // Simulate QR scanning (in real implementation, would use camera API)
+            let html5QrScanner = null;
+
             Swal.fire({
                 title: 'QR Scanner',
                 html: `
                     <div class="text-center">
-                        <i class="fas fa-qrcode text-6xl text-green-600 mb-4"></i>
-                        <p>Position QR code within the frame</p>
-                        <div class="border-2 border-green-600 rounded-lg p-4 mt-4 bg-gray-100">
-                            <i class="fas fa-camera text-4xl text-gray-400"></i>
-                        </div>
+                        <div id="patient-qr-reader" style="width: 100%;"></div>
+                        <p class="mt-2 text-gray-600 text-sm">Position QR code within the frame</p>
                     </div>
                 `,
                 showCancelButton: true,
-                confirmButtonText: 'Simulate Scan',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Simulate scanned QR code
-                    const simulatedToken = 'simulated_qr_token_' + Math.random().toString(36).substr(2, 9);
-                    qrTokenInput.value = simulatedToken;
-                    performQRSearch(simulatedToken);
+                showConfirmButton: false,
+                cancelButtonText: 'Cancel',
+                didOpen: () => {
+                    if (typeof Html5Qrcode === 'undefined') {
+                        document.getElementById('patient-qr-reader').innerHTML = '<p class="text-red-500">QR scanner library not loaded. Please refresh.</p>';
+                        return;
+                    }
+                    html5QrScanner = new Html5Qrcode("patient-qr-reader");
+                    html5QrScanner.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            // Extract token from URL if it's a full URL
+                            let token = decodedText;
+                            try {
+                                const url = new URL(decodedText);
+                                const urlToken = url.searchParams.get('token');
+                                if (urlToken) token = urlToken;
+                            } catch (e) {
+                                // Not a URL, use as-is
+                            }
+
+                            // Stop scanner and close modal
+                            html5QrScanner.stop().then(() => {
+                                html5QrScanner.clear();
+                                Swal.close();
+                                qrTokenInput.value = token;
+                                performQRSearch(token);
+                            });
+                        },
+                        (errorMessage) => { /* ignore scan errors */ }
+                    ).catch((err) => {
+                        console.error('Camera error:', err);
+                        document.getElementById('patient-qr-reader').innerHTML = `
+                            <div class="text-center py-4">
+                                <i class="fas fa-camera-slash text-4xl text-red-400 mb-2" style="display:block;"></i>
+                                <p class="text-red-500 text-sm">Could not access camera. Please check permissions or enter the QR code manually.</p>
+                            </div>`;
+                    });
+                },
+                willClose: () => {
+                    if (html5QrScanner) {
+                        html5QrScanner.stop().catch(() => {});
+                    }
                 }
             });
         });
@@ -1276,10 +1441,10 @@
         async function performSearch(query) {
             try {
                 showSearchLoading();
-                
+
                 const response = await fetch(`../api/search/unified-search.php?q=${encodeURIComponent(query)}&type=${currentSearchType}`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     displaySearchResults(data.results, data.type);
                 } else {
@@ -1295,10 +1460,10 @@
         async function performQRSearch(token) {
             try {
                 showSearchLoading();
-                
+
                 const response = await fetch(`../api/search/unified-search.php?type=qr&qr_token=${encodeURIComponent(token)}`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     displaySearchResults(data.results, 'qr');
                 } else {
@@ -1314,9 +1479,9 @@
         function displaySearchResults(results, type) {
             const container = document.getElementById('searchResultsContainer');
             const resultsDiv = document.getElementById('searchResults');
-            
+
             let html = '';
-            
+
             if (type === 'qr') {
                 if (results.qr && results.qr.success) {
                     html += displayQRResult(results.qr);
@@ -1335,7 +1500,7 @@
                     });
                     html += '</div>';
                 }
-                
+
                 // Display medical records
                 if (results.records && results.records.data.length > 0) {
                     html += '<div><h4 class="font-semibold text-gray-700 mb-3"><i class="fas fa-file-medical mr-2"></i>Medical Records</h4>';
@@ -1344,7 +1509,7 @@
                     });
                     html += '</div>';
                 }
-                
+
                 if (!html) {
                     html = `<div class="text-center py-8 text-gray-600">
                         <i class="fas fa-search text-4xl mb-2"></i>
@@ -1352,17 +1517,17 @@
                     </div>`;
                 }
             }
-            
+
             container.innerHTML = html;
             resultsDiv.classList.remove('hidden');
         }
 
         // Display appointment result
         function displayAppointmentResult(apt) {
-            const statusColor = apt.status === 'confirmed' ? 'green' : 
-                              apt.status === 'pending' ? 'yellow' : 
+            const statusColor = apt.status === 'confirmed' ? 'green' :
+                              apt.status === 'pending' ? 'yellow' :
                               apt.status === 'completed' ? 'blue' : 'red';
-            
+
             return `
                 <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer" onclick="viewAppointmentDetails(${apt.id})">
                     <div class="flex items-start justify-between">
@@ -1505,9 +1670,72 @@
             // Implementation for patient check-in
             console.log('Check in patient:', appointmentId);
         }
-        
+
+        // Mobile tab switching
+        function switchMobileTab(tabName) {
+            // Switch tab content
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            const targetTab = document.getElementById(tabName + 'Tab');
+            if (targetTab) targetTab.classList.remove('hidden');
+
+            // Update desktop tabs too
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-green-600', 'text-green-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            const desktopBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            if (desktopBtn) {
+                desktopBtn.classList.add('active', 'border-green-600', 'text-green-600');
+                desktopBtn.classList.remove('border-transparent', 'text-gray-500');
+            }
+
+            // Update mobile nav active state
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('text-green-600');
+                btn.classList.add('text-gray-400');
+            });
+
+            const activeBtn = document.querySelector(`.mobile-nav-btn[data-tab="${tabName}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.classList.add('text-green-600');
+                activeBtn.classList.remove('text-gray-400');
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Generate QR for latest appointment
+        function generateLatestQR() {
+            if (typeof allAppointments !== 'undefined' && allAppointments.length > 0) {
+                const scheduled = allAppointments.filter(a => a.status === 'scheduled' || a.status === 'checked_in');
+                if (scheduled.length > 0) {
+                    generateQRCode(scheduled[0].id);
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Active Appointments',
+                        text: 'You need a scheduled appointment to generate a QR code. Book an appointment first!',
+                        confirmButtonColor: '#10b981',
+                        confirmButtonText: 'Find Doctors'
+                    }).then((result) => {
+                        if (result.isConfirmed) switchMobileTab('doctors');
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Appointments',
+                    text: 'Book an appointment first to get a QR code.',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+        }
+
     </script>
-    
+
     <!-- Patient Dashboard Complete JavaScript -->
     <script src="../js/patient-dashboard-complete.js"></script>
 </body>

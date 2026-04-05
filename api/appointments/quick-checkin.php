@@ -53,9 +53,9 @@ try {
         sendJSON(['success' => false, 'message' => 'Can only check in appointments for today'], 400);
     }
 
-    // Check if appointment is already checked in
-    if ($appointment['status'] !== 'scheduled') {
-        sendJSON(['success' => false, 'message' => 'Appointment already processed'], 400);
+    // Check if appointment status allows check-in
+    if (!in_array($appointment['status'], ['scheduled', 'confirmed'])) {
+        sendJSON(['success' => false, 'message' => 'Appointment already processed (status: ' . $appointment['status'] . ')'], 400);
     }
 
     // Update appointment status

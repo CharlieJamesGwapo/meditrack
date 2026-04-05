@@ -1,9 +1,17 @@
 <?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 session_start();
 require_once '../../config/database.php';
 require_once '../../config/config.php';
-
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
@@ -72,7 +80,8 @@ try {
         
         // Doctor image URL
         if ($appointment['doctor_image']) {
-            $appointment['doctor_image_url'] = '../uploads/' . $appointment['doctor_image'];
+            $baseUrl = defined('APP_URL') ? APP_URL : '';
+            $appointment['doctor_image_url'] = $baseUrl . '/uploads/' . $appointment['doctor_image'];
         } else {
             $appointment['doctor_image_url'] = null;
         }
@@ -96,7 +105,7 @@ try {
             'pending' => 'yellow',
             'scheduled' => 'blue',
             'confirmed' => 'blue',
-            'checked-in' => 'purple',
+            'checked_in' => 'purple',
             'completed' => 'green',
             'cancelled' => 'red'
         ];

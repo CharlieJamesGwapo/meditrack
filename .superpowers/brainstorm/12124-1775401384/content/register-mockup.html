@@ -1,0 +1,312 @@
+<h2>Register Page - Multi-Step Wizard</h2>
+<p class="subtitle">Split-screen with step progress on left, form fields on right</p>
+
+<div class="mockup">
+  <div class="mockup-header">Register - Step 1: Account & Profile (Desktop)</div>
+  <div class="mockup-body" style="padding: 0;">
+    <div style="display: flex; min-height: 480px; border-radius: 0 0 8px 8px; overflow: hidden;">
+      <!-- Left Panel - Progress -->
+      <div style="flex: 0.9; background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%); padding: 36px 28px; display: flex; flex-direction: column; color: white; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.05);"></div>
+        <div style="position: absolute; bottom: -60px; left: -30px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.04);"></div>
+
+        <!-- Logo -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px;">
+          <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2);">
+            <span style="font-size: 18px; color: white;">+</span>
+          </div>
+          <span style="font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700; color: white;">MediTrack</span>
+        </div>
+
+        <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 24px;">Create your account</div>
+
+        <!-- Progress Steps -->
+        <div style="display: flex; flex-direction: column; gap: 0; flex: 1;">
+          <!-- Step 1 - Active -->
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 32px; height: 32px; background: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #065f46; box-shadow: 0 0 0 4px rgba(52,211,153,0.25);">1</div>
+              <div style="width: 2px; height: 36px; background: rgba(255,255,255,0.2); margin: 6px 0;"></div>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: white;">Account & Profile</div>
+              <div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px;">Photo, username, password</div>
+            </div>
+          </div>
+
+          <!-- Step 2 - Upcoming -->
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);">2</div>
+              <div style="width: 2px; height: 36px; background: rgba(255,255,255,0.1); margin: 6px 0;"></div>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5);">Personal Info</div>
+              <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px;">Name, DOB, gender, contact</div>
+            </div>
+          </div>
+
+          <!-- Step 3 - Upcoming -->
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);">3</div>
+              <div style="width: 2px; height: 36px; background: rgba(255,255,255,0.1); margin: 6px 0;"></div>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5);">Address</div>
+              <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px;">Region, province, city</div>
+            </div>
+          </div>
+
+          <!-- Step 4 - Upcoming -->
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);">4</div>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5);">Emergency & Medical</div>
+              <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px;">Emergency contact, allergies</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Already have account -->
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+          <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Already have an account? </span>
+          <span style="font-size: 12px; color: #34d399; font-weight: 600; cursor: pointer;">Sign in</span>
+        </div>
+      </div>
+
+      <!-- Right Panel - Form Step 1 -->
+      <div style="flex: 1.2; background: #f9fafb; padding: 36px 32px; display: flex; flex-direction: column;">
+        <div style="font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 2px;">Account & Profile</div>
+        <div style="font-size: 13px; color: #6b7280; margin-bottom: 24px;">Set up your login credentials and profile photo</div>
+
+        <!-- Profile Picture -->
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding: 16px; background: white; border-radius: 12px; border: 1.5px dashed #d1d5db;">
+          <div style="width: 72px; height: 72px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <span style="font-size: 28px; color: #9ca3af;">&#128247;</span>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px;">Profile Picture (2x2)</div>
+            <div style="font-size: 11px; color: #6b7280; margin-bottom: 8px;">Upload a photo or take one with your camera</div>
+            <div style="display: flex; gap: 8px;">
+              <div style="padding: 5px 12px; background: #f3f4f6; border-radius: 6px; font-size: 11px; color: #374151; border: 1px solid #e5e7eb;">Upload</div>
+              <div style="padding: 5px 12px; background: #f3f4f6; border-radius: 6px; font-size: 11px; color: #374151; border: 1px solid #e5e7eb;">Camera</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fields -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Username *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+              <span style="color: #9ca3af; font-size: 12px;">Choose a username</span>
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Email *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+              <span style="color: #9ca3af; font-size: 12px;">Enter your email</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Password *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+              <span style="color: #9ca3af; font-size: 12px;">Create a password</span>
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Confirm Password *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+              <span style="color: #9ca3af; font-size: 12px;">Confirm your password</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password strength -->
+        <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+          <div style="height: 3px; flex: 1; background: #10b981; border-radius: 2px;"></div>
+          <div style="height: 3px; flex: 1; background: #10b981; border-radius: 2px;"></div>
+          <div style="height: 3px; flex: 1; background: #e5e7eb; border-radius: 2px;"></div>
+          <div style="height: 3px; flex: 1; background: #e5e7eb; border-radius: 2px;"></div>
+        </div>
+        <div style="font-size: 11px; color: #6b7280; margin-bottom: 24px;">Password strength: Medium</div>
+
+        <!-- Navigation -->
+        <div style="margin-top: auto; display: flex; justify-content: flex-end;">
+          <div style="height: 42px; padding: 0 32px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 13px; box-shadow: 0 4px 14px rgba(5,150,105,0.3); gap: 8px;">
+            Next Step <span>&#8594;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2 Preview -->
+<div class="mockup" style="margin-top: 24px;">
+  <div class="mockup-header">Register - Step 2: Personal Info</div>
+  <div class="mockup-body" style="padding: 0;">
+    <div style="display: flex; min-height: 400px; border-radius: 0 0 8px 8px; overflow: hidden;">
+      <div style="flex: 0.9; background: linear-gradient(135deg, #065f46, #047857, #059669); padding: 36px 28px; display: flex; flex-direction: column; color: white; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.05);"></div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 32px;">
+          <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2);"><span style="font-size: 18px; color: white;">+</span></div>
+          <span style="font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700; color: white;">MediTrack</span>
+        </div>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 24px;">Create your account</div>
+
+        <!-- Step 1 - Completed -->
+        <div style="display: flex; align-items: flex-start; gap: 14px;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 32px; height: 32px; background: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #065f46;">&#10003;</div>
+            <div style="width: 2px; height: 36px; background: #34d399; margin: 6px 0;"></div>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: #34d399;">Account & Profile</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px;">Completed</div>
+          </div>
+        </div>
+
+        <!-- Step 2 - Active -->
+        <div style="display: flex; align-items: flex-start; gap: 14px;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 32px; height: 32px; background: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #065f46; box-shadow: 0 0 0 4px rgba(52,211,153,0.25);">2</div>
+            <div style="width: 2px; height: 36px; background: rgba(255,255,255,0.2); margin: 6px 0;"></div>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: white;">Personal Info</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px;">Name, DOB, gender, contact</div>
+          </div>
+        </div>
+
+        <!-- Steps 3-4 dimmed -->
+        <div style="display: flex; align-items: flex-start; gap: 14px;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: rgba(255,255,255,0.5);">3</div>
+            <div style="width: 2px; height: 36px; background: rgba(255,255,255,0.1); margin: 6px 0;"></div>
+          </div>
+          <div><div style="font-size: 13px; color: rgba(255,255,255,0.5);">Address</div></div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 14px;">
+          <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: rgba(255,255,255,0.5);">4</div>
+          <div><div style="font-size: 13px; color: rgba(255,255,255,0.5);">Emergency & Medical</div></div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Step 2 Fields -->
+      <div style="flex: 1.2; background: #f9fafb; padding: 36px 32px; display: flex; flex-direction: column;">
+        <div style="font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 2px;">Personal Information</div>
+        <div style="font-size: 13px; color: #6b7280; margin-bottom: 24px;">Tell us about yourself</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Full Name *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px;"></div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Date of Birth *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px;"></div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Gender *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px;"></div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Contact Number *</label>
+            <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px;"></div>
+          </div>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px;">Blood Group</label>
+          <div style="height: 42px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; width: 50%;"></div>
+        </div>
+
+        <!-- Navigation -->
+        <div style="margin-top: auto; display: flex; justify-content: space-between;">
+          <div style="height: 42px; padding: 0 24px; background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #374151; gap: 8px;">
+            <span>&#8592;</span> Back
+          </div>
+          <div style="height: 42px; padding: 0 32px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 13px; box-shadow: 0 4px 14px rgba(5,150,105,0.3); gap: 8px;">
+            Next Step <span>&#8594;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile View -->
+<div class="mockup" style="margin-top: 24px;">
+  <div class="mockup-header">Register - Mobile View (Step 1)</div>
+  <div class="mockup-body" style="padding: 0;">
+    <div style="max-width: 360px; margin: 0 auto;">
+      <!-- Compact header with progress -->
+      <div style="background: linear-gradient(135deg, #065f46, #047857); padding: 20px 20px 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2);"><span style="font-size: 14px; color: white;">+</span></div>
+            <span style="font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; color: white;">MediTrack</span>
+          </div>
+          <span style="font-size: 12px; color: rgba(255,255,255,0.7);">Step 1/4</span>
+        </div>
+        <!-- Progress bar -->
+        <div style="display: flex; gap: 4px;">
+          <div style="height: 3px; flex: 1; background: #34d399; border-radius: 2px;"></div>
+          <div style="height: 3px; flex: 1; background: rgba(255,255,255,0.2); border-radius: 2px;"></div>
+          <div style="height: 3px; flex: 1; background: rgba(255,255,255,0.2); border-radius: 2px;"></div>
+          <div style="height: 3px; flex: 1; background: rgba(255,255,255,0.2); border-radius: 2px;"></div>
+        </div>
+      </div>
+      <!-- Form -->
+      <div style="background: white; padding: 24px 20px;">
+        <div style="font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 700; color: #1f2937; margin-bottom: 2px;">Account & Profile</div>
+        <div style="font-size: 12px; color: #6b7280; margin-bottom: 20px;">Set up your credentials</div>
+
+        <!-- Profile pic compact -->
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding: 14px; background: #f9fafb; border-radius: 10px; border: 1.5px dashed #d1d5db;">
+          <div style="width: 56px; height: 56px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-size: 22px; color: #9ca3af;">&#128247;</span></div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #374151;">Profile Photo</div>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+              <div style="padding: 4px 10px; background: white; border-radius: 6px; font-size: 10px; color: #374151; border: 1px solid #e5e7eb;">Upload</div>
+              <div style="padding: 4px 10px; background: white; border-radius: 6px; font-size: 10px; color: #374151; border: 1px solid #e5e7eb;">Camera</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stacked fields on mobile -->
+        <div style="height: 40px; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px;"></div>
+        <div style="height: 40px; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px;"></div>
+        <div style="height: 40px; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px;"></div>
+        <div style="height: 40px; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px; margin-bottom: 18px;"></div>
+
+        <div style="height: 42px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 13px;">Next Step &#8594;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top: 24px;">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">&#10003;</div>
+    <div class="content">
+      <h3>Looks good, approve the design</h3>
+      <p>Proceed to write up the design spec</p>
+    </div>
+  </div>
+  <div class="option" data-choice="revise" onclick="toggleSelect(this)">
+    <div class="letter">&#9998;</div>
+    <div class="content">
+      <h3>Needs changes</h3>
+      <p>Tell me what to adjust in the terminal</p>
+    </div>
+  </div>
+</div>

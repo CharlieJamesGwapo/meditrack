@@ -33,8 +33,8 @@ try {
                 ELSE NULL
               END as profile_id
               FROM users u
-              LEFT JOIN patients p ON u.id = p.user_id AND u.role = 'patient'
-              LEFT JOIN doctors d ON u.id = d.user_id AND u.role = 'doctor'
+              LEFT JOIN patients p ON p.user_id = u.id AND u.role = 'patient'
+              LEFT JOIN doctors d ON d.user_id = u.id AND u.role = 'doctor'
               WHERE u.username = :username AND u.status = 'active'";
     
     $stmt = $db->prepare($query);

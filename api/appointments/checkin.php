@@ -39,8 +39,8 @@ try {
 
     $appointment_id = $validation['appointment_id'];
 
-    // Check if appointment is already checked in
-    if ($validation['status'] !== 'scheduled') {
+    // Check if appointment status allows check-in
+    if (!in_array($validation['status'], ['scheduled', 'confirmed'])) {
         sendJSON(['success' => false, 'message' => 'Appointment already processed'], 400);
     }
 
@@ -65,13 +65,18 @@ try {
                     WHERE a.id = :id";
     $detailStmt = $db->prepare($detailQuery);
     $detailStmt->execute([':id' => $appointment_id]);
-    $appointment = $detailStmt->fetch();
+    $appointment = $detailStmt->fetch(PDO::FETCH_ASSOC);
 
     // Create notification for doctor
-    $notifQuery = "INSERT INTO notifications (user_id, type, title, message, related_id) 
-                   VALUES ((SELECT user_id FROM doctors WHERE id = :doctor_id), 'appointment', 'Patient Checked In', 'Patient {$appointment['patient_name']} has checked in.', :appointment_id)";
+    $patientName = $appointment['patient_name'] ?? 'Unknown';
+    $notifQuery = "INSERT INTO notifications (user_id, type, title, message, related_id)
+                   VALUES ((SELECT user_id FROM doctors WHERE id = :doctor_id), 'appointment', 'Patient Checked In', :message, :appointment_id)";
     $notifStmt = $db->prepare($notifQuery);
-    $notifStmt->execute([':doctor_id' => $validation['doctor_id'], ':appointment_id' => $appointment_id]);
+    $notifStmt->execute([
+        ':doctor_id' => $validation['doctor_id'],
+        ':message' => "Patient $patientName has checked in.",
+        ':appointment_id' => $appointment_id
+    ]);
 
     // Log audit
     logAudit($db, getCurrentUserId(), 'checkin_appointment', 'appointments', $appointment_id, 'Patient checked in');

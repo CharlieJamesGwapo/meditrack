@@ -58,6 +58,55 @@
         .swal2-cancel {
             background-color: #6b7280 !important;
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 767px) {
+            body { padding-bottom: 80px; }
+            input, select, textarea { font-size: 16px !important; min-height: 44px; }
+            button { min-height: 44px; }
+            /* Hide desktop nav items on mobile */
+            .desktop-only { display: none !important; }
+            /* Stats grid: 2 columns on mobile */
+            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
+            .stats-grid > div { padding: 1rem !important; }
+            .stats-grid .text-2xl { font-size: 1.25rem !important; }
+            /* Welcome section compact */
+            .welcome-section { padding: 1rem !important; }
+            .welcome-section h1 { font-size: 1.25rem !important; }
+            .welcome-section .w-24 { width: 3.5rem !important; height: 3.5rem !important; }
+            .welcome-section .text-4xl { font-size: 1.5rem !important; }
+            /* Appointment card buttons stack */
+            .appointment-card .flex-col.gap-2 button { width: 100%; }
+            /* Tab nav scrollable on mobile */
+            .tab-nav-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .tab-nav-scroll::-webkit-scrollbar { display: none; }
+            /* Modal full width on mobile */
+            .modal-content-mobile { width: 95% !important; margin: 0.5rem auto !important; top: 0.5rem !important; max-height: 90vh; overflow-y: auto; }
+            /* Patient card responsive */
+            .patient-card-mobile .flex.items-center.gap-4 { flex-wrap: wrap; }
+            .patient-card-mobile .flex.items-center.gap-4 button { width: 100%; margin-top: 0.5rem; }
+            /* Hamburger visible */
+            #mobileMenuBtn { display: flex !important; }
+            /* Compact header on mobile */
+            .header-title { font-size: 1rem !important; }
+            .header-subtitle { display: none !important; }
+        }
+        @media (min-width: 768px) {
+            #mobileMenuBtn { display: none !important; }
+            #mobileBottomNav { display: none !important; }
+        }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            @media (max-width: 767px) {
+                body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+            }
+        }
+        * { -webkit-tap-highlight-color: transparent; }
+        /* Mobile bottom nav styles */
+        #mobileBottomNav button.active-nav { color: #10b981; }
+        #mobileBottomNav button { color: #6b7280; transition: color 0.2s; }
+        /* Sidebar overlay */
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 39; }
+        .sidebar-overlay.active { display: block; }
     </style>
     <script src="../js/auth-check.js"></script>
 </head>
@@ -67,11 +116,15 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
+                    <!-- Mobile Hamburger Menu -->
+                    <button id="mobileMenuBtn" class="mr-2 p-2 rounded-lg hover:bg-gray-100 transition items-center justify-center" style="display:none;" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars text-gray-700 text-xl"></i>
+                    </button>
                     <div class="w-10 h-10 rounded-full overflow-hidden bg-green-100 p-1 shadow-md mr-3">
                         <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full">
                     </div>
-                    <span class="text-xl font-bold text-gray-800">MediTrack</span>
-                    <span class="ml-2 text-sm text-green-600 font-semibold">Doctor Portal</span>
+                    <span class="text-xl font-bold text-gray-800 header-title">MediTrack</span>
+                    <span class="ml-2 text-sm text-green-600 font-semibold header-subtitle">Doctor Portal</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="hidden sm:flex items-center space-x-2 text-gray-600">
@@ -131,7 +184,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Welcome Section with Profile -->
-        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-2xl p-6 text-white mb-8">
+        <div class="welcome-section bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-2xl p-6 text-white mb-8">
             <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <div id="welcomeProfilePic" class="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-white text-4xl font-bold shadow-xl">
                     <i class="fas fa-user-md"></i>
@@ -156,7 +209,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stats-grid grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
@@ -204,7 +257,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="mb-6 border-b border-gray-200">
+        <div class="mb-6 border-b border-gray-200 tab-nav-scroll">
             <nav class="-mb-px flex space-x-8">
                 <button class="tab-btn active border-b-2 border-green-600 py-4 px-1 text-sm font-medium text-green-600" data-tab="appointments">
                     <i class="fas fa-calendar-alt mr-2"></i>Appointments
@@ -615,44 +668,9 @@
     </div>
 
     <script>
-        // Real-Time Clock
-        function updateClock() {
-            const now = new Date();
-            const options = { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-            };
-            document.getElementById('realTimeClock').textContent = now.toLocaleString('en-US', options);
-            
-            // Update current date
-            const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', dateOptions);
-        }
+        // Modal & form handlers only. All other logic in doctor-dashboard-complete.js
         
-        updateClock();
-        setInterval(updateClock, 1000);
-        
-        // Profile Dropdown Toggle
-        document.getElementById('profileMenuBtn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('hidden');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('profileDropdown');
-            const button = document.getElementById('profileMenuBtn');
-            if (!dropdown.contains(e.target) && !button.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-        
-        // Modal Functions
+        // Modal Functions (called by onclick handlers in HTML)
         function openProfileModal() {
             document.getElementById('profileModal').classList.remove('hidden');
             document.getElementById('profileDropdown').classList.add('hidden');
@@ -663,11 +681,8 @@
             document.getElementById('profileModal').classList.add('hidden');
         }
         
-        function openSettingsModal() {
-            document.getElementById('settingsModal').classList.remove('hidden');
-            document.getElementById('profileDropdown').classList.add('hidden');
-        }
-        
+        // openSettingsModal is defined below with settings loading
+
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.add('hidden');
         }
@@ -702,25 +717,13 @@
             document.getElementById('logoutModal').classList.add('hidden');
         }
         
-        function performLogout() {
-            // Clear session
+        async function performLogout() {
+            try {
+                await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'include' });
+            } catch (e) {}
             localStorage.clear();
             sessionStorage.clear();
-            
-            // Show loading
-            Swal.fire({
-                title: 'Logging out...',
-                text: 'Please wait',
-                icon: 'info',
-                showConfirmButton: false,
-                timer: 1000,
-                timerProgressBar: true
-            });
-            
-            // Redirect to login
-            setTimeout(() => {
-                window.location.href = '../pages/login.html';
-            }, 1000);
+            window.location.href = 'login.html';
         }
         
         // Profile Picture Preview
@@ -728,14 +731,11 @@
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('profilePicPreview').innerHTML = 
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('profilePicture').innerHTML = 
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('dropdownProfilePic').innerHTML = 
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('welcomeProfilePic').innerHTML = 
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+                    const img = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+                    ['profilePicPreview', 'profilePicture', 'dropdownProfilePic', 'welcomeProfilePic'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.innerHTML = img;
+                    });
                 };
                 reader.readAsDataURL(input.files[0]);
             }
@@ -743,26 +743,17 @@
         
         // Load Profile Data
         function loadProfileData() {
-            // Simulate loading from database
-            const doctorData = {
-                firstName: 'John',
-                middleName: 'Michael',
-                lastName: 'Smith',
-                email: 'dr.smith@meditrack.com',
-                phone: '+1234567890',
-                specialization: 'Cardiologist',
-                department: 'Cardiology',
-                bio: 'Experienced cardiologist with 15 years of practice.'
-            };
-            
-            document.getElementById('profileFirstName').value = doctorData.firstName;
-            document.getElementById('profileMiddleName').value = doctorData.middleName;
-            document.getElementById('profileLastName').value = doctorData.lastName;
-            document.getElementById('profileEmail').value = doctorData.email;
-            document.getElementById('profilePhone').value = doctorData.phone;
-            document.getElementById('profileSpecialization').value = doctorData.specialization;
-            document.getElementById('profileDepartment').value = doctorData.department;
-            document.getElementById('profileBio').value = doctorData.bio;
+            // Load from currentDoctor (set by doctor-dashboard-complete.js)
+            if (typeof currentDoctor !== 'undefined' && currentDoctor) {
+                document.getElementById('profileFirstName').value = currentDoctor.first_name || '';
+                document.getElementById('profileMiddleName').value = currentDoctor.middle_name || '';
+                document.getElementById('profileLastName').value = currentDoctor.last_name || '';
+                document.getElementById('profileEmail').value = currentDoctor.email || '';
+                document.getElementById('profilePhone').value = currentDoctor.contact_number || currentDoctor.phone || '';
+                document.getElementById('profileSpecialization').value = currentDoctor.specialization || '';
+                document.getElementById('profileDepartment').value = currentDoctor.department || '';
+                document.getElementById('profileBio').value = currentDoctor.bio || '';
+            }
         }
         
         // Profile Form Submit
@@ -800,7 +791,8 @@
                 // Real API call to save to database
                 const response = await fetch('../api/doctor/update-profile.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include'
                 });
                 
                 const result = await response.json();
@@ -878,27 +870,30 @@
             }
             
             try {
-                // Simulate API call
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: 'Password changed successfully',
-                    confirmButtonColor: '#10b981',
-                    timer: 2000
+                const response = await fetch('../api/doctor/change-password.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    }),
+                    credentials: 'include'
                 });
-                closeChangePasswordModal();
-                document.getElementById('changePasswordForm').reset();
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'Success!', text: 'Password changed successfully', confirmButtonColor: '#10b981', timer: 2000 });
+                    closeChangePasswordModal();
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Failed to change password', confirmButtonColor: '#10b981' });
+                }
             } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error changing password: ' + error.message,
-                    confirmButtonColor: '#10b981'
-                });
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Error changing password: ' + error.message, confirmButtonColor: '#10b981' });
             }
         });
         
-        // Save Settings
+        // Save Settings to localStorage
         function saveSettings() {
             const settings = {
                 emailNotif: document.getElementById('emailNotif').checked,
@@ -907,8 +902,9 @@
                 showProfile: document.getElementById('showProfile').checked,
                 onlineBooking: document.getElementById('onlineBooking').checked
             };
-            
-            // Simulate saving to database
+
+            localStorage.setItem('doctorSettings', JSON.stringify(settings));
+
             Swal.fire({
                 icon: 'success',
                 title: 'Saved!',
@@ -918,191 +914,24 @@
             });
             closeSettingsModal();
         }
-        
-        // Idle Timeout Security
-        let idleTime = 0;
-        let idleInterval;
-        let idleWarningShown = false;
-        const IDLE_TIMEOUT = 30; // 30 seconds
-        const WARNING_TIME = 20; // Show warning at 20 seconds
-        
-        function resetIdleTimer() {
-            idleTime = 0;
-            idleWarningShown = false;
+
+        // Load saved settings on modal open
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            document.getElementById('profileDropdown').classList.add('hidden');
+
+            const saved = JSON.parse(localStorage.getItem('doctorSettings') || '{}');
+            if (saved.emailNotif !== undefined) document.getElementById('emailNotif').checked = saved.emailNotif;
+            if (saved.apptReminders !== undefined) document.getElementById('apptReminders').checked = saved.apptReminders;
+            if (saved.patientAlerts !== undefined) document.getElementById('patientAlerts').checked = saved.patientAlerts;
+            if (saved.showProfile !== undefined) document.getElementById('showProfile').checked = saved.showProfile;
+            if (saved.onlineBooking !== undefined) document.getElementById('onlineBooking').checked = saved.onlineBooking;
         }
         
-        function startIdleTimer() {
-            // Reset timer on user activity
-            document.addEventListener('mousemove', resetIdleTimer);
-            document.addEventListener('keypress', resetIdleTimer);
-            document.addEventListener('click', resetIdleTimer);
-            document.addEventListener('scroll', resetIdleTimer);
-            
-            // Check idle time every second
-            idleInterval = setInterval(function() {
-                idleTime++;
-                
-                // Show warning at 20 seconds
-                if (idleTime >= WARNING_TIME && !idleWarningShown) {
-                    idleWarningShown = true;
-                    showIdleWarning();
-                }
-                
-                // Auto logout at 30 seconds
-                if (idleTime >= IDLE_TIMEOUT) {
-                    clearInterval(idleInterval);
-                    performIdleLogout();
-                }
-            }, 1000);
-        }
-        
-        function showIdleWarning() {
-            const timeLeft = IDLE_TIMEOUT - idleTime;
-            
-            Swal.fire({
-                title: 'Inactivity Warning',
-                html: `You will be logged out in <b>${timeLeft}</b> seconds due to inactivity.<br><br>Do you want to continue your session?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#ef4444',
-                confirmButtonText: 'Continue Session',
-                cancelButtonText: 'Logout Now',
-                allowOutsideClick: false,
-                timer: (timeLeft * 1000),
-                timerProgressBar: true,
-                didOpen: () => {
-                    const timer = Swal.getHtmlContainer().querySelector('b');
-                    const timerInterval = setInterval(() => {
-                        const remaining = Math.ceil((Swal.getTimerLeft() || 0) / 1000);
-                        timer.textContent = remaining;
-                        if (remaining <= 0) {
-                            clearInterval(timerInterval);
-                        }
-                    }, 100);
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // User wants to continue
-                    resetIdleTimer();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Session Extended',
-                        text: 'Your session has been extended',
-                        confirmButtonColor: '#10b981',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // User clicked logout
-                    performIdleLogout();
-                } else {
-                    // Timer expired
-                    performIdleLogout();
-                }
-            });
-        }
-        
-        function performIdleLogout() {
-            clearInterval(idleInterval);
-            
-            Swal.fire({
-                title: 'Session Expired',
-                text: 'You have been logged out due to inactivity',
-                icon: 'info',
-                confirmButtonColor: '#10b981',
-                showConfirmButton: false,
-                timer: 2000
-            }).then(() => {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '../index.html';
-            });
-        }
-        
-        // Load Doctor Profile from Database
-        async function loadDoctorProfile() {
-            try {
-                const response = await fetch('../api/doctor/profile.php');
-                const data = await response.json();
-                
-                if (data.success) {
-                    const doctor = data.doctor;
-                    
-                    // Update all display elements
-                    const fullName = `${doctor.first_name || ''} ${doctor.middle_name || ''} ${doctor.last_name || ''}`.trim();
-                    document.getElementById('userName').textContent = fullName;
-                    document.getElementById('welcomeName').textContent = fullName;
-                    document.getElementById('dropdownName').textContent = 'Dr. ' + fullName;
-                    document.getElementById('dropdownEmail').textContent = doctor.email || '';
-                    document.getElementById('specialization').textContent = doctor.specialization || 'Specialist';
-                    document.getElementById('department').textContent = doctor.department || 'Department';
-                    document.getElementById('doctorEmail').textContent = doctor.email || '';
-                    document.getElementById('doctorPhone').textContent = doctor.phone || '';
-                    
-                    // Update profile pictures if exists
-                    if (doctor.profile_picture) {
-                        const imgSrc = `../uploads/${doctor.profile_picture}`;
-                        const imgHtml = `<img src="${imgSrc}" class="w-full h-full object-cover">`;
-                        document.getElementById('profilePicture').innerHTML = imgHtml;
-                        document.getElementById('dropdownProfilePic').innerHTML = imgHtml;
-                        document.getElementById('welcomeProfilePic').innerHTML = imgHtml;
-                    }
-                } else {
-                    // Fallback to default data
-                    const doctorName = 'John Smith';
-                    document.getElementById('userName').textContent = doctorName;
-                    document.getElementById('welcomeName').textContent = doctorName;
-                    document.getElementById('dropdownName').textContent = 'Dr. ' + doctorName;
-                    document.getElementById('dropdownEmail').textContent = 'dr.smith@meditrack.com';
-                    document.getElementById('specialization').textContent = 'Cardiologist';
-                    document.getElementById('department').textContent = 'Cardiology';
-                    document.getElementById('doctorEmail').textContent = 'dr.smith@meditrack.com';
-                    document.getElementById('doctorPhone').textContent = '+1234567890';
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-            }
-        }
-        
-        // Initialize on page load
-        window.addEventListener('load', function() {
-            // Load doctor profile from database
-            loadDoctorProfile();
-            
-            // Start idle timeout security
-            startIdleTimer();
-            
-            console.log('Doctor Dashboard - Enhanced Version Ready!');
-            console.log('Idle timeout security: Active (30 seconds)');
-        });
-        
-        // Tab Switching (if tabs exist)
-        document.querySelectorAll('.tab-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const tabName = this.getAttribute('data-tab');
-                
-                // Hide all tabs
-                document.querySelectorAll('.tab-content').forEach(tab => {
-                    tab.classList.add('hidden');
-                });
-                
-                // Remove active class from all buttons
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active', 'border-green-600', 'text-green-600');
-                    btn.classList.add('border-transparent', 'text-gray-500');
-                });
-                
-                // Show selected tab
-                document.getElementById(tabName + 'Tab').classList.remove('hidden');
-                
-                // Add active class to clicked button
-                this.classList.add('active', 'border-green-600', 'text-green-600');
-                this.classList.remove('border-transparent', 'text-gray-500');
-            });
-        });
-        
-        // Close modals with Escape key
+        // Note: Clock, tabs, profile loading, idle timer, and auto-refresh all handled by doctor-dashboard-complete.js
+    </script>
+    <!-- Escape key to close modals -->
+    <script>
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeProfileModal();
@@ -1113,6 +942,117 @@
         });
     </script>
     
+    <!-- Sidebar Overlay (for mobile menu) -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+    <!-- Mobile Side Menu -->
+    <div id="mobileSideMenu" class="fixed top-0 left-0 w-72 h-full bg-white shadow-2xl z-40 transform -translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto">
+        <div class="p-5 bg-gradient-to-r from-green-600 to-green-700 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-lg font-bold">Menu</span>
+                <button onclick="closeMobileMenu()" class="p-1 hover:bg-white/20 rounded-lg transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="mobileMenuProfilePic" class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold overflow-hidden">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div>
+                    <p id="mobileMenuName" class="font-semibold text-sm"></p>
+                    <p id="mobileMenuSpec" class="text-xs text-green-100"></p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4 space-y-1">
+            <button onclick="switchTab('appointments'); closeMobileMenu();" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 flex items-center gap-3 transition">
+                <i class="fas fa-tachometer-alt text-green-600 w-5"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('appointments'); closeMobileMenu();" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 flex items-center gap-3 transition">
+                <i class="fas fa-calendar-alt text-green-600 w-5"></i>
+                <span>Appointments</span>
+            </button>
+            <button onclick="switchTab('patients'); closeMobileMenu();" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 flex items-center gap-3 transition">
+                <i class="fas fa-users text-green-600 w-5"></i>
+                <span>Patients</span>
+            </button>
+            <button onclick="openProfileModal(); closeMobileMenu();" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 flex items-center gap-3 transition">
+                <i class="fas fa-user-circle text-green-600 w-5"></i>
+                <span>My Profile</span>
+            </button>
+            <button onclick="openSettingsModal(); closeMobileMenu();" class="w-full text-left px-4 py-3 rounded-lg hover:bg-green-50 text-gray-700 flex items-center gap-3 transition">
+                <i class="fas fa-cog text-green-600 w-5"></i>
+                <span>Settings</span>
+            </button>
+            <hr class="my-2">
+            <button onclick="confirmLogout();" class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 flex items-center gap-3 transition">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="font-semibold">Logout</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+        <div class="flex justify-around items-center h-16">
+            <button onclick="switchTab('appointments'); setActiveNav(this);" class="active-nav flex flex-col items-center justify-center flex-1 py-2" data-nav="dashboard">
+                <i class="fas fa-tachometer-alt text-lg"></i>
+                <span class="text-xs mt-1 font-medium">Dashboard</span>
+            </button>
+            <button onclick="switchTab('appointments'); setActiveNav(this);" class="flex flex-col items-center justify-center flex-1 py-2" data-nav="appointments">
+                <i class="fas fa-calendar-alt text-lg"></i>
+                <span class="text-xs mt-1 font-medium">Appointments</span>
+            </button>
+            <button onclick="switchTab('patients'); setActiveNav(this);" class="flex flex-col items-center justify-center flex-1 py-2" data-nav="patients">
+                <i class="fas fa-users text-lg"></i>
+                <span class="text-xs mt-1 font-medium">Patients</span>
+            </button>
+            <button onclick="openProfileModal();" class="flex flex-col items-center justify-center flex-1 py-2" data-nav="profile">
+                <i class="fas fa-user-circle text-lg"></i>
+                <span class="text-xs mt-1 font-medium">Profile</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileSideMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+            menu.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('active');
+            // Update mobile menu profile info
+            if (typeof currentDoctor !== 'undefined' && currentDoctor) {
+                const nameEl = document.getElementById('mobileMenuName');
+                const specEl = document.getElementById('mobileMenuSpec');
+                if (nameEl) nameEl.textContent = 'Dr. ' + (currentDoctor.full_name || '');
+                if (specEl) specEl.textContent = currentDoctor.specialization || '';
+            }
+        }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileSideMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+            menu.classList.add('-translate-x-full');
+            overlay.classList.remove('active');
+        }
+
+        function setActiveNav(btn) {
+            document.querySelectorAll('#mobileBottomNav button').forEach(b => {
+                b.classList.remove('active-nav');
+            });
+            btn.classList.add('active-nav');
+        }
+
+        // Close mobile menu on resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                closeMobileMenu();
+            }
+        });
+    </script>
+
     <!-- Doctor Dashboard Complete JavaScript -->
     <script src="../js/doctor-dashboard-complete.js"></script>
 </body>

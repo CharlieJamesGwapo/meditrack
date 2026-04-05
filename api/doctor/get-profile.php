@@ -6,6 +6,7 @@
 session_start();
 
 require_once '../../config/database.php';
+require_once '../../config/config.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -26,9 +27,12 @@ try {
         throw new Exception('Database connection failed');
     }
     
-    // For testing, get the first doctor if no session
-    // In production, check session: if (!isset($_SESSION['user_id']))
-    $userId = $_SESSION['user_id'] ?? 19; // Default to Dr. Lanie's user_id for testing
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+        exit;
+    }
+    $userId = $_SESSION['user_id'];
     
     // Get doctor profile with department info
     $query = "SELECT 
@@ -43,19 +47,18 @@ try {
                 d.license_number,
                 d.contact_number,
                 d.email,
-                d.department_id,
+                d.department,
                 d.consultation_fee,
                 d.experience_years,
                 d.profile_image,
                 d.bio,
                 d.status,
-                dept.name as department_name,
+                d.department as department_name,
                 u.username,
                 u.email as user_email
               FROM doctors d
               LEFT JOIN users u ON d.user_id = u.id
-              LEFT JOIN departments dept ON d.department_id = dept.id
-              WHERE d.user_id = :user_id AND d.is_archived = 0";
+              WHERE d.user_id = :user_id AND d.status = 'active'";
     
     $stmt = $db->prepare($query);
     $stmt->execute([':user_id' => $userId]);
@@ -65,7 +68,8 @@ try {
     if ($profile) {
         // Format profile image URL
         if ($profile['profile_image']) {
-            $profile['profile_image_url'] = '../uploads/' . $profile['profile_image'];
+            $baseUrl = defined('APP_URL') ? APP_URL : '';
+            $profile['profile_image_url'] = $baseUrl . '/uploads/' . $profile['profile_image'];
         } else {
             $profile['profile_image_url'] = null;
         }

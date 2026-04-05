@@ -69,7 +69,7 @@ try {
     $db->beginTransaction();
 
     // Generate appointment number
-    $appointment_number = 'APT' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    $appointment_number = 'APT' . date('Ymd') . strtoupper(substr(uniqid(), -4));
 
     // Insert appointment
     $insertQuery = "INSERT INTO appointments (appointment_number, patient_id, doctor_id, appointment_date, appointment_time, reason_for_visit, priority, status, created_by) 
@@ -122,7 +122,7 @@ try {
     ]);
 
 } catch (Exception $e) {
-    if ($db->inTransaction()) {
+    if (isset($db) && $db && $db->inTransaction()) {
         $db->rollBack();
     }
     sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);

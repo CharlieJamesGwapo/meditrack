@@ -7,6 +7,7 @@
 session_start();
 
 require_once '../../config/database.php';
+require_once '../../config/config.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -27,12 +28,16 @@ try {
         throw new Exception('Database connection failed');
     }
     
-    // For testing, use Dr. Lanie's user_id
-    $userId = $_SESSION['user_id'] ?? 19;
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+        exit;
+    }
+    $userId = $_SESSION['user_id'];
     $filterDate = $_GET['date'] ?? null;
     
     // Get doctor ID
-    $doctorQuery = "SELECT id FROM doctors WHERE user_id = :user_id AND is_archived = 0";
+    $doctorQuery = "SELECT id FROM doctors WHERE user_id = :user_id AND status = 'active'";
     $doctorStmt = $db->prepare($doctorQuery);
     $doctorStmt->execute([':user_id' => $userId]);
     $doctor = $doctorStmt->fetch(PDO::FETCH_ASSOC);
@@ -66,7 +71,8 @@ try {
                 p.blood_group,
                 p.allergies,
                 p.medical_history,
-                p.email as patient_email
+                p.email as patient_email,
+                p.profile_image as patient_profile_image
               FROM appointments a
               LEFT JOIN patients p ON a.patient_id = p.id
               WHERE a.doctor_id = :doctor_id";
@@ -90,6 +96,7 @@ try {
     $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Format appointments
+    $baseUrl = defined('APP_URL') ? APP_URL : '';
     foreach ($appointments as &$appointment) {
         // Format date
         $appointment['formatted_date'] = date('F d, Y', strtotime($appointment['appointment_date']));
@@ -111,7 +118,14 @@ try {
         $appointment['status_display'] = strtoupper(str_replace('-', ' ', $appointment['status']));
         
         // Check if can add medical record
-        $appointment['can_add_record'] = in_array($appointment['status'], ['checked-in', 'scheduled', 'confirmed']);
+        $appointment['can_add_record'] = in_array($appointment['status'], ['checked_in', 'scheduled', 'confirmed']);
+
+        // Build absolute patient profile image URL
+        if (!empty($appointment['patient_profile_image'])) {
+            $appointment['patient_profile_image_url'] = $baseUrl . '/uploads/' . $appointment['patient_profile_image'];
+        } else {
+            $appointment['patient_profile_image_url'] = null;
+        }
     }
     
     echo json_encode([

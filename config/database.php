@@ -4,11 +4,19 @@
  */
 
 class Database {
-    private $host = "localhost";
-    private $db_name = "meditrack";
-    private $username = "root";
-    private $password = "";
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
     private $conn;
+
+    public function __construct() {
+        $env = require __DIR__ . '/../env.php';
+        $this->host = $env['DB_HOST'] ?? 'localhost';
+        $this->db_name = $env['DB_NAME'] ?? 'meditrack';
+        $this->username = $env['DB_USERNAME'] ?? 'root';
+        $this->password = $env['DB_PASSWORD'] ?? '';
+    }
 
     public function getConnection() {
         $this->conn = null;
@@ -25,7 +33,8 @@ class Database {
                 )
             );
         } catch(PDOException $e) {
-            echo "Connection Error: " . $e->getMessage();
+            error_log("Database Connection Error: " . $e->getMessage());
+            throw new Exception("Database connection failed");
         }
 
         return $this->conn;

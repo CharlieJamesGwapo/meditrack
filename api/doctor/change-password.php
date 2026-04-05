@@ -1,22 +1,34 @@
 <?php
+session_start();
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 require_once '../../config/database.php';
+require_once '../../config/config.php';
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
+
     if (!$db) {
         throw new Exception('Database connection failed');
     }
-    
+
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
-    
-    // Get doctor ID from session
-    $doctor_id = 3; // Replace with actual session doctor ID
+
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+        exit;
+    }
+    if (!in_array($_SESSION['role'], ['doctor', 'reception', 'admin'])) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Access denied']);
+        exit;
+    }
+    $doctor_id = $_SESSION['user_id'];
     
     $current_password = $input['current_password'] ?? '';
     $new_password = $input['new_password'] ?? '';
@@ -36,7 +48,7 @@ try {
     }
     
     // Update password
-    $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+    $new_password_hash = password_hash($new_password, PASSWORD_BCRYPT, ['cost' => 10]);
     $sql = "UPDATE users SET password_hash = :password_hash WHERE id = :doctor_id";
     $stmt = $db->prepare($sql);
     $stmt->execute([

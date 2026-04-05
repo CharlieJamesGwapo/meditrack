@@ -52,6 +52,45 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #059669; }
+
+        /* Mobile Responsiveness */
+        * { -webkit-tap-highlight-color: transparent; }
+        @media (max-width: 767px) {
+            body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+            .sidebar { position: fixed; z-index: 40; height: 100vh; width: 260px; }
+            .stats-grid, .grid-cols-4, [class*="grid-cols-4"] { grid-template-columns: repeat(2, 1fr) !important; }
+            [class*="grid-cols-1 md:grid-cols-4"] { grid-template-columns: repeat(2, 1fr) !important; }
+            input, select, textarea { font-size: 16px !important; min-height: 44px; }
+            button { min-height: 44px; }
+            .tab-btn { font-size: 0.75rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+            .tab-btn i { display: none; }
+            table { font-size: 0.75rem; }
+            table th, table td { padding: 0.5rem 0.25rem; }
+            .mobile-bottom-nav { display: flex !important; }
+        }
+        @media (min-width: 768px) {
+            .mobile-bottom-nav { display: none !important; }
+        }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            @media (max-width: 767px) {
+                body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+                .mobile-bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+            }
+        }
+        .mobile-bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+            background: white; border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: none; justify-content: space-around; align-items: center;
+            height: 70px; padding: 0 4px;
+        }
+        .mobile-bottom-nav a {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; padding: 8px 2px; color: #6b7280; text-decoration: none;
+            font-size: 0.65rem; font-weight: 500; transition: color 0.2s;
+        }
+        .mobile-bottom-nav a.active, .mobile-bottom-nav a:hover { color: #10b981; }
+        .mobile-bottom-nav a i { font-size: 1.25rem; margin-bottom: 2px; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -589,11 +628,12 @@
                     console.error('API Error:', data.error);
                 }
                 
-                // Update counters with animation
-                animateCounter(document.getElementById('totalPatients'), data.totalPatients || 0);
-                animateCounter(document.getElementById('totalDoctors'), data.totalDoctors || 0);
-                animateCounter(document.getElementById('todayAppointments'), data.todayAppointments || 0);
-                animateCounter(document.getElementById('totalVisits'), data.totalVisits || 0);
+                // Handle both nested and flat response formats
+                const stats = data.stats || data;
+                animateCounter(document.getElementById('totalPatients'), stats.totalPatients || 0);
+                animateCounter(document.getElementById('totalDoctors'), stats.totalDoctors || 0);
+                animateCounter(document.getElementById('todayAppointments'), stats.todayAppointments || 0);
+                animateCounter(document.getElementById('totalVisits'), stats.totalVisits || 0);
                 
                 console.log('✅ Stats updated successfully!');
             } catch (error) {
@@ -613,10 +653,11 @@
                 const response = await fetch(`${API_BASE_URL}/admin/recent-appointments.php`);
                 if (!response.ok) throw new Error('Failed to fetch appointments');
                 
-                const appointments = await response.json();
+                const result = await response.json();
+                const appointments = result.appointments || (Array.isArray(result) ? result : []);
                 const container = document.getElementById('recentAppointments');
-                
-                if (appointments.length === 0) {
+
+                if (!appointments || appointments.length === 0) {
                     container.innerHTML = `
                         <div class="text-center py-8 text-gray-500">
                             <i class="fas fa-calendar-times text-4xl mb-2"></i>
@@ -632,8 +673,8 @@
                             <i class="fas fa-user text-blue-600"></i>
                         </div>
                         <div class="flex-1">
-                            <p class="font-semibold text-sm">${apt.patientName}</p>
-                            <p class="text-xs text-gray-500">Dr. ${apt.doctorName} • ${apt.time}</p>
+                            <p class="font-semibold text-sm">${apt.patientName || apt.patient_name || 'Unknown'}</p>
+                            <p class="text-xs text-gray-500">Dr. ${apt.doctorName || apt.doctor_name || 'Unknown'} • ${apt.time || apt.appointment_time || ''}</p>
                         </div>
                         <span class="text-xs px-2 py-1 rounded-full ${
                             apt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
@@ -659,10 +700,11 @@
                 const response = await fetch(`${API_BASE_URL}/admin/activity.php`);
                 if (!response.ok) throw new Error('Failed to fetch activity');
                 
-                const activities = await response.json();
+                const activityResult = await response.json();
+                const activities = activityResult.activities || activityResult.data || (Array.isArray(activityResult) ? activityResult : []);
                 const container = document.getElementById('systemActivity');
-                
-                if (activities.length === 0) {
+
+                if (!activities || activities.length === 0) {
                     container.innerHTML = `
                         <div class="text-center py-8 text-gray-500">
                             <i class="fas fa-history text-4xl mb-2"></i>
@@ -804,10 +846,11 @@
                 const response = await fetch(`${API_BASE_URL}/admin/appointments.php`);
                 if (!response.ok) throw new Error('Failed to fetch appointments');
                 
-                const appointments = await response.json();
+                const apptResult = await response.json();
+                const appointments = apptResult.appointments || (Array.isArray(apptResult) ? apptResult : []);
                 const container = document.getElementById('allAppointments');
-                
-                if (appointments.length === 0) {
+
+                if (!appointments || appointments.length === 0) {
                     container.innerHTML = `
                         <div class="text-center py-8 text-gray-500">
                             <i class="fas fa-calendar-times text-4xl mb-2"></i>
@@ -821,8 +864,8 @@
                     <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <h4 class="font-semibold">${apt.patientName}</h4>
-                                <p class="text-sm text-gray-600">Dr. ${apt.doctorName}</p>
+                                <h4 class="font-semibold">${apt.patientName || apt.patient_name || 'Unknown'}</h4>
+                                <p class="text-sm text-gray-600">Dr. ${apt.doctorName || apt.doctor_name || 'Unknown'}</p>
                             </div>
                             <span class="px-3 py-1 text-xs rounded-full ${
                                 apt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
@@ -979,7 +1022,7 @@
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             if (confirm('Are you sure you want to logout?')) {
                 try {
-                    await fetch(`${API_BASE_URL}/logout.php`, { method: 'POST' });
+                    await fetch(`${API_BASE_URL}/auth/logout.php`, { method: 'POST', credentials: 'include' });
                 } catch (error) {
                     console.error('Logout error:', error);
                 }
@@ -1437,6 +1480,30 @@
         console.log('MediTrack Admin Dashboard v2.0 - Professional Edition with Archive Ready!');
     </script>
     
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <a href="#dashboard" class="active" data-section="dashboard">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="patients.html">
+            <i class="fas fa-users"></i>
+            <span>Patients</span>
+        </a>
+        <a href="doctors.html">
+            <i class="fas fa-user-md"></i>
+            <span>Doctors</span>
+        </a>
+        <a href="appointments.html">
+            <i class="fas fa-calendar-check"></i>
+            <span>Appts</span>
+        </a>
+        <a href="#" id="mobileMoreBtn" onclick="document.getElementById('sidebar').classList.add('active'); document.getElementById('sidebarOverlay').classList.remove('hidden'); return false;">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>More</span>
+        </a>
+    </nav>
+
     <!-- Enhanced Admin Dashboard Script -->
     <script src="../js/admin-dashboard-enhanced.js"></script>
 </body>

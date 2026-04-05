@@ -1,0 +1,10 @@
+{"type":"server-started","port":49705,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:49705","screen_dir":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content","state_dir":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/state"}
+{"type":"screen-added","file":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content/visual-style.html"}
+{"type":"screen-added","file":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content/register-layout.html"}
+{"type":"screen-added","file":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content/waiting.html"}
+{"type":"screen-added","file":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content/login-mockup.html"}
+{"source":"user-event","type":"click","text":"✓\n    \n      Looks good, continue\n      Proceed to register page mockup","choice":"approve","id":null,"timestamp":1775401646368}
+{"type":"screen-added","file":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content/register-mockup.html"}
+{"source":"user-event","type":"click","text":"✓\n    \n      Looks good, approve the design\n      Proceed to write up the design spec","choice":"approve","id":null,"timestamp":1775401687835}
+{"type":"screen-added","file":"/Applications/XAMPP/xamppfiles/htdocs/meditrack/.superpowers/brainstorm/12124-1775401384/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

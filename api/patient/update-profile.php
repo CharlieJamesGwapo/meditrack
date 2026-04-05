@@ -19,14 +19,39 @@ try {
     $db = $database->getConnection();
     $userId = $_SESSION['user_id'];
 
-    // Get data from POST
-    $data = $_POST;
+    // Get data from POST or JSON body
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (strpos($contentType, 'application/json') !== false) {
+        $data = json_decode(file_get_contents("php://input"), true) ?? [];
+    } else {
+        $data = $_POST;
+    }
 
-    // Validate required fields
+    // For partial updates, fetch existing data to fill in missing required fields
     $required = ['full_name', 'date_of_birth', 'gender', 'contact_number'];
+    $missingRequired = false;
     foreach ($required as $field) {
-        if (empty($data[$field])) {
-            sendJSON(['success' => false, 'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required'], 400);
+        if (!isset($data[$field]) || $data[$field] === '') {
+            $missingRequired = true;
+            break;
+        }
+    }
+    if ($missingRequired) {
+        $existingStmt = $db->prepare("SELECT p.full_name, p.date_of_birth, p.gender, p.contact_number, p.address, p.region, p.province, p.city, p.zip_code, p.blood_group, p.allergies, p.medical_history, p.emergency_contact_name, p.emergency_contact_number FROM patients p WHERE p.user_id = :uid");
+        $existingStmt->execute([':uid' => $userId]);
+        $existing = $existingStmt->fetch(PDO::FETCH_ASSOC);
+        if ($existing) {
+            foreach ($existing as $key => $val) {
+                if (!isset($data[$key]) || $data[$key] === '') {
+                    $data[$key] = $val;
+                }
+            }
+        }
+        // Re-validate after merge
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                sendJSON(['success' => false, 'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required'], 400);
+            }
         }
     }
 
@@ -35,7 +60,7 @@ try {
     $profile_image_path = null;
 
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = '../../uploads/';
+        $upload_dir = __DIR__ . '/../../uploads/';
         
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0777, true);
@@ -55,14 +80,16 @@ try {
     $db->beginTransaction();
 
     // Update users table
-    $userQuery = "UPDATE users SET 
+    $userQuery = "UPDATE users SET
                     phone = :phone,
+                    email = :email,
                     updated_at = CURRENT_TIMESTAMP
                   WHERE id = :user_id";
-    
+
     $userStmt = $db->prepare($userQuery);
     $userStmt->execute([
         ':phone' => sanitizeInput($data['contact_number']),
+        ':email' => sanitizeInput($data['email'] ?? ''),
         ':user_id' => $userId
     ]);
 
@@ -125,11 +152,11 @@ try {
     sendJSON([
         'success' => true,
         'message' => 'Profile updated successfully',
-        'profile_image_url' => $profile_image_path ? '../../' . $profile_image_path : null
+        'profile_image_url' => $profile_image_path ? (defined('APP_URL') ? APP_URL : '') . '/' . $profile_image_path : null
     ]);
 
 } catch (Exception $e) {
-    if ($db->inTransaction()) {
+    if (isset($db) && $db && $db->inTransaction()) {
         $db->rollBack();
     }
     sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);

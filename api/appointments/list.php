@@ -14,7 +14,7 @@ try {
 
     $role = getCurrentUserRole();
     $userId = getCurrentUserId();
-    $profileId = $_SESSION['profile_id'];
+    $profileId = $_SESSION['profile_id'] ?? null;
     
     $status = $_GET['status'] ?? null;
     $date = $_GET['date'] ?? null;

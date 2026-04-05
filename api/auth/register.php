@@ -43,11 +43,11 @@ $profile_image = null;
 $profile_image_path = null;
 
 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-    $upload_dir = '../../uploads/';
+    $upload_dir = __DIR__ . '/../../uploads/';
     
     // Create uploads directory if it doesn't exist
     if (!file_exists($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
+        mkdir($upload_dir, 0755, true);
     }
     
     $file_extension = 'jpg'; // Always save as JPG since we're converting
@@ -87,13 +87,23 @@ try {
     $db->beginTransaction();
 
     // Insert user
-    $password_hash = password_hash($password, PASSWORD_HASH_ALGO);
-    $userQuery = "INSERT INTO users (username, email, password_hash, role) VALUES (:username, :email, :password_hash, 'patient')";
+    $password_hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+    // Split full_name into first/last for users table
+    $nameParts = explode(' ', $full_name, 2);
+    $firstName = $nameParts[0] ?? '';
+    $lastName = $nameParts[1] ?? '';
+
+    $userQuery = "INSERT INTO users (username, email, password_hash, first_name, last_name, role, phone, profile_picture)
+                  VALUES (:username, :email, :password_hash, :first_name, :last_name, 'patient', :phone, :profile_picture)";
     $userStmt = $db->prepare($userQuery);
     $userStmt->execute([
         ':username' => $username,
         ':email' => $email,
-        ':password_hash' => $password_hash
+        ':password_hash' => $password_hash,
+        ':first_name' => $firstName,
+        ':last_name' => $lastName,
+        ':phone' => $contact_number,
+        ':profile_picture' => $profile_image
     ]);
     
     $user_id = $db->lastInsertId();
@@ -162,7 +172,7 @@ try {
     ]);
 
 } catch (Exception $e) {
-    if ($db->inTransaction()) {
+    if (isset($db) && $db && $db->inTransaction()) {
         $db->rollBack();
     }
     sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);

@@ -1,20 +1,27 @@
 <?php
+session_start();
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 require_once '../../config/database.php';
+require_once '../../config/config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+    exit;
+}
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
+
     if (!$db) {
         throw new Exception('Database connection failed');
     }
-    
-    // Get doctor ID from session (you should implement proper session handling)
-    // For now, we'll use a default doctor ID
-    $doctor_id = 3; // Replace with actual session doctor ID
+
+    $doctor_id = $_SESSION['user_id'];
     
     $sql = "SELECT 
                 u.id,
@@ -39,6 +46,10 @@ try {
     $doctor = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($doctor) {
+        $baseUrl = defined('APP_URL') ? APP_URL : '';
+        $profileImg = $doctor['profile_picture'] ?: $doctor['profile_image'];
+        $profileImageUrl = $profileImg ? ($baseUrl . '/uploads/' . $profileImg) : null;
+
         echo json_encode([
             'success' => true,
             'doctor' => [
@@ -49,7 +60,8 @@ try {
                 'middle_name' => $doctor['middle_name'],
                 'last_name' => $doctor['last_name'],
                 'phone' => $doctor['phone'],
-                'profile_picture' => $doctor['profile_picture'] ?: $doctor['profile_image'],
+                'profile_picture' => $profileImg,
+                'profile_image_url' => $profileImageUrl,
                 'specialization' => $doctor['specialization'],
                 'department' => $doctor['department'],
                 'bio' => $doctor['bio']

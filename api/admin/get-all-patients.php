@@ -1,4 +1,14 @@
 <?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 /**
  * Get All Patients for Admin View
  */
@@ -6,10 +16,8 @@
 require_once '../../config/database.php';
 require_once '../../config/config.php';
 
-header('Content-Type: application/json');
-
-// Check authentication
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+// Check authentication - admin and reception can view patients
+if (!isLoggedIn() || !in_array(getCurrentUserRole(), ['admin', 'reception'])) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
@@ -32,7 +40,7 @@ try {
                 p.created_at,
                 u.status
               FROM patients p
-              LEFT JOIN users u ON p.user_id = u.id
+              LEFT JOIN users u ON p.user_id = u.id AND u.role = 'patient'
               WHERE u.status != 'archived' OR u.status IS NULL
               ORDER BY p.created_at DESC";
     

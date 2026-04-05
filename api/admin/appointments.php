@@ -1,8 +1,17 @@
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
 require_once '../../config/database.php';
+require_once '../../config/config.php';
+
+// Check authentication - admin and reception can view appointments
+if (!isLoggedIn() || !in_array(getCurrentUserRole(), ['admin', 'reception'])) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
 
 try {
     $database = new Database();
@@ -16,22 +25,21 @@ try {
     $date = isset($_GET['date']) ? $_GET['date'] : '';
     $status = isset($_GET['status']) ? $_GET['status'] : '';
     
-    $sql = "SELECT 
+    $sql = "SELECT
                 a.id,
+                a.patient_id,
                 a.appointment_date,
                 a.appointment_time,
                 a.status,
                 a.reason_for_visit as reason,
                 a.notes,
-                CONCAT(COALESCE(pu.first_name, ''), ' ', COALESCE(pu.middle_name, ''), ' ', COALESCE(pu.last_name, '')) as patient_name,
-                CONCAT(COALESCE(du.first_name, ''), ' ', COALESCE(du.middle_name, ''), ' ', COALESCE(du.last_name, '')) as doctor_name,
-                p.full_name as patient_full_name,
-                d.full_name as doctor_full_name
+                COALESCE(p.full_name, 'Unknown Patient') as patient_name,
+                COALESCE(d.full_name, CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as doctor_name,
+                d.department as department
             FROM appointments a
             LEFT JOIN patients p ON a.patient_id = p.id
-            LEFT JOIN users pu ON p.user_id = pu.id
             LEFT JOIN doctors d ON a.doctor_id = d.id
-            LEFT JOIN users du ON d.user_id = du.id
+            LEFT JOIN users u ON d.user_id = u.id
             WHERE 1=1";
     
     $params = [];
@@ -54,24 +62,28 @@ try {
     $appointments = [];
     
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $patientName = trim($row['patient_name']) ?: $row['patient_full_name'] ?: 'Unknown Patient';
-        $doctorName = trim($row['doctor_name']) ?: $row['doctor_full_name'] ?: 'Unknown Doctor';
+        $patientName = trim($row['patient_name']) ?: 'Unknown Patient';
+        $doctorName = trim($row['doctor_name']) ?: 'Not Assigned';
         
         $appointments[] = [
             'id' => (int)$row['id'],
+            'patient_id' => (int)$row['patient_id'],
             'patient_name' => $patientName,
             'doctor_name' => $doctorName,
             'appointment_date' => $row['appointment_date'],
             'appointment_time' => $row['appointment_time'],
             'status' => $row['status'] ?: 'scheduled',
             'reason' => $row['reason'],
-            'notes' => $row['notes']
+            'notes' => $row['notes'],
+            'department' => $row['department'] ?: 'General'
         ];
     }
     
-    echo json_encode($appointments);
-    
+    echo json_encode(['success' => true, 'appointments' => $appointments]);
+
+} catch(PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 } catch(Exception $e) {
-    echo json_encode([]);
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 ?>

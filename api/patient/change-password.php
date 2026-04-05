@@ -53,7 +53,7 @@ try {
     }
 
     // Update password
-    $new_password_hash = password_hash($data['new_password'], PASSWORD_HASH_ALGO);
+    $new_password_hash = password_hash($data['new_password'], PASSWORD_BCRYPT, ['cost' => 10]);
     
     $updateQuery = "UPDATE users SET 
                       password_hash = :password_hash,

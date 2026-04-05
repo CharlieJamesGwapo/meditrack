@@ -122,7 +122,7 @@ try {
     $hashedPassword = password_hash($newPassword, PASSWORD_HASH_ALGO, ['cost' => PASSWORD_HASH_COST]);
     
     // Update user password
-    $updateQuery = "UPDATE users SET password = :password, updated_at = NOW() WHERE id = :user_id";
+    $updateQuery = "UPDATE users SET password_hash = :password, updated_at = NOW() WHERE id = :user_id";
     $updateStmt = $db->prepare($updateQuery);
     $updateStmt->bindParam(':password', $hashedPassword);
     $updateStmt->bindParam(':user_id', $user['id']);
