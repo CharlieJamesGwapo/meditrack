@@ -3,227 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Record - MediTrack</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1a1a1a; background: #f5f5f5; }
-
-        .print-container { max-width: 800px; margin: 20px auto; background: white; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-
-        /* Header */
-        .record-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #10b981; padding-bottom: 20px; margin-bottom: 25px; }
-        .clinic-info h1 { font-size: 24px; color: #10b981; margin-bottom: 4px; }
-        .clinic-info p { font-size: 12px; color: #666; }
-        .record-meta { text-align: right; font-size: 12px; color: #666; }
-        .record-meta .record-id { font-weight: bold; color: #333; font-size: 14px; }
-
-        /* Patient Info */
-        .patient-section { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-        .patient-section h3 { font-size: 14px; color: #10b981; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .patient-grid .field { font-size: 13px; }
-        .patient-grid .field strong { color: #555; }
-
-        /* Sections */
-        .section { margin-bottom: 18px; }
-        .section-title { font-size: 13px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
-        .section-content { font-size: 14px; line-height: 1.7; padding: 8px 0; }
-
-        /* Vital Signs */
-        .vitals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .vital-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; text-align: center; }
-        .vital-item .vital-label { font-size: 11px; color: #888; text-transform: uppercase; }
-        .vital-item .vital-value { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-
-        /* Prescription box */
-        .prescription-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; }
-        .prescription-box .rx-symbol { font-size: 24px; font-weight: bold; color: #d97706; margin-bottom: 8px; }
-
-        /* Footer */
-        .record-footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; display: flex; justify-content: space-between; }
-        .signature-line { width: 200px; text-align: center; }
-        .signature-line .line { border-top: 1px solid #333; margin-bottom: 4px; margin-top: 40px; }
-        .signature-line p { font-size: 12px; color: #666; }
-
-        /* Action buttons - hidden in print */
-        .action-bar { max-width: 800px; margin: 20px auto; display: flex; gap: 12px; justify-content: center; }
-        .action-btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-print { background: #10b981; color: white; }
-        .btn-print:hover { background: #059669; }
-        .btn-back { background: #6b7280; color: white; }
-        .btn-back:hover { background: #4b5563; }
-
-        .loading { text-align: center; padding: 60px; }
-        .loading i { font-size: 40px; color: #10b981; }
-
-        @media print {
-            body { background: white; }
-            .action-bar { display: none !important; }
-            .print-container { box-shadow: none; margin: 0; padding: 20px; }
-        }
-
-        @media (max-width: 600px) {
-            .print-container { margin: 10px; padding: 20px; }
-            .patient-grid { grid-template-columns: 1fr; }
-            .vitals-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-    </style>
+    <title>Medical Record — MediTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; font-size: 12pt; }
+            .print-container { box-shadow: none; max-width: 100%; padding: 0; }
+        }
+        @page { margin: 1.5cm; size: A4; }
+    </style>
 </head>
-<body>
-    <div class="action-bar" id="actionBar">
-        <button class="action-btn btn-print" onclick="window.print()">
-            <i class="fas fa-print"></i> Print Record
+<body class="bg-gray-100 min-h-screen">
+    <div class="no-print fixed top-4 right-4 flex gap-2 z-50">
+        <button onclick="window.print()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition flex items-center gap-2">
+            <i class="fas fa-print"></i> Print
         </button>
-        <button class="action-btn btn-back" onclick="history.back()">
-            <i class="fas fa-arrow-left"></i> Back
+        <button onclick="window.close()" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="fas fa-times"></i> Close
         </button>
     </div>
 
-    <div class="print-container" id="recordContainer">
-        <div class="loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p style="margin-top:12px;color:#666;">Loading medical record...</p>
+    <div class="print-container max-w-3xl mx-auto bg-white shadow-lg my-8 p-8">
+        <div class="border-b-2 border-teal-600 pb-4 mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-teal-700">MediTrack</h1>
+                    <p class="text-gray-600 text-sm">Internal Medicine Clinic</p>
+                    <p class="text-gray-500 text-xs mt-1">Mon–Fri, 8:00 AM – 5:00 PM</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-semibold text-gray-700" id="aptNumber"></p>
+                    <p class="text-sm text-gray-500" id="aptDate"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+            <div><p class="text-xs text-gray-500 uppercase">Patient Name</p><p class="font-semibold" id="patientName">—</p></div>
+            <div><p class="text-xs text-gray-500 uppercase">Date of Birth</p><p id="patientDOB">—</p></div>
+            <div><p class="text-xs text-gray-500 uppercase">Gender</p><p id="patientGender">—</p></div>
+            <div><p class="text-xs text-gray-500 uppercase">Contact</p><p id="patientContact">—</p></div>
+        </div>
+
+        <div class="mb-6">
+            <p class="text-xs text-gray-500 uppercase">Attending Physician</p>
+            <p class="font-semibold text-teal-700" id="doctorName">—</p>
+            <p class="text-sm text-gray-500" id="doctorSpec">Internal Medicine</p>
+        </div>
+
+        <div class="mb-6" id="vitalsSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-3">Vital Signs</h3>
+            <div class="grid grid-cols-5 gap-3 text-center" id="vitalsGrid"></div>
+        </div>
+
+        <div class="mb-4" id="complaintSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Chief Complaint</h3>
+            <p class="text-gray-800" id="chiefComplaint">—</p>
+        </div>
+
+        <div class="mb-4" id="diagnosisSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Diagnosis</h3>
+            <p class="text-gray-800" id="diagnosis">—</p>
+        </div>
+
+        <div class="mb-4" id="prescriptionSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Prescription</h3>
+            <p class="text-gray-800 whitespace-pre-line" id="prescription">—</p>
+        </div>
+
+        <div class="mb-4" id="labSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Lab Tests Ordered</h3>
+            <p class="text-gray-800 whitespace-pre-line" id="labTests">—</p>
+        </div>
+
+        <div class="mb-4" id="notesSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Notes</h3>
+            <p class="text-gray-800 whitespace-pre-line" id="notes">—</p>
+        </div>
+
+        <div class="mb-6" id="followupSection">
+            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Follow-up Date</h3>
+            <p class="text-gray-800 font-semibold" id="followUp">—</p>
+        </div>
+
+        <div class="border-t pt-4 mt-8 text-center text-xs text-gray-400">
+            <p>This is a computer-generated document.</p>
+            <p>Printed on: <span id="printDate"></span></p>
         </div>
     </div>
 
+    <script src="../js/auth.js"></script>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const recordId = urlParams.get('id');
-        const source = urlParams.get('source') || 'medical_records'; // medical_records or visits
+        const user = checkAuth();
+        const params = new URLSearchParams(window.location.search);
+        const recordId = params.get('id');
 
         if (!recordId) {
-            document.getElementById('recordContainer').innerHTML = '<div class="loading"><p style="color:red;">No record ID provided</p></div>';
+            document.querySelector('.print-container').innerHTML = '<p class="text-center text-red-500 py-20">No record ID specified.</p>';
         } else {
             loadRecord();
         }
 
         async function loadRecord() {
-            try {
-                // Fetch record data - we'll use a dedicated API
-                const response = await fetch(`../api/patient/get-record-detail.php?id=${recordId}&source=${source}`, { credentials: 'include' });
-                const data = await response.json();
-
-                if (data.success && data.record) {
-                    renderRecord(data.record);
-                } else {
-                    document.getElementById('recordContainer').innerHTML = `<div class="loading"><p style="color:red;">${data.message || 'Record not found'}</p></div>`;
-                }
-            } catch (error) {
-                document.getElementById('recordContainer').innerHTML = '<div class="loading"><p style="color:red;">Failed to load record</p></div>';
+            const data = await apiRequest('/patient/get-medical-records.php');
+            if (data && data.success) {
+                const record = data.records.find(r => r.id == recordId);
+                if (record) { renderRecord(record); return; }
             }
+            document.querySelector('.print-container').innerHTML = '<p class="text-center text-gray-500 py-20">Record not found.</p>';
         }
 
         function renderRecord(r) {
-            const vitals = r.vitals || {};
-            const hasVitals = vitals.blood_pressure || vitals.temperature || vitals.pulse || vitals.weight;
-            const recordDate = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : 'N/A';
+            document.getElementById('aptNumber').textContent = r.appointment_number || '';
+            document.getElementById('aptDate').textContent = fmtDate(r.appointment_date) + ' at ' + fmtTime(r.appointment_time);
+            document.getElementById('patientName').textContent = r.patient_name || r.full_name || '—';
+            document.getElementById('patientDOB').textContent = r.date_of_birth ? fmtDate(r.date_of_birth) : '—';
+            document.getElementById('patientGender').textContent = r.gender || '—';
+            document.getElementById('patientContact').textContent = r.contact_number || '—';
+            document.getElementById('doctorName').textContent = r.doctor_name || '—';
+            document.getElementById('doctorSpec').textContent = r.specialization || 'Internal Medicine';
 
-            document.getElementById('recordContainer').innerHTML = `
-                <div class="record-header">
-                    <div class="clinic-info">
-                        <h1><i class="fas fa-hospital" style="margin-right:8px;"></i>MediTrack</h1>
-                        <p>Healthcare Management System</p>
-                        <p>Medical Record / Clinical Report</p>
-                    </div>
-                    <div class="record-meta">
-                        <div class="record-id">Record #${r.id || 'N/A'}</div>
-                        <p>Date: ${recordDate}</p>
-                        ${r.appointment_date ? '<p>Appointment: ' + new Date(r.appointment_date).toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'}) + '</p>' : ''}
-                    </div>
-                </div>
+            const vitals = typeof r.vital_signs === 'string' ? JSON.parse(r.vital_signs) : (r.vital_signs || {});
+            document.getElementById('vitalsGrid').innerHTML = [
+                { l: 'Blood Pressure', v: vitals.bp, u: 'mmHg' },
+                { l: 'Temperature', v: vitals.temp, u: '°C' },
+                { l: 'Heart Rate', v: vitals.heart_rate, u: 'bpm' },
+                { l: 'Weight', v: vitals.weight, u: 'kg' },
+                { l: 'Height', v: vitals.height, u: 'cm' }
+            ].map(x => `<div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">${x.l}</p><p class="font-semibold text-sm">${x.v || '—'} ${x.v ? x.u : ''}</p></div>`).join('');
 
-                <div class="patient-section">
-                    <h3><i class="fas fa-user" style="margin-right:6px;"></i>Patient Information</h3>
-                    <div class="patient-grid">
-                        <div class="field"><strong>Name:</strong> ${r.patient_name || 'N/A'}</div>
-                        <div class="field"><strong>Gender:</strong> ${r.gender || 'N/A'}</div>
-                        <div class="field"><strong>Date of Birth:</strong> ${r.date_of_birth || 'N/A'}</div>
-                        <div class="field"><strong>Blood Group:</strong> ${r.blood_group || 'N/A'}</div>
-                        <div class="field"><strong>Contact:</strong> ${r.contact_number || 'N/A'}</div>
-                        <div class="field"><strong>Allergies:</strong> ${r.allergies || 'None known'}</div>
-                    </div>
-                </div>
+            set('chiefComplaint', r.chief_complaint);
+            set('diagnosis', r.diagnosis);
+            set('prescription', r.prescription);
+            set('labTests', r.lab_tests_ordered);
+            set('notes', r.notes);
+            document.getElementById('followUp').textContent = r.follow_up_date ? fmtDate(r.follow_up_date) : 'None scheduled';
 
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-user-md" style="margin-right:6px;"></i>Attending Physician</div>
-                    <div class="section-content">
-                        <strong>Dr. ${r.doctor_name || 'N/A'}</strong>
-                        ${r.specialization ? ' — ' + r.specialization : ''}
-                        ${r.department ? ' | ' + r.department : ''}
-                    </div>
-                </div>
-
-                ${r.chief_complaint ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-comment-medical" style="margin-right:6px;"></i>Chief Complaint</div>
-                    <div class="section-content">${r.chief_complaint}</div>
-                </div>` : ''}
-
-                ${r.symptoms ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-thermometer" style="margin-right:6px;"></i>Symptoms</div>
-                    <div class="section-content">${r.symptoms}</div>
-                </div>` : ''}
-
-                ${hasVitals ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-heartbeat" style="margin-right:6px;"></i>Vital Signs</div>
-                    <div class="vitals-grid">
-                        ${vitals.blood_pressure ? '<div class="vital-item"><div class="vital-label">Blood Pressure</div><div class="vital-value">' + vitals.blood_pressure + '</div></div>' : ''}
-                        ${vitals.temperature ? '<div class="vital-item"><div class="vital-label">Temperature</div><div class="vital-value">' + vitals.temperature + '°C</div></div>' : ''}
-                        ${vitals.pulse ? '<div class="vital-item"><div class="vital-label">Pulse Rate</div><div class="vital-value">' + vitals.pulse + ' bpm</div></div>' : ''}
-                        ${vitals.weight ? '<div class="vital-item"><div class="vital-label">Weight</div><div class="vital-value">' + vitals.weight + ' kg</div></div>' : ''}
-                    </div>
-                </div>` : ''}
-
-                ${r.diagnosis ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-stethoscope" style="margin-right:6px;"></i>Diagnosis</div>
-                    <div class="section-content"><strong>${r.diagnosis}</strong></div>
-                </div>` : ''}
-
-                ${r.prescription ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-prescription" style="margin-right:6px;"></i>Prescription</div>
-                    <div class="prescription-box">
-                        <div class="rx-symbol">Rx</div>
-                        <div class="section-content" style="white-space:pre-line;">${r.prescription}</div>
-                    </div>
-                </div>` : ''}
-
-                ${r.lab_tests ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-flask" style="margin-right:6px;"></i>Laboratory Tests Ordered</div>
-                    <div class="section-content">${r.lab_tests}</div>
-                </div>` : ''}
-
-                ${r.notes ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-sticky-note" style="margin-right:6px;"></i>Additional Notes</div>
-                    <div class="section-content">${r.notes}</div>
-                </div>` : ''}
-
-                ${r.follow_up_date ? `
-                <div class="section">
-                    <div class="section-title"><i class="fas fa-calendar-check" style="margin-right:6px;"></i>Follow-up</div>
-                    <div class="section-content">${new Date(r.follow_up_date).toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'})}</div>
-                </div>` : ''}
-
-                <div class="record-footer">
-                    <div class="signature-line">
-                        <div class="line"></div>
-                        <p>Patient Signature</p>
-                    </div>
-                    <div class="signature-line">
-                        <div class="line"></div>
-                        <p>Dr. ${r.doctor_name || '___________'}</p>
-                        <p style="font-size:11px;color:#999;">${r.specialization || ''}</p>
-                    </div>
-                </div>
-            `;
+            if (!r.chief_complaint) hide('complaintSection');
+            if (!r.lab_tests_ordered) hide('labSection');
+            if (!r.notes) hide('notesSection');
+            document.getElementById('printDate').textContent = new Date().toLocaleString();
         }
+
+        function set(id, v) { document.getElementById(id).textContent = v || '—'; }
+        function hide(id) { document.getElementById(id).style.display = 'none'; }
+        function fmtDate(d) { return d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—'; }
+        function fmtTime(t) { if(!t)return''; const[h,m]=t.split(':'); const hr=parseInt(h); return `${hr>12?hr-12:hr||12}:${m} ${hr>=12?'PM':'AM'}`; }
     </script>
 </body>
 </html>
