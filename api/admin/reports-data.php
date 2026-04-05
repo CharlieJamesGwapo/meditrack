@@ -13,72 +13,81 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    $period = sanitizeInput($_GET['period'] ?? 'daily');
+    $range = sanitizeInput($_GET['range'] ?? $_GET['period'] ?? 'week');
 
-    // Appointment stats by period
-    switch ($period) {
-        case 'weekly':
-            $groupBy   = "YEARWEEK(appointment_date,1)";
-            $labelExpr = "CONCAT('Week ', WEEK(appointment_date,1), ' ', YEAR(appointment_date))";
-            $limit     = 12;
+    // Date range filter
+    switch ($range) {
+        case 'today':
+            $dateFilter = "appointment_date = CURDATE()";
             break;
-        case 'monthly':
-            $groupBy   = "DATE_FORMAT(appointment_date, '%Y-%m')";
-            $labelExpr = "DATE_FORMAT(appointment_date, '%b %Y')";
-            $limit     = 12;
+        case 'month':
+            $dateFilter = "appointment_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)";
             break;
-        default: // daily
-            $groupBy   = "appointment_date";
-            $labelExpr = "appointment_date";
-            $limit     = 30;
+        case 'year':
+            $dateFilter = "appointment_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)";
+            break;
+        default: // week
+            $dateFilter = "appointment_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
             break;
     }
 
-    $stmt = $db->query("
-        SELECT $labelExpr as label,
-               COUNT(*) as total,
-               SUM(status='completed') as completed,
-               SUM(status='cancelled') as cancelled,
-               SUM(status='scheduled') as scheduled
-        FROM appointments
-        GROUP BY $groupBy
-        ORDER BY $groupBy DESC
-        LIMIT $limit
-    ");
-    $appointment_stats = array_reverse($stmt->fetchAll());
+    // Overview stats
+    $stmt = $db->query("SELECT COUNT(*) as total FROM appointments WHERE $dateFilter");
+    $totalAppointments = (int)$stmt->fetch()['total'];
 
-    // Gender distribution
-    $stmt = $db->query("SELECT gender, COUNT(*) as count FROM patients WHERE gender IS NOT NULL GROUP BY gender");
-    $gender_distribution = $stmt->fetchAll();
+    $stmt = $db->query("SELECT COUNT(*) as total FROM patients");
+    $totalPatients = (int)$stmt->fetch()['total'];
+
+    // Status distribution
+    $stmt = $db->query("SELECT status, COUNT(*) as count FROM appointments WHERE $dateFilter GROUP BY status ORDER BY count DESC");
+    $statusRows = $stmt->fetchAll();
+    $statusLabels = [];
+    $statusData = [];
+    foreach ($statusRows as $row) {
+        $statusLabels[] = ucfirst($row['status']);
+        $statusData[] = (int)$row['count'];
+    }
+
+    // Last 7 days trend
+    $stmt = $db->query("SELECT DATE_FORMAT(appointment_date, '%d') as label, COUNT(*) as count FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) GROUP BY appointment_date ORDER BY appointment_date ASC");
+    $trendRows = $stmt->fetchAll();
+    $trendLabels = [];
+    $trendData = [];
+    foreach ($trendRows as $row) {
+        $trendLabels[] = $row['label'];
+        $trendData[] = (int)$row['count'];
+    }
 
     // Age distribution
-    $age_brackets = ['0-17' => 0, '18-30' => 0, '31-45' => 0, '46-60' => 0, '60+' => 0];
+    $ageBrackets = ['0-17' => 0, '18-30' => 0, '31-45' => 0, '46-60' => 0, '60+' => 0];
     $stmt = $db->query("SELECT TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) as age FROM patients WHERE date_of_birth IS NOT NULL");
     foreach ($stmt->fetchAll() as $row) {
-        $age = (int) $row['age'];
-        if ($age < 18)      $age_brackets['0-17']++;
-        elseif ($age <= 30) $age_brackets['18-30']++;
-        elseif ($age <= 45) $age_brackets['31-45']++;
-        elseif ($age <= 60) $age_brackets['46-60']++;
-        else                $age_brackets['60+']++;
+        $age = (int)$row['age'];
+        if ($age < 18)      $ageBrackets['0-17']++;
+        elseif ($age <= 30) $ageBrackets['18-30']++;
+        elseif ($age <= 45) $ageBrackets['31-45']++;
+        elseif ($age <= 60) $ageBrackets['46-60']++;
+        else                $ageBrackets['60+']++;
     }
-    $age_distribution = array_map(
-        fn($bracket, $count) => ['bracket' => $bracket, 'count' => $count],
-        array_keys($age_brackets), array_values($age_brackets)
-    );
-
-    // Completion rate
-    $stmt = $db->query("SELECT COUNT(*) as total, SUM(status='completed') as completed FROM appointments");
-    $row  = $stmt->fetch();
-    $completion_rate = $row['total'] > 0 ? round($row['completed'] / $row['total'] * 100, 1) : 0;
 
     sendJSON([
-        'success'            => true,
-        'period'             => $period,
-        'appointment_stats'  => $appointment_stats,
-        'gender_distribution'=> $gender_distribution,
-        'age_distribution'   => $age_distribution,
-        'completion_rate'    => $completion_rate
+        'success' => true,
+        'overview' => [
+            'totalAppointments' => $totalAppointments,
+            'totalPatients' => $totalPatients
+        ],
+        'statusDistribution' => [
+            'labels' => $statusLabels,
+            'data' => $statusData
+        ],
+        'appointmentsTrend' => [
+            'labels' => $trendLabels,
+            'data' => $trendData
+        ],
+        'demographics' => [
+            'labels' => array_keys($ageBrackets),
+            'data' => array_values($ageBrackets)
+        ]
     ]);
 
 } catch (Exception $e) {
