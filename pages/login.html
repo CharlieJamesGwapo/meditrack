@@ -104,7 +104,7 @@
         .brand-title {
             font-family: 'Poppins', sans-serif;
             font-size: 28px;
-            font-weight: 800;
+            font-weight: 700;
             color: #ffffff;
             margin-bottom: 8px;
             line-height: 1.2;
@@ -241,23 +241,18 @@
         }
 
         .strength-bar-container {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .strength-segment {
+            flex: 1;
             height: 4px;
             background: #e5e7eb;
             border-radius: 2px;
-            margin-top: 8px;
-            overflow: hidden;
+            transition: background 0.3s ease;
         }
-
-        .password-strength {
-            height: 100%;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-            width: 0;
-        }
-
-        .strength-weak { background: #ef4444; width: 33%; }
-        .strength-medium { background: #f59e0b; width: 66%; }
-        .strength-strong { background: #10b981; width: 100%; }
 
         .options-row {
             display: flex;
@@ -556,15 +551,15 @@
 
             <div class="features-list">
                 <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
                     <span class="feature-text">Easy appointment booking</span>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
                     <span class="feature-text">Secure medical records</span>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-qrcode"></i></div>
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
                     <span class="feature-text">QR code check-in</span>
                 </div>
             </div>
@@ -606,8 +601,11 @@
                             <i class="fas fa-eye" id="eyeIcon"></i>
                         </button>
                     </div>
-                    <div class="strength-bar-container">
-                        <div id="passwordStrength" class="password-strength"></div>
+                    <div class="strength-bar-container" id="strengthBar">
+                        <div class="strength-segment"></div>
+                        <div class="strength-segment"></div>
+                        <div class="strength-segment"></div>
+                        <div class="strength-segment"></div>
                     </div>
 
                     <div style="height: 18px;"></div>
@@ -700,8 +698,8 @@
             eyeIcon.classList.toggle('fa-eye-slash');
         });
 
-        // Password Strength Indicator
-        const passwordStrength = document.getElementById('passwordStrength');
+        // Password Strength Indicator (4-segment bar)
+        const strengthSegments = document.querySelectorAll('.strength-segment');
         passwordInput.addEventListener('input', () => {
             const password = passwordInput.value;
             let strength = 0;
@@ -712,14 +710,12 @@
             if (/[0-9]/.test(password)) strength++;
             if (/[^a-zA-Z0-9]/.test(password)) strength++;
 
-            passwordStrength.className = 'password-strength';
-            if (strength <= 2) {
-                passwordStrength.classList.add('strength-weak');
-            } else if (strength <= 4) {
-                passwordStrength.classList.add('strength-medium');
-            } else {
-                passwordStrength.classList.add('strength-strong');
-            }
+            const filledSegments = Math.min(4, Math.round(strength * 4 / 5));
+            const color = filledSegments <= 1 ? '#ef4444' : filledSegments <= 3 ? '#f59e0b' : '#10b981';
+
+            strengthSegments.forEach((seg, i) => {
+                seg.style.background = i < filledSegments ? color : '#e5e7eb';
+            });
         });
 
         // Form Elements
