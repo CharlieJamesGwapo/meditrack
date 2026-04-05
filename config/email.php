@@ -3,51 +3,57 @@
 // This file contains email settings for sending notifications
 
 class EmailConfig {
-    // SMTP Settings
-    const SMTP_HOST = 'smtp.gmail.com';  // Gmail SMTP server
-    const SMTP_PORT = 587;                // TLS port
-    const SMTP_SECURE = 'tls';            // TLS encryption
-    
-    // Email Credentials (Update with your actual email)
-    const SMTP_USERNAME = 'pforcapstone@gmail.com';  // Your Gmail address
-    const SMTP_PASSWORD = 'rtegcvlllmtaxnin';        // Your Gmail App Password (no spaces)
-    
-    // Sender Information
-    const FROM_EMAIL = 'noreply@meditrack.com';
-    const FROM_NAME = 'MediTrack Hospital System';
-    
     // System Settings
     const ENABLE_EMAIL = true;  // Set to false to disable email sending
     const DEBUG_MODE = false;   // Set to true for debugging
-    
+
     /**
      * Get PHPMailer instance with configuration
+     * Uses constants from config.php (which reads from env.php)
      */
     public static function getMailer() {
+        // Load config if not already loaded
+        if (!defined('SMTP_HOST')) {
+            require_once __DIR__ . '/config.php';
+        }
+
+        require_once __DIR__ . '/../PHPMailer/src/Exception.php';
         require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
         require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
-        require_once __DIR__ . '/../PHPMailer/src/Exception.php';
-        
-        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-        
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
         try {
             // Server settings
             $mail->isSMTP();
-            $mail->Host = self::SMTP_HOST;
+            $mail->Host = SMTP_HOST;
             $mail->SMTPAuth = true;
-            $mail->Username = self::SMTP_USERNAME;
-            $mail->Password = self::SMTP_PASSWORD;
-            $mail->SMTPSecure = self::SMTP_SECURE;
-            $mail->Port = self::SMTP_PORT;
-            
+            $mail->Username = SMTP_USERNAME;
+            $mail->Password = SMTP_PASSWORD;
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = SMTP_PORT;
+
+            // SSL options for local development
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
+
             // Sender
-            $mail->setFrom(self::FROM_EMAIL, self::FROM_NAME);
-            
+            $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+
+            // Email settings
+            $mail->isHTML(true);
+            $mail->CharSet = 'UTF-8';
+
             // Debug mode
             if (self::DEBUG_MODE) {
                 $mail->SMTPDebug = 2;
             }
-            
+
             return $mail;
         } catch (Exception $e) {
             error_log("Email configuration error: " . $e->getMessage());
@@ -92,7 +98,7 @@ class EmailConfig {
      * HTML Email Template for Doctor Account
      */
     private static function getDoctorWelcomeEmailTemplate($data) {
-        $loginUrl = 'http://localhost/meditrack/pages/login.html';
+        $loginUrl = (defined('APP_URL') ? APP_URL : 'http://localhost/meditrack') . '/pages/login.html';
         
         return '
         <!DOCTYPE html>
@@ -171,7 +177,7 @@ class EmailConfig {
      * Plain Text Email for Doctor Account
      */
     private static function getDoctorWelcomeEmailPlainText($data) {
-        $loginUrl = 'http://localhost/meditrack/pages/login.html';
+        $loginUrl = (defined('APP_URL') ? APP_URL : 'http://localhost/meditrack') . '/pages/login.html';
         
         return "
 Welcome to MediTrack Hospital Management System!
