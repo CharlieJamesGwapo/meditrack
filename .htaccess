@@ -7,7 +7,7 @@ RewriteEngine On
 Options -Indexes
 
 # Protect sensitive files
-<FilesMatch "(\.htaccess|\.htpasswd|\.ini|\.log|\.sh|\.sql|composer\.json|composer\.lock|README\.md)$">
+<FilesMatch "(\.htaccess|\.htpasswd|\.ini|\.log|\.sh|\.sql|composer\.json|composer\.lock|README\.md|env\.php)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
