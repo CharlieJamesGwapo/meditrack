@@ -5,89 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard — MediTrack</title>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome 6.4 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         h1,h2,h3,h4,h5,h6,.font-poppins { font-family: 'Poppins', sans-serif; }
-        body { overflow-x: hidden; background: #f0fdf4; }
+        body { overflow-x: hidden; background: #f8fafc; }
 
         /* ── Sidebar ── */
-        .sidebar { transition: transform 0.3s ease; z-index: 40; }
+        .sidebar {
+            background: linear-gradient(160deg, #134e4a 0%, #0f3d39 55%, #0c2e2b 100%);
+            transition: transform 0.3s ease; z-index: 40;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+        }
         @media (max-width: 767px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
         }
         .sidebar-overlay { transition: opacity 0.3s ease; }
 
-        /* active nav item */
-        .nav-item { transition: background 0.2s, color 0.2s; }
-        .nav-item.active { background: rgba(255,255,255,0.2); }
-        .nav-item:hover  { background: rgba(255,255,255,0.12); }
+        /* Sidebar nav */
+        .nav-item { transition: background 0.2s, color 0.2s; border-left: 3px solid transparent; }
+        .nav-item.active {
+            background: rgba(255,255,255,0.13);
+            border-left-color: #22d3ee;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.08); }
+        .nav-item.active i, .nav-item.active span { color: #ffffff; }
+        .nav-item i { color: rgba(255,255,255,0.65); }
+        .nav-item span { color: rgba(255,255,255,0.85); }
+
+        /* Sidebar section label */
+        .nav-section-label {
+            font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.35); padding: 0 1rem; margin: 1rem 0 0.35rem;
+            text-transform: uppercase;
+        }
 
         /* ── Stat cards ── */
         .stat-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.10); }
 
-        @keyframes countUp {
-            from { opacity:0; transform:translateY(10px); }
-            to   { opacity:1; transform:translateY(0); }
-        }
-        .counter { animation: countUp 0.5s ease-out; }
+        @keyframes countUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .counter { animation: countUp 0.45s ease-out; }
+
+        /* Colored left-border stat cards */
+        .stat-border-teal   { border-left: 4px solid #0891b2; }
+        .stat-border-blue   { border-left: 4px solid #3b82f6; }
+        .stat-border-cyan   { border-left: 4px solid #22d3ee; }
+        .stat-border-orange { border-left: 4px solid #f97316; }
+        .stat-border-green  { border-left: 4px solid #16a34a; }
+        .stat-border-red    { border-left: 4px solid #dc2626; }
 
         /* ── Scrollbar ── */
-        ::-webkit-scrollbar        { width:8px; height:8px; }
-        ::-webkit-scrollbar-track  { background:#f1f1f1; }
-        ::-webkit-scrollbar-thumb  { background:#0d9488; border-radius:4px; }
-        ::-webkit-scrollbar-thumb:hover { background:#0f766e; }
+        ::-webkit-scrollbar        { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track  { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb  { background: #0891b2; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0e7490; }
 
-        /* ── Tab content ── */
+        /* ── Tab panels ── */
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
+
+        /* ── Tables ── */
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #f0fdfa; }
+
+        /* ── Period buttons ── */
+        .period-btn { transition: all 0.2s; }
+        .period-btn.active-period { background: #0891b2 !important; color: #fff !important; border-color: #0891b2 !important; }
 
         /* ── Mobile bottom nav ── */
         .mobile-bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-            background: white; border-top: 1px solid #e5e7eb;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            background: white; border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
             display: none; justify-content: space-around; align-items: center;
             height: 68px; padding: 0 4px;
             padding-bottom: env(safe-area-inset-bottom, 0);
         }
         .mobile-bottom-nav .nav-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            flex: 1; padding: 6px 2px; color: #6b7280; background: none; border: none;
-            cursor: pointer; font-size: 0.62rem; font-weight: 500; transition: color 0.2s;
+            flex: 1; padding: 6px 2px; color: #94a3b8; background: none; border: none;
+            cursor: pointer; font-size: 0.6rem; font-weight: 600; transition: color 0.2s;
+            min-height: 44px;
         }
-        .mobile-bottom-nav .nav-btn.active, .mobile-bottom-nav .nav-btn:hover { color: #0d9488; }
-        .mobile-bottom-nav .nav-btn i { font-size: 1.2rem; margin-bottom: 2px; }
+        .mobile-bottom-nav .nav-btn.active, .mobile-bottom-nav .nav-btn:hover { color: #0891b2; }
+        .mobile-bottom-nav .nav-btn i { font-size: 1.15rem; margin-bottom: 3px; }
 
-        /* "More" dropdown in mobile nav */
         #moreDropdown {
             position: fixed; bottom: 68px; right: 0; left: 0;
-            background: white; border-top: 1px solid #e5e7eb;
-            padding: 8px 0; z-index: 49; display: none;
+            background: white; border-top: 1px solid #e2e8f0;
+            padding: 6px 0; z-index: 49; display: none;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
         }
         #moreDropdown.open { display: block; }
         #moreDropdown button {
             display: flex; align-items: center; gap: 12px;
-            width: 100%; padding: 12px 24px; color: #374151;
-            font-size: 0.9rem; font-weight: 500; border: none; background: none; cursor: pointer;
+            width: 100%; padding: 13px 24px; color: #374151;
+            font-size: 0.875rem; font-weight: 500; border: none; background: none; cursor: pointer;
+            transition: background 0.15s;
         }
-        #moreDropdown button:hover, #moreDropdown button.active { color: #0d9488; background: #f0fdf4; }
+        #moreDropdown button:hover, #moreDropdown button.active { color: #0891b2; background: #f0fdfa; }
 
         @media (max-width: 767px) {
             body { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
             .mobile-bottom-nav { display: flex !important; }
-            table { font-size: 0.75rem; }
-            table th, table td { padding: 0.5rem 0.4rem; }
+            table { font-size: 0.74rem; }
+            table th, table td { padding: 0.45rem 0.5rem; }
             input, select { font-size: 16px !important; }
         }
         @media (min-width: 768px) {
@@ -95,106 +123,117 @@
             #moreDropdown { display: none !important; }
         }
 
-        /* ── Print styles ── */
+        /* ── Print ── */
         @media print {
             .sidebar, .mobile-bottom-nav, #moreDropdown,
             header, nav, button, .no-print { display: none !important; }
             body { padding: 0 !important; background: white !important; }
-            .print-area { display: block !important; }
         }
 
-        /* ── SweetAlert2 overrides ── */
-        .swal2-popup    { border-radius: 1rem; }
-        .swal2-confirm  { background-color: #0d9488 !important; }
-        .swal2-cancel   { background-color: #6b7280 !important; }
+        /* ── SweetAlert2 ── */
+        .swal2-popup   { border-radius: 1rem; font-family: 'Inter', sans-serif; }
+        .swal2-confirm { background-color: #0891b2 !important; }
+        .swal2-cancel  { background-color: #64748b !important; }
 
-        /* ── Pulse ── */
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-        .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
-
-        /* ── Schedule grid ── */
-        .schedule-row { border-bottom: 1px solid #e5e7eb; }
+        /* ── Schedule ── */
+        .schedule-row { border-bottom: 1px solid #f1f5f9; }
         .schedule-row:last-child { border-bottom: none; }
         .schedule-row input[type="time"],
         .schedule-row select,
         .schedule-row input[type="number"] {
-            border: 1px solid #d1d5db; border-radius: 6px;
-            padding: 6px 8px; font-size: 0.85rem; width: 100%;
+            border: 1px solid #cbd5e1; border-radius: 7px;
+            padding: 6px 10px; font-size: 0.83rem; width: 100%;
+            transition: border-color 0.2s;
         }
-        .schedule-row input:disabled, .schedule-row select:disabled { background: #f9fafb; color: #9ca3af; }
+        .schedule-row input[type="time"]:focus,
+        .schedule-row select:focus { border-color: #0891b2; outline: none; }
+        .schedule-row input:disabled, .schedule-row select:disabled { background: #f8fafc; color: #94a3b8; }
 
-        /* ── Demographics bars ── */
-        .demo-bar { transition: width 0.8s ease; }
+        /* ── Header badge ── */
+        .admin-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: #f0fdfa; border: 1px solid #ccfbf1;
+            padding: 5px 12px; border-radius: 999px;
+            font-size: 0.8rem; color: #0f766e; font-weight: 600;
+        }
+
+        /* ── Pulse ── */
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+        .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
 
-<!-- ══════════ MOBILE SIDEBAR OVERLAY ══════════ -->
+<!-- MOBILE SIDEBAR OVERLAY -->
 <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden sidebar-overlay"
      onclick="closeSidebar()"></div>
 
 <!-- ══════════ SIDEBAR ══════════ -->
-<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-teal-700 text-white shadow-2xl flex flex-col">
+<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 text-white flex flex-col" style="background:linear-gradient(160deg,#134e4a 0%,#0f3d39 55%,#0c2e2b 100%)">
+
     <!-- Logo -->
-    <div class="p-5 border-b border-teal-600 flex items-center space-x-3 flex-shrink-0">
-        <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-lg flex-shrink-0">
-            <i class="fas fa-heartbeat text-teal-600 text-xl"></i>
+    <div class="px-5 py-5 flex items-center gap-3 flex-shrink-0" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <i class="fas fa-heartbeat text-cyan-300 text-lg"></i>
         </div>
         <div>
-            <h1 class="text-lg font-bold font-poppins leading-tight">MediTrack</h1>
-            <p class="text-xs text-teal-200">Internal Medicine Clinic</p>
+            <h1 class="text-base font-bold font-poppins text-white leading-tight tracking-wide">MediTrack</h1>
+            <p class="text-[0.68rem] text-teal-300/80 font-medium">Internal Medicine Clinic</p>
         </div>
     </div>
 
-    <!-- Nav items -->
-    <nav class="flex-1 overflow-y-auto p-3 space-y-1 mt-2">
+    <!-- Nav -->
+    <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+        <p class="nav-section-label">Main Menu</p>
         <button onclick="switchTab('overview')" data-tab="overview"
-                class="nav-item active w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl">
-            <i class="fas fa-chart-pie w-5 text-center"></i>
+                class="nav-item active w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-chart-pie w-4 text-center text-sm"></i>
             <span class="font-medium text-sm">Overview</span>
         </button>
         <button onclick="switchTab('appointments')" data-tab="appointments"
-                class="nav-item w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl">
-            <i class="fas fa-calendar-check w-5 text-center"></i>
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-calendar-check w-4 text-center text-sm"></i>
             <span class="font-medium text-sm">Appointments</span>
         </button>
         <button onclick="switchTab('patients')" data-tab="patients"
-                class="nav-item w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl">
-            <i class="fas fa-users w-5 text-center"></i>
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-users w-4 text-center text-sm"></i>
             <span class="font-medium text-sm">Patients</span>
         </button>
+
+        <p class="nav-section-label">Management</p>
         <button onclick="switchTab('schedule')" data-tab="schedule"
-                class="nav-item w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl">
-            <i class="fas fa-clock w-5 text-center"></i>
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-clock w-4 text-center text-sm"></i>
             <span class="font-medium text-sm">Doctor Schedule</span>
         </button>
         <button onclick="switchTab('reports')" data-tab="reports"
-                class="nav-item w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl">
-            <i class="fas fa-chart-bar w-5 text-center"></i>
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-chart-bar w-4 text-center text-sm"></i>
             <span class="font-medium text-sm">Reports</span>
         </button>
         <button onclick="switchTab('activity')" data-tab="activity"
-                class="nav-item w-full text-left flex items-center space-x-3 px-4 py-3 rounded-xl">
-            <i class="fas fa-history w-5 text-center"></i>
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-history w-4 text-center text-sm"></i>
             <span class="font-medium text-sm">Activity Logs</span>
         </button>
     </nav>
 
     <!-- User + Logout -->
-    <div class="p-4 border-t border-teal-600 flex-shrink-0">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="w-9 h-9 rounded-full bg-teal-500 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-user-shield text-sm"></i>
+    <div class="px-4 py-4 flex-shrink-0" style="border-top: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-9 h-9 rounded-full bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-user-shield text-cyan-300 text-sm"></i>
             </div>
             <div class="min-w-0">
-                <p id="sidebarAdminName" class="font-semibold text-sm truncate">Admin</p>
-                <p class="text-xs text-teal-200">Administrator</p>
+                <p id="sidebarAdminName" class="font-semibold text-sm text-white truncate">Admin</p>
+                <p class="text-[0.68rem] text-teal-300/70">Administrator</p>
             </div>
         </div>
         <button onclick="logout()"
-                class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+                class="w-full bg-red-500/20 hover:bg-red-500 border border-red-400/30 hover:border-red-500 text-red-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2">
+            <i class="fas fa-sign-out-alt text-xs"></i>
+            <span>Sign Out</span>
         </button>
     </div>
 </aside>
@@ -203,179 +242,186 @@
 <div class="md:ml-64 min-h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-20 flex-shrink-0">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 flex-shrink-0" style="box-shadow: 0 1px 12px rgba(0,0,0,0.06);">
         <div class="flex items-center justify-between h-16 px-4 sm:px-6">
-            <!-- Mobile hamburger -->
-            <button onclick="openSidebar()" class="md:hidden text-gray-500 hover:text-teal-600 p-1">
-                <i class="fas fa-bars text-xl"></i>
+            <!-- Hamburger -->
+            <button onclick="openSidebar()" class="md:hidden text-slate-400 hover:text-teal-600 p-2 rounded-lg hover:bg-teal-50 transition min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <i class="fas fa-bars text-lg"></i>
             </button>
 
             <!-- Title -->
-            <h2 id="headerTitle" class="text-lg font-bold text-gray-800 font-poppins">Admin Dashboard</h2>
+            <h2 id="headerTitle" class="text-base sm:text-lg font-bold text-slate-800 font-poppins">Admin Dashboard</h2>
 
-            <!-- Right controls -->
-            <div class="flex items-center space-x-3">
-                <span class="hidden sm:flex items-center space-x-2 text-sm text-gray-500">
-                    <i class="fas fa-user-shield text-teal-600"></i>
-                    <span id="headerAdminName" class="font-medium">Admin</span>
+            <!-- Right -->
+            <div class="flex items-center gap-3">
+                <span class="hidden sm:flex admin-badge">
+                    <i class="fas fa-user-shield text-xs"></i>
+                    <span id="headerAdminName">Admin</span>
                 </span>
                 <button onclick="logout()"
-                        class="hidden sm:flex items-center space-x-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium transition">
-                    <i class="fas fa-sign-out-alt"></i>
+                        class="hidden sm:flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm font-medium transition min-h-[44px]">
+                    <i class="fas fa-sign-out-alt text-xs"></i>
                     <span>Logout</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Content area -->
-    <main class="flex-1 p-4 sm:p-6">
+    <!-- Content -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8">
 
-        <!-- ════ TAB: OVERVIEW ════ -->
+        <!-- ════ OVERVIEW ════ -->
         <div id="tab-overview" class="tab-panel active">
-            <div class="mb-6">
-                <h3 class="text-2xl font-bold text-gray-800 font-poppins">Overview</h3>
-                <p class="text-gray-500 text-sm mt-1">Clinic at a glance</p>
+            <div class="mb-7">
+                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Overview</h3>
+                <p class="text-slate-400 text-sm mt-1">Clinic performance at a glance</p>
             </div>
 
-            <!-- 6 stat cards: 2-col on mobile, 3-col on md+ -->
+            <!-- Stat cards grid -->
             <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                <!-- Filled by JS -->
-                <div class="col-span-2 md:col-span-3 flex items-center justify-center py-12 text-gray-400">
-                    <i class="fas fa-spinner fa-spin text-2xl mr-3"></i>
-                    <span>Loading statistics…</span>
+                <div class="col-span-2 md:col-span-3 flex items-center justify-center py-14 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-xl mr-3 text-teal-500"></i>
+                    <span class="text-sm">Loading statistics…</span>
                 </div>
             </div>
 
-            <!-- Quick links -->
-            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h4>
+            <!-- Quick actions -->
+            <div class="mb-3 flex items-center gap-2">
+                <div class="w-1 h-5 rounded-full bg-cyan-500"></div>
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Quick Actions</h4>
+            </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <button onclick="switchTab('appointments')"
-                        class="bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
-                    <i class="fas fa-calendar-check text-2xl"></i><span>Appointments</span>
+                        class="bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-teal-500/20 flex flex-col items-center gap-2 min-h-[90px]">
+                    <i class="fas fa-calendar-check text-2xl opacity-90"></i>
+                    <span>Appointments</span>
                 </button>
                 <button onclick="switchTab('patients')"
-                        class="bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
-                    <i class="fas fa-users text-2xl"></i><span>Patients</span>
+                        class="bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-blue-500/20 flex flex-col items-center gap-2 min-h-[90px]">
+                    <i class="fas fa-users text-2xl opacity-90"></i>
+                    <span>Patients</span>
                 </button>
                 <button onclick="switchTab('schedule')"
-                        class="bg-gradient-to-br from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
-                    <i class="fas fa-clock text-2xl"></i><span>Schedule</span>
+                        class="bg-gradient-to-br from-violet-500 to-purple-700 hover:from-violet-600 hover:to-purple-800 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-purple-500/20 flex flex-col items-center gap-2 min-h-[90px]">
+                    <i class="fas fa-clock text-2xl opacity-90"></i>
+                    <span>Schedule</span>
                 </button>
                 <button onclick="switchTab('reports')"
-                        class="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
-                    <i class="fas fa-chart-bar text-2xl"></i><span>Reports</span>
+                        class="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-orange-400/20 flex flex-col items-center gap-2 min-h-[90px]">
+                    <i class="fas fa-chart-bar text-2xl opacity-90"></i>
+                    <span>Reports</span>
                 </button>
             </div>
         </div>
 
-        <!-- ════ TAB: APPOINTMENTS ════ -->
+        <!-- ════ APPOINTMENTS ════ -->
         <div id="tab-appointments" class="tab-panel">
-            <div class="mb-5">
-                <h3 class="text-2xl font-bold text-gray-800 font-poppins">Appointments</h3>
-                <p class="text-gray-500 text-sm mt-1">View and manage all appointments</p>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Appointments</h3>
+                <p class="text-slate-400 text-sm mt-1">View and manage all clinic appointments</p>
             </div>
 
-            <!-- Filters -->
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-5 flex flex-wrap gap-3 items-end">
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</label>
-                    <input type="date" id="apptFilterDate"
-                           class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <!-- Filters card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</label>
+                        <input type="date" id="apptFilterDate"
+                               class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                        <select id="apptFilterStatus"
+                                class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                            <option value="">All Statuses</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="checked_in">Checked In</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <button onclick="applyAppointmentFilters()"
+                            class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 min-h-[44px]">
+                        <i class="fas fa-filter text-xs"></i> Filter
+                    </button>
+                    <button onclick="clearAppointmentFilters()"
+                            class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition min-h-[44px]">
+                        Clear
+                    </button>
                 </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</label>
-                    <select id="apptFilterStatus"
-                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        <option value="">All Statuses</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="checked_in">Checked In</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <button onclick="applyAppointmentFilters()"
-                        class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">
-                    <i class="fas fa-filter mr-1"></i>Filter
-                </button>
-                <button onclick="clearAppointmentFilters()"
-                        class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition">
-                    Clear
-                </button>
             </div>
 
             <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">#</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Appt No.</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Patient</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Date</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Time</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Actions</th>
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">#</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Appt No.</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Patient</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Date</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Time</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="apptTableBody" class="divide-y divide-gray-100">
-                            <tr><td colspan="7" class="text-center py-10 text-gray-400">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading…
+                        <tbody id="apptTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="7" class="text-center py-12 text-slate-400">
+                                <i class="fas fa-spinner fa-spin mr-2 text-teal-400"></i>Loading…
                             </td></tr>
                         </tbody>
                     </table>
                 </div>
-                <!-- Pagination -->
-                <div id="apptPagination" class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+                <div class="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
                     <button id="apptPrevBtn" onclick="appointmentPrevPage()"
-                            class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium disabled:opacity-40 transition">
-                        <i class="fas fa-chevron-left mr-1"></i>Previous
+                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                        <i class="fas fa-chevron-left text-xs"></i> Previous
                     </button>
-                    <span id="apptPageInfo">Page 1 of 1</span>
+                    <span id="apptPageInfo" class="text-sm text-slate-500 font-medium">Page 1 of 1</span>
                     <button id="apptNextBtn" onclick="appointmentNextPage()"
-                            class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium disabled:opacity-40 transition">
-                        Next<i class="fas fa-chevron-right ml-1"></i>
+                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                        Next <i class="fas fa-chevron-right text-xs"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- ════ TAB: PATIENTS ════ -->
+        <!-- ════ PATIENTS ════ -->
         <div id="tab-patients" class="tab-panel">
-            <div class="mb-5">
-                <h3 class="text-2xl font-bold text-gray-800 font-poppins">Patients</h3>
-                <p class="text-gray-500 text-sm mt-1">Manage registered patients</p>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Patients</h3>
+                <p class="text-slate-400 text-sm mt-1">Manage registered clinic patients</p>
             </div>
 
             <!-- Search -->
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-5">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
                 <div class="relative max-w-sm">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="patientSearch" placeholder="Search by name or email…"
                            oninput="filterPatientsTable()"
-                           class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                           class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
                 </div>
             </div>
 
             <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">#</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Name</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Email</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Contact</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Blood Group</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Actions</th>
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">#</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Name</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Contact</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Blood Group</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="patientsTableBody" class="divide-y divide-gray-100">
-                            <tr><td colspan="7" class="text-center py-10 text-gray-400">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading…
+                        <tbody id="patientsTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="7" class="text-center py-12 text-slate-400">
+                                <i class="fas fa-spinner fa-spin mr-2 text-teal-400"></i>Loading…
                             </td></tr>
                         </tbody>
                     </table>
@@ -383,158 +429,160 @@
             </div>
         </div>
 
-        <!-- ════ TAB: DOCTOR SCHEDULE ════ -->
+        <!-- ════ DOCTOR SCHEDULE ════ -->
         <div id="tab-schedule" class="tab-panel">
-            <div class="mb-5">
-                <h3 class="text-2xl font-bold text-gray-800 font-poppins">Doctor Schedule</h3>
-                <p class="text-gray-500 text-sm mt-1">Set weekly availability for the clinic doctor</p>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Doctor Schedule</h3>
+                <p class="text-slate-400 text-sm mt-1">Set weekly availability for the clinic doctor</p>
             </div>
 
             <!-- Doctor info card -->
-            <div id="doctorInfoCard" class="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6 flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-user-md text-white text-lg"></i>
+            <div id="doctorInfoCard" class="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-2xl p-5 mb-6 flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-teal-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <i class="fas fa-user-md text-white text-xl"></i>
                 </div>
                 <div>
-                    <p id="schedDocName" class="font-bold text-gray-800">Loading…</p>
-                    <p id="schedDocSpec" class="text-sm text-teal-700"></p>
-                    <p id="schedDocEmail" class="text-xs text-gray-500"></p>
+                    <p id="schedDocName" class="font-bold text-slate-800 text-base">Loading…</p>
+                    <p id="schedDocSpec" class="text-sm text-teal-700 font-medium"></p>
+                    <p id="schedDocEmail" class="text-xs text-slate-500 mt-0.5"></p>
                 </div>
             </div>
 
             <!-- Schedule form -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b border-gray-100 bg-gray-50">
-                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                        Check the days the doctor is available and set their hours
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 flex items-center gap-2">
+                    <i class="fas fa-calendar-week text-teal-500 text-sm"></i>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Weekly Availability — check days and set hours
                     </p>
                 </div>
-                <form id="scheduleForm" onsubmit="saveSchedule(event)" class="divide-y divide-gray-100" id="scheduleRows">
-                    <!-- Rows injected by JS -->
-                    <div class="p-8 text-center text-gray-400">
-                        <i class="fas fa-spinner fa-spin text-2xl mr-2"></i> Loading schedule…
+                <form id="scheduleForm" onsubmit="saveSchedule(event)" class="divide-y divide-slate-100">
+                    <div class="p-10 text-center text-slate-400">
+                        <i class="fas fa-spinner fa-spin text-2xl mr-2 text-teal-400"></i> Loading schedule…
                     </div>
                 </form>
-                <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <div class="px-5 py-4 bg-slate-50/80 border-t border-slate-100 flex justify-end">
                     <button type="button" onclick="saveSchedule(event)"
-                            class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition shadow-sm flex items-center space-x-2">
-                        <i class="fas fa-save"></i>
+                            class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition shadow flex items-center gap-2 min-h-[44px]">
+                        <i class="fas fa-save text-xs"></i>
                         <span>Save Schedule</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- ════ TAB: REPORTS ════ -->
+        <!-- ════ REPORTS ════ -->
         <div id="tab-reports" class="tab-panel">
-            <div class="mb-5 flex flex-wrap items-center justify-between gap-3 no-print">
+            <div class="mb-6 flex flex-wrap items-start justify-between gap-3 no-print">
                 <div>
-                    <h3 class="text-2xl font-bold text-gray-800 font-poppins">Reports</h3>
-                    <p class="text-gray-500 text-sm mt-1">Appointment and patient statistics</p>
+                    <h3 class="text-2xl font-bold text-slate-800 font-poppins">Reports</h3>
+                    <p class="text-slate-400 text-sm mt-1">Appointment and patient analytics</p>
                 </div>
                 <button onclick="window.print()"
-                        class="flex items-center space-x-2 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
-                    <i class="fas fa-print"></i><span>Print Report</span>
+                        class="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition min-h-[44px]">
+                    <i class="fas fa-print text-xs"></i> Print Report
                 </button>
             </div>
 
             <!-- Period selector -->
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-5 no-print">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5 no-print">
                 <div class="flex gap-2 flex-wrap">
                     <button data-period="today" onclick="selectReportPeriod('today')"
-                            class="period-btn px-4 py-2 rounded-lg text-sm font-semibold transition border border-teal-600 text-teal-600 hover:bg-teal-50">Today</button>
+                            class="period-btn px-5 py-2 rounded-xl text-sm font-semibold transition border border-teal-500 text-teal-600 hover:bg-teal-50 min-h-[44px]">Today</button>
                     <button data-period="week" onclick="selectReportPeriod('week')"
-                            class="period-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-teal-600 text-white">Weekly</button>
+                            class="period-btn active-period px-5 py-2 rounded-xl text-sm font-semibold transition min-h-[44px]">Weekly</button>
                     <button data-period="month" onclick="selectReportPeriod('month')"
-                            class="period-btn px-4 py-2 rounded-lg text-sm font-semibold transition border border-teal-600 text-teal-600 hover:bg-teal-50">Monthly</button>
+                            class="period-btn px-5 py-2 rounded-xl text-sm font-semibold transition border border-teal-500 text-teal-600 hover:bg-teal-50 min-h-[44px]">Monthly</button>
                     <button data-period="year" onclick="selectReportPeriod('year')"
-                            class="period-btn px-4 py-2 rounded-lg text-sm font-semibold transition border border-teal-600 text-teal-600 hover:bg-teal-50">Yearly</button>
+                            class="period-btn px-5 py-2 rounded-xl text-sm font-semibold transition border border-teal-500 text-teal-600 hover:bg-teal-50 min-h-[44px]">Yearly</button>
                 </div>
             </div>
 
             <div id="reportsContent">
-                <div class="flex items-center justify-center py-16 text-gray-400">
-                    <i class="fas fa-spinner fa-spin text-2xl mr-3"></i><span>Loading reports…</span>
+                <div class="flex items-center justify-center py-16 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mr-3 text-teal-400"></i>
+                    <span>Loading reports…</span>
                 </div>
             </div>
         </div>
 
-        <!-- ════ TAB: ACTIVITY LOGS ════ -->
+        <!-- ════ ACTIVITY LOGS ════ -->
         <div id="tab-activity" class="tab-panel">
-            <div class="mb-5">
-                <h3 class="text-2xl font-bold text-gray-800 font-poppins">Activity Logs</h3>
-                <p class="text-gray-500 text-sm mt-1">Audit trail of all system actions</p>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Activity Logs</h3>
+                <p class="text-slate-400 text-sm mt-1">Audit trail of all system actions</p>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-5 flex flex-wrap gap-3 items-end">
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Action Type</label>
-                    <select id="logFilterAction"
-                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        <option value="">All Actions</option>
-                        <option value="CREATE">CREATE</option>
-                        <option value="UPDATE">UPDATE</option>
-                        <option value="DELETE">DELETE</option>
-                        <option value="LOGIN">LOGIN</option>
-                        <option value="LOGOUT">LOGOUT</option>
-                        <option value="CHECKIN">CHECKIN</option>
-                    </select>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Action Type</label>
+                        <select id="logFilterAction"
+                                class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                            <option value="">All Actions</option>
+                            <option value="CREATE">CREATE</option>
+                            <option value="UPDATE">UPDATE</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="LOGIN">LOGIN</option>
+                            <option value="LOGOUT">LOGOUT</option>
+                            <option value="CHECKIN">CHECKIN</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Module</label>
+                        <select id="logFilterModule"
+                                class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                            <option value="">All Modules</option>
+                            <option value="auth">auth</option>
+                            <option value="appointments">appointments</option>
+                            <option value="patients">patients</option>
+                            <option value="medical_records">medical_records</option>
+                            <option value="users">users</option>
+                            <option value="doctor_schedules">doctor_schedules</option>
+                        </select>
+                    </div>
+                    <button onclick="applyActivityFilters()"
+                            class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 min-h-[44px]">
+                        <i class="fas fa-filter text-xs"></i> Filter
+                    </button>
+                    <button onclick="clearActivityFilters()"
+                            class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition min-h-[44px]">
+                        Clear
+                    </button>
                 </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Module</label>
-                    <select id="logFilterModule"
-                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        <option value="">All Modules</option>
-                        <option value="auth">auth</option>
-                        <option value="appointments">appointments</option>
-                        <option value="patients">patients</option>
-                        <option value="medical_records">medical_records</option>
-                        <option value="users">users</option>
-                        <option value="doctor_schedules">doctor_schedules</option>
-                    </select>
-                </div>
-                <button onclick="applyActivityFilters()"
-                        class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">
-                    <i class="fas fa-filter mr-1"></i>Filter
-                </button>
-                <button onclick="clearActivityFilters()"
-                        class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition">
-                    Clear
-                </button>
             </div>
 
             <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Timestamp</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">User</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Role</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Action</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Module</th>
-                                <th class="text-left px-4 py-3 font-semibold text-gray-600">Description</th>
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200">
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Timestamp</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">User</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Role</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Action</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Module</th>
+                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Description</th>
                             </tr>
                         </thead>
-                        <tbody id="activityTableBody" class="divide-y divide-gray-100">
-                            <tr><td colspan="6" class="text-center py-10 text-gray-400">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading…
+                        <tbody id="activityTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="text-center py-12 text-slate-400">
+                                <i class="fas fa-spinner fa-spin mr-2 text-teal-400"></i>Loading…
                             </td></tr>
                         </tbody>
                     </table>
                 </div>
-                <!-- Pagination -->
-                <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+                <div class="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
                     <button id="actPrevBtn" onclick="activityPrevPage()"
-                            class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium disabled:opacity-40 transition">
-                        <i class="fas fa-chevron-left mr-1"></i>Previous
+                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                        <i class="fas fa-chevron-left text-xs"></i> Previous
                     </button>
-                    <span id="actPageInfo">Page 1 of 1</span>
+                    <span id="actPageInfo" class="text-sm text-slate-500 font-medium">Page 1 of 1</span>
                     <button id="actNextBtn" onclick="activityNextPage()"
-                            class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium disabled:opacity-40 transition">
-                        Next<i class="fas fa-chevron-right ml-1"></i>
+                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                        Next <i class="fas fa-chevron-right text-xs"></i>
                     </button>
                 </div>
             </div>
