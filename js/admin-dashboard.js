@@ -1,0 +1,982 @@
+/**
+ * admin-dashboard.js
+ * MediTrack — Internal Medicine Clinic
+ * Complete admin dashboard logic
+ */
+
+'use strict';
+
+/* ══════════════════════════════════════════════
+   AUTH GUARD
+══════════════════════════════════════════════ */
+const _user = (() => {
+    const u = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!u) { window.location.href = '/meditrack/pages/login.html'; return null; }
+    if (u.role !== 'admin') { window.location.href = '/meditrack/pages/login.html'; return null; }
+    return u;
+})();
+
+/* ══════════════════════════════════════════════
+   GLOBAL STATE
+══════════════════════════════════════════════ */
+let currentTab = 'overview';
+
+// Appointments tab state
+let apptPage       = 1;
+let apptTotalPages = 1;
+let apptFilters    = { date: '', status: '' };
+
+// Activity logs state
+let actPage       = 1;
+let actTotalPages = 1;
+let actFilters    = { action_type: '', module: '' };
+
+// Patients (client-side data store for filtering)
+let allPatients = [];
+
+// Reports period
+let reportPeriod = 'week';
+
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+    if (!_user) return;
+
+    // Populate admin name in header + sidebar
+    const name = _user.name || _user.username || 'Admin';
+    const headerName   = document.getElementById('headerAdminName');
+    const sidebarName  = document.getElementById('sidebarAdminName');
+    if (headerName)  headerName.textContent  = name;
+    if (sidebarName) sidebarName.textContent = name;
+
+    // Default tab
+    switchTab('overview');
+});
+
+/* ══════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════ */
+function switchTab(tab) {
+    currentTab = tab;
+
+    // Hide all panels
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById('tab-' + tab);
+    if (panel) panel.classList.add('active');
+
+    // Update sidebar nav items
+    document.querySelectorAll('.sidebar [data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    // Update mobile bottom nav
+    document.querySelectorAll('.mobile-bottom-nav .nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    // Also update "More" dropdown active state
+    document.querySelectorAll('#moreDropdown button[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    // Update header title
+    const titles = {
+        overview:     'Admin Dashboard',
+        appointments: 'Appointments',
+        patients:     'Patients',
+        schedule:     'Doctor Schedule',
+        reports:      'Reports',
+        activity:     'Activity Logs',
+    };
+    const el = document.getElementById('headerTitle');
+    if (el) el.textContent = titles[tab] || 'Admin Dashboard';
+
+    // Close mobile sidebar
+    closeSidebar();
+
+    // Load data for the tab
+    switch (tab) {
+        case 'overview':     loadOverview();     break;
+        case 'appointments': loadAppointments(); break;
+        case 'patients':     loadPatients();     break;
+        case 'schedule':     loadSchedule();     break;
+        case 'reports':      loadReports();      break;
+        case 'activity':     loadActivityLogs(); break;
+    }
+}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR (MOBILE)
+══════════════════════════════════════════════ */
+function openSidebar() {
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+    if (sidebar)  sidebar.classList.add('open');
+    if (overlay)  overlay.classList.remove('hidden');
+}
+
+function closeSidebar() {
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+    if (sidebar)  sidebar.classList.remove('open');
+    if (overlay)  overlay.classList.add('hidden');
+}
+
+/* ══════════════════════════════════════════════
+   MORE MENU (MOBILE)
+══════════════════════════════════════════════ */
+function toggleMoreMenu() {
+    const dd = document.getElementById('moreDropdown');
+    if (dd) dd.classList.toggle('open');
+}
+
+function closeMoreMenu() {
+    const dd = document.getElementById('moreDropdown');
+    if (dd) dd.classList.remove('open');
+}
+
+// Close more menu when tapping outside
+document.addEventListener('click', e => {
+    const dd     = document.getElementById('moreDropdown');
+    const moreBtn = document.getElementById('moreBtn');
+    if (dd && dd.classList.contains('open') && !dd.contains(e.target) && e.target !== moreBtn && !moreBtn?.contains(e.target)) {
+        dd.classList.remove('open');
+    }
+});
+
+/* ══════════════════════════════════════════════
+   OVERVIEW TAB
+══════════════════════════════════════════════ */
+async function loadOverview() {
+    const grid = document.getElementById('statsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = `<div class="col-span-2 md:col-span-3 flex items-center justify-center py-12 text-gray-400">
+        <i class="fas fa-spinner fa-spin text-2xl mr-3"></i><span>Loading statistics…</span></div>`;
+
+    try {
+        const data = await apiRequest('/admin/stats.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load stats');
+
+        const s = data.stats;
+
+        const cards = [
+            {
+                id: 'stat-patients', label: 'Total Patients', value: s.total_patients ?? 0,
+                icon: 'fas fa-users', color: 'blue', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+                border: 'border-blue-500', sub: 'Registered patients'
+            },
+            {
+                id: 'stat-today', label: "Today's Appointments", value: s.today_appointments ?? 0,
+                icon: 'fas fa-calendar-day', color: 'teal', iconBg: 'bg-teal-100', iconColor: 'text-teal-600',
+                border: 'border-teal-500', sub: formatDate(new Date())
+            },
+            {
+                id: 'stat-week', label: 'This Week', value: s.week_appointments ?? 0,
+                icon: 'fas fa-calendar-week', color: 'purple', iconBg: 'bg-purple-100', iconColor: 'text-purple-600',
+                border: 'border-purple-500', sub: 'Current week'
+            },
+            {
+                id: 'stat-month', label: 'This Month', value: s.month_appointments ?? 0,
+                icon: 'fas fa-calendar-alt', color: 'yellow', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600',
+                border: 'border-yellow-500', sub: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+            },
+            {
+                id: 'stat-completed', label: 'Completed', value: s.total_completed ?? 0,
+                icon: 'fas fa-check-circle', color: 'green', iconBg: 'bg-green-100', iconColor: 'text-green-600',
+                border: 'border-green-500', sub: 'All time'
+            },
+            {
+                id: 'stat-cancelled', label: 'Cancelled', value: s.total_cancelled ?? 0,
+                icon: 'fas fa-times-circle', color: 'red', iconBg: 'bg-red-100', iconColor: 'text-red-500',
+                border: 'border-red-400', sub: 'All time'
+            },
+        ];
+
+        grid.innerHTML = cards.map(c => `
+            <div class="stat-card bg-white rounded-xl shadow-sm p-5 border-l-4 ${c.border}">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">${c.label}</p>
+                        <p class="counter text-3xl font-bold text-gray-900">${c.value.toLocaleString()}</p>
+                        <p class="text-xs text-gray-400 mt-1">${c.sub}</p>
+                    </div>
+                    <div class="${c.iconBg} rounded-full p-3 flex-shrink-0 ml-3">
+                        <i class="${c.icon} ${c.iconColor} text-xl"></i>
+                    </div>
+                </div>
+            </div>`).join('');
+
+    } catch (err) {
+        grid.innerHTML = `<div class="col-span-2 md:col-span-3 text-center py-10 text-red-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</div>`;
+    }
+}
+
+/* ══════════════════════════════════════════════
+   APPOINTMENTS TAB
+══════════════════════════════════════════════ */
+async function loadAppointments() {
+    const tbody = document.getElementById('apptTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
+        <i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>`;
+
+    const params = new URLSearchParams();
+    if (apptFilters.date)   params.set('date',   apptFilters.date);
+    if (apptFilters.status) params.set('status', apptFilters.status);
+    params.set('page', apptPage);
+
+    try {
+        const data = await apiRequest('/admin/appointments.php?' + params.toString());
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load appointments');
+
+        const appts = data.appointments || [];
+
+        // Client-side pagination (API returns max 100 records; page size = 15)
+        const pageSize = 15;
+        const total    = appts.length;
+        apptTotalPages = Math.max(1, Math.ceil(total / pageSize));
+        const start    = (apptPage - 1) * pageSize;
+        const slice    = appts.slice(start, start + pageSize);
+
+        updateApptPagination();
+
+        if (!slice.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
+                <i class="fas fa-calendar-times mr-2"></i>No appointments found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = slice.map((a, i) => {
+            const rowNum   = start + i + 1;
+            const apptNo   = escHtml(a.appointment_number || `#${a.id}`);
+            const patient  = escHtml(a.patient_name || '—');
+            const date     = formatDateStr(a.appointment_date);
+            const time     = formatTime(a.appointment_time);
+            const badge    = statusBadge(a.status);
+            const canCancel = ['scheduled', 'checked_in'].includes(a.status);
+
+            return `<tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-3 text-gray-500">${rowNum}</td>
+                <td class="px-4 py-3 font-mono text-xs font-semibold text-teal-700">${apptNo}</td>
+                <td class="px-4 py-3 font-medium text-gray-800">${patient}</td>
+                <td class="px-4 py-3 text-gray-600">${date}</td>
+                <td class="px-4 py-3 text-gray-600">${time}</td>
+                <td class="px-4 py-3">${badge}</td>
+                <td class="px-4 py-3">
+                    ${canCancel
+                        ? `<button onclick="cancelAppointment(${a.id}, '${apptNo}')"
+                                   class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition">
+                               <i class="fas fa-ban mr-1"></i>Cancel
+                           </button>`
+                        : `<span class="text-gray-300 text-xs">—</span>`}
+                </td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</td></tr>`;
+    }
+}
+
+function applyAppointmentFilters() {
+    apptFilters.date   = document.getElementById('apptFilterDate')?.value   || '';
+    apptFilters.status = document.getElementById('apptFilterStatus')?.value || '';
+    apptPage = 1;
+    loadAppointments();
+}
+
+function clearAppointmentFilters() {
+    apptFilters = { date: '', status: '' };
+    const dateEl   = document.getElementById('apptFilterDate');
+    const statusEl = document.getElementById('apptFilterStatus');
+    if (dateEl)   dateEl.value   = '';
+    if (statusEl) statusEl.value = '';
+    apptPage = 1;
+    loadAppointments();
+}
+
+function updateApptPagination() {
+    const info    = document.getElementById('apptPageInfo');
+    const prevBtn = document.getElementById('apptPrevBtn');
+    const nextBtn = document.getElementById('apptNextBtn');
+    if (info)    info.textContent = `Page ${apptPage} of ${apptTotalPages}`;
+    if (prevBtn) prevBtn.disabled = apptPage <= 1;
+    if (nextBtn) nextBtn.disabled = apptPage >= apptTotalPages;
+}
+
+function appointmentPrevPage() {
+    if (apptPage > 1) { apptPage--; loadAppointments(); }
+}
+function appointmentNextPage() {
+    if (apptPage < apptTotalPages) { apptPage++; loadAppointments(); }
+}
+
+async function cancelAppointment(id, apptNo) {
+    const result = await Swal.fire({
+        title: 'Cancel Appointment?',
+        html: `Are you sure you want to cancel appointment <strong>${apptNo}</strong>?<br><span class="text-sm text-gray-500">This action cannot be undone.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Cancel It',
+        cancelButtonText: 'Keep Appointment',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const data = await apiRequest('/admin/cancel-appointment.php', {
+            method: 'POST',
+            body: JSON.stringify({ appointment_id: id }),
+        });
+
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to cancel appointment');
+
+        await Swal.fire({
+            title: 'Cancelled',
+            text: 'The appointment has been cancelled.',
+            icon: 'success',
+            timer: 1800,
+            showConfirmButton: false,
+        });
+
+        loadAppointments();
+
+    } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+    }
+}
+
+/* ══════════════════════════════════════════════
+   PATIENTS TAB
+══════════════════════════════════════════════ */
+async function loadPatients() {
+    const tbody = document.getElementById('patientsTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
+        <i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>`;
+
+    try {
+        const data = await apiRequest('/admin/get-all-patients.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load patients');
+
+        allPatients = data.patients || [];
+        renderPatientsTable(allPatients);
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</td></tr>`;
+    }
+}
+
+function renderPatientsTable(patients) {
+    const tbody = document.getElementById('patientsTableBody');
+    if (!tbody) return;
+
+    if (!patients.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
+            <i class="fas fa-user-slash mr-2"></i>No patients found</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = patients.map((p, i) => {
+        const status  = p.status || 'active';
+        const isActive = status === 'active';
+        const badgeCls = isActive
+            ? 'bg-green-100 text-green-700'
+            : 'bg-red-100 text-red-600';
+        const toggleLabel = isActive ? 'Deactivate' : 'Activate';
+        const toggleCls   = isActive
+            ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
+            : 'bg-green-50 hover:bg-green-100 text-green-700 border border-green-200';
+        const newStatus   = isActive ? 'inactive' : 'active';
+
+        return `<tr class="hover:bg-gray-50 transition">
+            <td class="px-4 py-3 text-gray-500">${i + 1}</td>
+            <td class="px-4 py-3">
+                <span class="font-semibold text-gray-800">${escHtml(p.full_name || '—')}</span>
+                ${p.gender ? `<span class="ml-1 text-xs text-gray-400">(${escHtml(p.gender)})</span>` : ''}
+            </td>
+            <td class="px-4 py-3 text-gray-600">${escHtml(p.email || '—')}</td>
+            <td class="px-4 py-3 text-gray-600">${escHtml(p.contact_number || '—')}</td>
+            <td class="px-4 py-3 text-center">
+                <span class="inline-block bg-gray-100 text-gray-700 rounded px-2 py-0.5 text-xs font-semibold">
+                    ${escHtml(p.blood_group || '—')}
+                </span>
+            </td>
+            <td class="px-4 py-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeCls}">
+                    <span class="w-1.5 h-1.5 rounded-full mr-1 ${isActive ? 'bg-green-500' : 'bg-red-500'}"></span>
+                    ${status.charAt(0).toUpperCase() + status.slice(1)}
+                </span>
+            </td>
+            <td class="px-4 py-3">
+                <button onclick="togglePatientStatus(${p.id}, '${escHtml(p.full_name || '')}', '${newStatus}')"
+                        class="${toggleCls} px-3 py-1 rounded-lg text-xs font-semibold transition">
+                    ${toggleLabel}
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function filterPatientsTable() {
+    const q = (document.getElementById('patientSearch')?.value || '').toLowerCase().trim();
+    if (!q) {
+        renderPatientsTable(allPatients);
+        return;
+    }
+    const filtered = allPatients.filter(p =>
+        (p.full_name || '').toLowerCase().includes(q) ||
+        (p.email     || '').toLowerCase().includes(q)
+    );
+    renderPatientsTable(filtered);
+}
+
+async function togglePatientStatus(id, name, newStatus) {
+    const action = newStatus === 'inactive' ? 'Deactivate' : 'Activate';
+    const iconType = newStatus === 'inactive' ? 'warning' : 'question';
+
+    const result = await Swal.fire({
+        title: `${action} Patient?`,
+        html: `<strong>${escHtml(name)}</strong> will be set to <strong>${newStatus}</strong>.`,
+        icon: iconType,
+        showCancelButton: true,
+        confirmButtonText: `Yes, ${action}`,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: newStatus === 'inactive' ? '#ef4444' : '#0d9488',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const data = await apiRequest('/admin/update-patient-status.php', {
+            method: 'POST',
+            body: JSON.stringify({ patient_id: id, status: newStatus }),
+        });
+
+        if (!data || !data.success) throw new Error(data?.message || 'Update failed');
+
+        await Swal.fire({
+            title: 'Updated',
+            text: `Patient status set to ${newStatus}.`,
+            icon: 'success',
+            timer: 1600,
+            showConfirmButton: false,
+        });
+
+        loadPatients();
+
+    } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+    }
+}
+
+/* ══════════════════════════════════════════════
+   DOCTOR SCHEDULE TAB
+══════════════════════════════════════════════ */
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+async function loadSchedule() {
+    const form = document.getElementById('scheduleForm');
+    if (!form) return;
+
+    form.innerHTML = `<div class="p-8 text-center text-gray-400">
+        <i class="fas fa-spinner fa-spin text-2xl mr-2"></i> Loading schedule…</div>`;
+
+    // Reset doctor info card
+    const nameEl  = document.getElementById('schedDocName');
+    const specEl  = document.getElementById('schedDocSpec');
+    const emailEl = document.getElementById('schedDocEmail');
+
+    try {
+        const data = await apiRequest('/admin/get-doctor-schedule.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load schedule');
+
+        const doc = data.doctor || {};
+        if (nameEl)  nameEl.textContent  = doc.full_name || 'Doctor';
+        if (specEl)  specEl.textContent  = doc.specialization || '';
+        if (emailEl) emailEl.textContent = doc.email || '';
+
+        const schedMap = data.schedule || {};
+
+        // Render one row per day (0=Sun … 6=Sat)
+        form.innerHTML = DAYS.map((day, dow) => {
+            const row       = schedMap[dow] || {};
+            const checked   = row.is_active ? 'checked' : '';
+            const start     = row.start_time   ? row.start_time.slice(0, 5)   : '08:00';
+            const end       = row.end_time     ? row.end_time.slice(0, 5)     : '17:00';
+            const slot      = row.slot_duration || 30;
+            const maxPat    = row.max_patients  || 20;
+            const disabled  = row.is_active ? '' : 'disabled';
+
+            return `
+            <div class="schedule-row p-4 flex flex-wrap items-center gap-3" data-dow="${dow}">
+                <!-- Checkbox + Day -->
+                <label class="flex items-center space-x-2 cursor-pointer min-w-max">
+                    <input type="checkbox" data-field="is_active" ${checked}
+                           onchange="toggleScheduleRow(${dow}, this.checked)"
+                           class="w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                    <span class="font-semibold text-gray-800 w-24">${day}</span>
+                </label>
+
+                <!-- Start time -->
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-xs text-gray-400 font-medium">Start</label>
+                    <input type="time" data-field="start_time" value="${start}" ${disabled}
+                           class="w-32">
+                </div>
+
+                <!-- End time -->
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-xs text-gray-400 font-medium">End</label>
+                    <input type="time" data-field="end_time" value="${end}" ${disabled}
+                           class="w-32">
+                </div>
+
+                <!-- Slot duration -->
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-xs text-gray-400 font-medium">Slot (min)</label>
+                    <select data-field="slot_duration" ${disabled} class="w-24">
+                        ${[15,30,45,60].map(v => `<option value="${v}" ${v===slot?'selected':''}>${v} min</option>`).join('')}
+                    </select>
+                </div>
+
+                <!-- Max patients -->
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-xs text-gray-400 font-medium">Max Patients</label>
+                    <input type="number" data-field="max_patients" value="${maxPat}" min="1" max="100" ${disabled}
+                           class="w-24">
+                </div>
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        form.innerHTML = `<div class="p-8 text-center text-red-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</div>`;
+        if (nameEl)  nameEl.textContent  = 'Error loading doctor';
+        if (specEl)  specEl.textContent  = '';
+        if (emailEl) emailEl.textContent = '';
+    }
+}
+
+function toggleScheduleRow(dow, isChecked) {
+    const row    = document.querySelector(`.schedule-row[data-dow="${dow}"]`);
+    if (!row) return;
+    const inputs = row.querySelectorAll('input[type="time"], input[type="number"], select');
+    inputs.forEach(el => { el.disabled = !isChecked; });
+}
+
+async function saveSchedule(e) {
+    if (e) e.preventDefault();
+
+    const rows = document.querySelectorAll('.schedule-row[data-dow]');
+    const schedules = [];
+
+    rows.forEach(row => {
+        const dow      = parseInt(row.dataset.dow, 10);
+        const checkbox = row.querySelector('input[data-field="is_active"]');
+        const isActive = checkbox ? checkbox.checked : false;
+
+        const startEl  = row.querySelector('[data-field="start_time"]');
+        const endEl    = row.querySelector('[data-field="end_time"]');
+        const slotEl   = row.querySelector('[data-field="slot_duration"]');
+        const maxEl    = row.querySelector('[data-field="max_patients"]');
+
+        schedules.push({
+            day_of_week:   dow,
+            is_active:     isActive,
+            start_time:    startEl ? startEl.value + ':00' : '08:00:00',
+            end_time:      endEl   ? endEl.value   + ':00' : '17:00:00',
+            slot_duration: slotEl  ? parseInt(slotEl.value, 10)   : 30,
+            max_patients:  maxEl   ? parseInt(maxEl.value,  10)   : 20,
+        });
+    });
+
+    try {
+        const data = await apiRequest('/admin/update-doctor-schedule.php', {
+            method: 'POST',
+            body: JSON.stringify({ schedules }),
+        });
+
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to save schedule');
+
+        await Swal.fire({
+            title: 'Schedule Saved',
+            text: 'Doctor schedule has been updated successfully.',
+            icon: 'success',
+            timer: 1800,
+            showConfirmButton: false,
+        });
+
+        loadSchedule();
+
+    } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+    }
+}
+
+/* ══════════════════════════════════════════════
+   REPORTS TAB
+══════════════════════════════════════════════ */
+async function loadReports() {
+    const container = document.getElementById('reportsContent');
+    if (!container) return;
+
+    container.innerHTML = `<div class="flex items-center justify-center py-16 text-gray-400">
+        <i class="fas fa-spinner fa-spin text-2xl mr-3"></i><span>Loading reports…</span></div>`;
+
+    // Sync period buttons UI
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        const isActive = btn.dataset.period === reportPeriod;
+        btn.className = `period-btn px-4 py-2 rounded-lg text-sm font-semibold transition ${
+            isActive
+                ? 'bg-teal-600 text-white shadow'
+                : 'border border-teal-600 text-teal-600 hover:bg-teal-50'
+        }`;
+    });
+
+    try {
+        const data = await apiRequest(`/admin/reports-data.php?range=${reportPeriod}`);
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load reports');
+
+        const ov    = data.overview           || {};
+        const trend = data.appointmentsTrend  || { labels: [], data: [] };
+        const status_dist = data.statusDistribution || { labels: [], data: [] };
+        const demo  = data.demographics       || { labels: [], data: [] };
+
+        // Completion rate
+        const total     = ov.totalAppointments || 0;
+        const completed = status_dist.data[status_dist.labels.findIndex(l => l.toLowerCase() === 'completed')] || 0;
+        const cancelled = status_dist.data[status_dist.labels.findIndex(l => l.toLowerCase() === 'cancelled')] || 0;
+        const compRate  = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const cancRate  = total > 0 ? Math.round((cancelled / total) * 100) : 0;
+
+        // Gender data (from doctor performance — we derive from demographics hint if available)
+        // For now build from what the API returns. The API doesn't return gender directly,
+        // so we show age distribution as the demographics section.
+        const ageLabels = demo.labels || [];
+        const ageData   = demo.data   || [];
+        const ageMax    = Math.max(...ageData, 1);
+
+        // Build status rows for the table
+        const statusRows = status_dist.labels.map((label, i) => ({
+            label,
+            count: status_dist.data[i] || 0,
+        }));
+
+        // Trend summary: last 7 days
+        const trendRows = trend.labels.map((label, i) => ({
+            label,
+            count: trend.data[i] || 0,
+        }));
+
+        const periodLabel = { today: 'Today', week: 'This Week', month: 'This Month', year: 'This Year' }[reportPeriod] || reportPeriod;
+
+        container.innerHTML = `
+        <!-- Summary header cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-teal-500">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Appointments</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">${ov.totalAppointments ?? 0}</p>
+                <p class="text-xs text-gray-400">${periodLabel}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Patients</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">${ov.totalPatients ?? 0}</p>
+                <p class="text-xs text-gray-400">Registered</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Completion Rate</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">${compRate}%</p>
+                <p class="text-xs text-gray-400">${periodLabel}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-400">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Cancellation Rate</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">${cancRate}%</p>
+                <p class="text-xs text-gray-400">${periodLabel}</p>
+            </div>
+        </div>
+
+        <!-- Completion rate progress -->
+        <div class="bg-white rounded-xl shadow-sm p-5 mb-6">
+            <h4 class="font-semibold text-gray-700 mb-3 font-poppins">Completion Rate — ${periodLabel}</h4>
+            <div class="flex items-center space-x-4">
+                <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                    <div class="demo-bar h-5 bg-teal-500 rounded-full flex items-center justify-end pr-2"
+                         style="width:${compRate}%;">
+                        <span class="text-xs text-white font-semibold">${compRate > 10 ? compRate + '%' : ''}</span>
+                    </div>
+                </div>
+                <span class="text-lg font-bold text-teal-700 w-12 text-right">${compRate}%</span>
+            </div>
+            ${cancelled > 0 ? `
+            <div class="flex items-center space-x-4 mt-3">
+                <span class="text-xs text-gray-500 w-28 flex-shrink-0">Cancellations:</span>
+                <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                    <div class="demo-bar h-3 bg-red-400 rounded-full" style="width:${cancRate}%;"></div>
+                </div>
+                <span class="text-sm font-semibold text-red-500 w-12 text-right">${cancRate}%</span>
+            </div>` : ''}
+        </div>
+
+        <!-- Two-column layout: Status table + Trend -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <!-- Appointment Status Breakdown -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-gray-100 bg-gray-50">
+                    <h4 class="font-semibold text-gray-700 font-poppins">Appointment Status — ${periodLabel}</h4>
+                </div>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="text-left px-4 py-2 font-semibold text-gray-600">Status</th>
+                            <th class="text-right px-4 py-2 font-semibold text-gray-600">Count</th>
+                            <th class="text-right px-4 py-2 font-semibold text-gray-600">%</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        ${statusRows.length ? statusRows.map(r => {
+                            const pct = total > 0 ? Math.round((r.count / total) * 100) : 0;
+                            return `<tr class="hover:bg-gray-50">
+                                <td class="px-4 py-2">${statusBadge(r.label.toLowerCase())}</td>
+                                <td class="px-4 py-2 text-right font-semibold text-gray-800">${r.count}</td>
+                                <td class="px-4 py-2 text-right text-gray-500">${pct}%</td>
+                            </tr>`;
+                        }).join('') : `<tr><td colspan="3" class="px-4 py-6 text-center text-gray-400">No data</td></tr>`}
+                        ${total > 0 ? `<tr class="bg-gray-50 font-semibold">
+                            <td class="px-4 py-2 text-gray-700">Total</td>
+                            <td class="px-4 py-2 text-right text-gray-800">${total}</td>
+                            <td class="px-4 py-2 text-right text-gray-500">100%</td>
+                        </tr>` : ''}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 7-Day Trend -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-gray-100 bg-gray-50">
+                    <h4 class="font-semibold text-gray-700 font-poppins">Last 7 Days</h4>
+                </div>
+                <div class="p-4 space-y-3">
+                    ${trendRows.length ? (() => {
+                        const tMax = Math.max(...trendRows.map(r => r.count), 1);
+                        return trendRows.map(r => {
+                            const w = Math.round((r.count / tMax) * 100);
+                            return `<div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-500 w-8 text-right flex-shrink-0">${escHtml(r.label)}</span>
+                                <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                                    <div class="demo-bar h-5 bg-teal-400 rounded-full" style="width:${w}%;"></div>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-700 w-5 text-right">${r.count}</span>
+                            </div>`;
+                        }).join('');
+                    })() : '<p class="text-center text-gray-400 text-sm py-4">No data</p>'}
+                </div>
+            </div>
+        </div>
+
+        <!-- Demographics: Age Distribution -->
+        <div class="bg-white rounded-xl shadow-sm p-5 mb-6">
+            <h4 class="font-semibold text-gray-700 mb-4 font-poppins">Age Distribution</h4>
+            <div class="space-y-3">
+                ${ageLabels.length ? ageLabels.map((label, i) => {
+                    const val = ageData[i] || 0;
+                    const w   = Math.round((val / ageMax) * 100);
+                    const colors = ['bg-blue-400', 'bg-teal-400', 'bg-purple-400', 'bg-yellow-400', 'bg-orange-400'];
+                    return `<div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-600 w-14 flex-shrink-0">${escHtml(label)}</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+                            <div class="demo-bar h-6 ${colors[i % colors.length]} rounded-full flex items-center pl-2"
+                                 style="width:${w}%; min-width: ${val > 0 ? '24px' : '0'};">
+                                ${w > 10 ? `<span class="text-xs text-white font-semibold">${val}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-700 w-6 text-right">${val}</span>
+                    </div>`;
+                }).join('') : '<p class="text-gray-400 text-sm">No demographic data available</p>'}
+            </div>
+        </div>`;
+
+    } catch (err) {
+        container.innerHTML = `<div class="text-center py-10 text-red-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</div>`;
+    }
+}
+
+function selectReportPeriod(period) {
+    reportPeriod = period;
+    loadReports();
+}
+
+/* ══════════════════════════════════════════════
+   ACTIVITY LOGS TAB
+══════════════════════════════════════════════ */
+async function loadActivityLogs() {
+    const tbody = document.getElementById('activityTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400">
+        <i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>`;
+
+    const params = new URLSearchParams();
+    if (actFilters.action_type && actFilters.action_type !== 'all') params.set('action_type', actFilters.action_type);
+    if (actFilters.module       && actFilters.module       !== 'all') params.set('module',      actFilters.module);
+    params.set('page', actPage);
+
+    try {
+        const data = await apiRequest('/admin/activity-logs.php?' + params.toString());
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load activity logs');
+
+        const logs = data.logs || [];
+        actTotalPages = data.total_pages || 1;
+        updateActPagination();
+
+        if (!logs.length) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-400">
+                <i class="fas fa-clipboard mr-2"></i>No activity logs found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = logs.map(log => {
+            const ts     = formatDateTime(log.created_at);
+            const user   = escHtml(log.username  || '—');
+            const role   = escHtml(log.user_role || '—');
+            const action = actionBadge(log.action_type);
+            const module = `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-mono">${escHtml(log.module || '—')}</span>`;
+            const desc   = escHtml(log.description || '—');
+
+            return `<tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">${ts}</td>
+                <td class="px-4 py-3 font-medium text-gray-800">${user}</td>
+                <td class="px-4 py-3 text-xs text-gray-500 capitalize">${role}</td>
+                <td class="px-4 py-3">${action}</td>
+                <td class="px-4 py-3">${module}</td>
+                <td class="px-4 py-3 text-gray-600 max-w-xs truncate" title="${desc}">${desc}</td>
+            </tr>`;
+        }).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">
+            <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</td></tr>`;
+    }
+}
+
+function applyActivityFilters() {
+    actFilters.action_type = document.getElementById('logFilterAction')?.value || '';
+    actFilters.module      = document.getElementById('logFilterModule')?.value || '';
+    actPage = 1;
+    loadActivityLogs();
+}
+
+function clearActivityFilters() {
+    actFilters = { action_type: '', module: '' };
+    const actionEl  = document.getElementById('logFilterAction');
+    const moduleEl  = document.getElementById('logFilterModule');
+    if (actionEl)  actionEl.value  = '';
+    if (moduleEl)  moduleEl.value  = '';
+    actPage = 1;
+    loadActivityLogs();
+}
+
+function updateActPagination() {
+    const info    = document.getElementById('actPageInfo');
+    const prevBtn = document.getElementById('actPrevBtn');
+    const nextBtn = document.getElementById('actNextBtn');
+    if (info)    info.textContent = `Page ${actPage} of ${actTotalPages}`;
+    if (prevBtn) prevBtn.disabled = actPage <= 1;
+    if (nextBtn) nextBtn.disabled = actPage >= actTotalPages;
+}
+
+function activityPrevPage() {
+    if (actPage > 1) { actPage--; loadActivityLogs(); }
+}
+function activityNextPage() {
+    if (actPage < actTotalPages) { actPage++; loadActivityLogs(); }
+}
+
+/* ══════════════════════════════════════════════
+   HELPERS — BADGES
+══════════════════════════════════════════════ */
+function statusBadge(status) {
+    const map = {
+        scheduled:  'bg-blue-100 text-blue-700',
+        checked_in: 'bg-yellow-100 text-yellow-700',
+        in_progress:'bg-purple-100 text-purple-700',
+        completed:  'bg-green-100 text-green-700',
+        cancelled:  'bg-red-100 text-red-500',
+        no_show:    'bg-gray-100 text-gray-500',
+    };
+    const cls   = map[status] || 'bg-gray-100 text-gray-500';
+    const label = status ? status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—';
+    return `<span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}">${label}</span>`;
+}
+
+function actionBadge(action) {
+    const map = {
+        LOGIN:   'bg-blue-100 text-blue-700',
+        LOGOUT:  'bg-gray-100 text-gray-600',
+        CREATE:  'bg-green-100 text-green-700',
+        UPDATE:  'bg-yellow-100 text-yellow-700',
+        DELETE:  'bg-red-100 text-red-600',
+        CHECKIN: 'bg-purple-100 text-purple-700',
+        READ:    'bg-teal-100 text-teal-700',
+    };
+    const cls   = map[action] || 'bg-gray-100 text-gray-600';
+    return `<span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}">${escHtml(action || '—')}</span>`;
+}
+
+/* ══════════════════════════════════════════════
+   HELPERS — DATE / TIME
+══════════════════════════════════════════════ */
+function formatDate(d) {
+    return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function formatDateStr(str) {
+    if (!str) return '—';
+    const d = new Date(str + 'T00:00:00');
+    return isNaN(d) ? str : formatDate(d);
+}
+
+function formatTime(str) {
+    if (!str) return '—';
+    const [h, m] = str.split(':');
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hr12 = hour % 12 || 12;
+    return `${hr12}:${m} ${ampm}`;
+}
+
+function formatDateTime(str) {
+    if (!str) return '—';
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('en-PH', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
+/* ══════════════════════════════════════════════
+   HELPERS — MISC
+══════════════════════════════════════════════ */
+function escHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}

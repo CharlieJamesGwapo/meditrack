@@ -1,88 +1,51 @@
 <?php
-/**
- * Get Doctor Dashboard Statistics
- */
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-require_once '../../config/database.php';
-require_once '../../config/config.php';
-
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-
-// Check authentication
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
+if (!isLoggedIn() || !hasRole('doctor')) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
-    $userId = $_SESSION['user_id'];
-    
-    // Get doctor ID
-    $doctorQuery = "SELECT id FROM doctors WHERE user_id = :user_id";
-    $doctorStmt = $db->prepare($doctorQuery);
-    $doctorStmt->execute([':user_id' => $userId]);
-    $doctor = $doctorStmt->fetch(PDO::FETCH_ASSOC);
-    
+    $userId = getCurrentUserId();
+
+    $stmt = $db->prepare("SELECT id FROM doctors WHERE user_id = :uid LIMIT 1");
+    $stmt->execute([':uid' => $userId]);
+    $doctor = $stmt->fetch();
     if (!$doctor) {
-        sendJSON(['success' => false, 'message' => 'Doctor not found'], 404);
+        sendJSON(['success' => false, 'message' => 'Doctor profile not found'], 404);
     }
-    
-    $doctorId = $doctor['id'];
-    
-    // Count today's appointments
-    $todayQuery = "SELECT COUNT(*) as count FROM appointments 
-                   WHERE doctor_id = :doctor_id 
-                   AND appointment_date = CURDATE()
-                   AND status NOT IN ('cancelled')";
-    $todayStmt = $db->prepare($todayQuery);
-    $todayStmt->execute([':doctor_id' => $doctorId]);
-    $today = $todayStmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Count checked-in appointments
-    $checkedInQuery = "SELECT COUNT(*) as count FROM appointments 
-                       WHERE doctor_id = :doctor_id 
-                       AND status = 'checked_in'
-                       AND appointment_date = CURDATE()";
-    $checkedInStmt = $db->prepare($checkedInQuery);
-    $checkedInStmt->execute([':doctor_id' => $doctorId]);
-    $checkedIn = $checkedInStmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Count pending appointments
-    $pendingQuery = "SELECT COUNT(*) as count FROM appointments 
-                     WHERE doctor_id = :doctor_id 
-                     AND status = 'pending'";
-    $pendingStmt = $db->prepare($pendingQuery);
-    $pendingStmt->execute([':doctor_id' => $doctorId]);
-    $pending = $pendingStmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Count completed appointments
-    $completedQuery = "SELECT COUNT(*) as count FROM appointments 
-                       WHERE doctor_id = :doctor_id 
-                       AND status = 'completed'";
-    $completedStmt = $db->prepare($completedQuery);
-    $completedStmt->execute([':doctor_id' => $doctorId]);
-    $completed = $completedStmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
+    $did = $doctor['id'];
+
+    $q = function($db, $sql, $params) {
+        $s = $db->prepare($sql);
+        $s->execute($params);
+        return (int) $s->fetchColumn();
+    };
+
+    $today_appointments = $q($db, "SELECT COUNT(*) FROM appointments WHERE doctor_id = :did AND appointment_date = CURDATE() AND status != 'cancelled'", [':did' => $did]);
+    $today_checked_in   = $q($db, "SELECT COUNT(*) FROM appointments WHERE doctor_id = :did AND appointment_date = CURDATE() AND status = 'checked_in'", [':did' => $did]);
+    $today_completed    = $q($db, "SELECT COUNT(*) FROM appointments WHERE doctor_id = :did AND appointment_date = CURDATE() AND status = 'completed'", [':did' => $did]);
+    $total_patients     = $q($db, "SELECT COUNT(DISTINCT patient_id) FROM appointments WHERE doctor_id = :did", [':did' => $did]);
+    $total_completed    = $q($db, "SELECT COUNT(*) FROM appointments WHERE doctor_id = :did AND status = 'completed'", [':did' => $did]);
+
     sendJSON([
         'success' => true,
-        'stats' => [
-            'today' => (int)$today,
-            'checked_in' => (int)$checkedIn,
-            'pending' => (int)$pending,
-            'completed' => (int)$completed
+        'stats'   => [
+            'today_appointments' => $today_appointments,
+            'today_checked_in'   => $today_checked_in,
+            'today_completed'    => $today_completed,
+            'total_patients'     => $total_patients,
+            'total_completed'    => $total_completed
         ]
     ]);
-    
+
 } catch (Exception $e) {
-    sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+    error_log("doctor stats error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to load stats'], 500);
 }

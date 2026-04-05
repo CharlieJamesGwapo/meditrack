@@ -1,92 +1,65 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-require_once '../../config/database.php';
-require_once '../../config/config.php';
-
-// Authentication check
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'reception'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+if (!isLoggedIn() || !hasRole('admin')) {
+    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
-    if (!$db) {
-        throw new Exception('Database connection failed');
+
+    $filter_action = sanitizeInput($_GET['action_type'] ?? '');
+    $filter_module = sanitizeInput($_GET['module'] ?? '');
+    $page          = max(1, (int) ($_GET['page'] ?? 1));
+    $offset        = ($page - 1) * ITEMS_PER_PAGE;
+
+    $where  = "WHERE 1=1";
+    $params = [];
+
+    if (!empty($filter_action)) {
+        $where .= " AND action_type = :action_type";
+        $params[':action_type'] = $filter_action;
     }
-    
-    // Get recent activity from audit logs or create from recent actions
-    $activities = [];
-    
-    // Get recent user registrations
-    $stmt = $db->query("SELECT username, created_at FROM users ORDER BY created_at DESC LIMIT 5");
-    while ($row = $stmt->fetch()) {
-        $timeAgo = getTimeAgo($row['created_at']);
-        $activities[] = [
-            'type' => 'success',
-            'title' => 'New User Registered',
-            'description' => $row['username'] . ' joined the system',
-            'time' => $timeAgo
-        ];
+    if (!empty($filter_module)) {
+        $where .= " AND module = :module";
+        $params[':module'] = $filter_module;
     }
-    
-    // Get recent appointments
-    $stmt = $db->query("SELECT appointment_date, created_at FROM appointments ORDER BY created_at DESC LIMIT 5");
-    while ($row = $stmt->fetch()) {
-        $timeAgo = getTimeAgo($row['created_at']);
-        $activities[] = [
-            'type' => 'info',
-            'title' => 'New Appointment Scheduled',
-            'description' => 'Appointment for ' . date('M d, Y', strtotime($row['appointment_date'])),
-            'time' => $timeAgo
-        ];
-    }
-    
-    // Sort by time
-    usort($activities, function($a, $b) {
-        return strcmp($b['time'], $a['time']);
-    });
-    
-    echo json_encode(array_slice($activities, 0, 10));
-    
-} catch(Exception $e) {
-    // Return default activity
-    $now = date('M d, g:i A');
-    echo json_encode([
-        [
-            'type' => 'success',
-            'title' => 'System Started',
-            'description' => 'Dashboard loaded successfully',
-            'time' => $now
-        ],
-        [
-            'type' => 'info',
-            'title' => 'Admin Login',
-            'description' => 'Administrator logged in',
-            'time' => $now
+
+    $countStmt = $db->prepare("SELECT COUNT(*) FROM activity_logs $where");
+    $countStmt->execute($params);
+    $total      = (int) $countStmt->fetchColumn();
+    $total_pages = (int) ceil($total / ITEMS_PER_PAGE);
+
+    $params[':limit']  = ITEMS_PER_PAGE;
+    $params[':offset'] = $offset;
+
+    $stmt = $db->prepare("
+        SELECT id, user_id, username, user_role, action_type, module, record_id, description, ip_address, created_at
+        FROM activity_logs
+        $where
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    ");
+    $stmt->execute($params);
+    $logs = $stmt->fetchAll();
+
+    sendJSON([
+        'success'    => true,
+        'logs'       => $logs,
+        'pagination' => [
+            'total'       => $total,
+            'page'        => $page,
+            'total_pages' => $total_pages,
+            'per_page'    => ITEMS_PER_PAGE
         ]
     ]);
-}
 
-function getTimeAgo($datetime) {
-    $time = strtotime($datetime);
-    $diff = time() - $time;
-    
-    if ($diff < 60) {
-        return 'Just now';
-    } elseif ($diff < 3600) {
-        $mins = floor($diff / 60);
-        return $mins . ' minute' . ($mins > 1 ? 's' : '') . ' ago';
-    } elseif ($diff < 86400) {
-        $hours = floor($diff / 3600);
-        return $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
-    } else {
-        return date('M d, g:i A', $time);
-    }
+} catch (Exception $e) {
+    error_log("admin activity error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to load activity logs'], 500);
 }
-?>

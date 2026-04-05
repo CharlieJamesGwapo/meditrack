@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/database.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-if (!isLoggedIn() || !hasRole('patient')) {
+if (!isLoggedIn() || !hasRole('admin')) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
@@ -19,34 +19,27 @@ if (!$appointment_id) {
 try {
     $database = new Database();
     $db = $database->getConnection();
-    $userId = getCurrentUserId();
 
-    $stmt = $db->prepare("SELECT id FROM patients WHERE user_id = :uid LIMIT 1");
-    $stmt->execute([':uid' => $userId]);
-    $patient = $stmt->fetch();
-    if (!$patient) {
-        sendJSON(['success' => false, 'message' => 'Patient profile not found'], 404);
-    }
-
-    $stmt = $db->prepare("SELECT id, status FROM appointments WHERE id = :aid AND patient_id = :pid LIMIT 1");
-    $stmt->execute([':aid' => $appointment_id, ':pid' => $patient['id']]);
+    $stmt = $db->prepare("SELECT id, status, appointment_number FROM appointments WHERE id = :aid LIMIT 1");
+    $stmt->execute([':aid' => $appointment_id]);
     $appointment = $stmt->fetch();
 
     if (!$appointment) {
         sendJSON(['success' => false, 'message' => 'Appointment not found'], 404);
     }
-    if ($appointment['status'] !== 'scheduled') {
-        sendJSON(['success' => false, 'message' => 'Only scheduled appointments can be cancelled'], 400);
+    if (in_array($appointment['status'], ['completed', 'cancelled'])) {
+        sendJSON(['success' => false, 'message' => 'Cannot cancel a ' . $appointment['status'] . ' appointment'], 400);
     }
 
     $db->prepare("UPDATE appointments SET status = 'cancelled', cancelled_at = NOW() WHERE id = :aid")
        ->execute([':aid' => $appointment_id]);
 
-    logActivity($db, $userId, $_SESSION['username'] ?? '', 'patient', 'UPDATE', 'Appointments', $appointment_id, "Appointment cancelled by patient");
+    logActivity($db, getCurrentUserId(), $_SESSION['username'] ?? '', 'admin', 'UPDATE', 'Appointments', $appointment_id,
+        "Admin cancelled appointment " . $appointment['appointment_number']);
 
     sendJSON(['success' => true, 'message' => 'Appointment cancelled successfully']);
 
 } catch (Exception $e) {
-    error_log("cancel-appointment (patient) error: " . $e->getMessage());
+    error_log("admin cancel-appointment error: " . $e->getMessage());
     sendJSON(['success' => false, 'message' => 'Failed to cancel appointment'], 500);
 }

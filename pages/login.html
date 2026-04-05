@@ -7,539 +7,257 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="robots" content="noindex, nofollow">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-    <meta name="referrer" content="no-referrer">
-    <title>Secure Login - MediTrack</title>
+    <title>Log In — MediTrack</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
-    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
     <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
-    <link rel="manifest" href="../assets/images/site.webmanifest">
 
+    <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6.4 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             min-height: 100vh;
+            background: #f9fafb;
         }
 
-        h1, h2, h3 {
-            font-family: 'Poppins', 'Inter', sans-serif;
-        }
+        h1, h2, h3 { font-family: 'Poppins', 'Inter', sans-serif; }
 
-        .split-container {
-            display: flex;
-            min-height: 100vh;
-        }
+        /* ── Layout ── */
+        .split-container { display: flex; min-height: 100vh; }
 
-        /* Left Panel - Branding */
+        /* ── Left Panel ── */
         .left-panel {
-            flex: 0 0 45%;
-            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
-            padding: 48px 40px;
+            flex: 0 0 44%;
+            background: linear-gradient(150deg, #0d4f6e 0%, #0e7490 45%, #0891b2 100%);
+            padding: 52px 44px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             position: relative;
             overflow: hidden;
         }
-
         .left-panel::before {
             content: '';
             position: absolute;
-            top: -60px;
-            right: -60px;
-            width: 200px;
-            height: 200px;
+            top: -70px; right: -70px;
+            width: 220px; height: 220px;
             border-radius: 50%;
             background: rgba(255,255,255,0.05);
         }
-
         .left-panel::after {
             content: '';
             position: absolute;
-            bottom: -80px;
-            left: -40px;
-            width: 260px;
-            height: 260px;
+            bottom: -90px; left: -50px;
+            width: 280px; height: 280px;
             border-radius: 50%;
             background: rgba(255,255,255,0.04);
         }
 
         .logo-box {
-            width: 56px;
-            height: 56px;
+            width: 58px; height: 58px;
             background: rgba(255,255,255,0.15);
             border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 26px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.22);
             overflow: hidden;
         }
-
-        .logo-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 14px;
-        }
+        .logo-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
 
         .brand-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 28px;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 8px;
-            line-height: 1.2;
+            font-size: 30px; font-weight: 800;
+            color: #fff; margin-bottom: 6px; line-height: 1.2;
         }
-
         .brand-subtitle {
             font-size: 14px;
-            color: rgba(255,255,255,0.8);
-            line-height: 1.6;
-            margin-bottom: 32px;
+            color: rgba(255,255,255,0.78);
+            line-height: 1.7; margin-bottom: 36px;
         }
 
         .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+            display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
         }
-
         .feature-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(52,211,153,0.2);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            width: 34px; height: 34px;
+            background: rgba(103,232,249,0.18);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
+        .feature-icon i { color: #67e8f9; font-size: 13px; }
+        .feature-text { font-size: 13px; color: rgba(255,255,255,0.85); }
 
-        .feature-icon i {
-            color: #34d399;
-            font-size: 13px;
-        }
-
-        .feature-text {
-            font-size: 13px;
-            color: rgba(255,255,255,0.85);
-        }
-
-        /* Right Panel - Form */
+        /* ── Right Panel ── */
         .right-panel {
             flex: 1;
-            background: #ffffff;
-            padding: 48px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background: #fff;
+            padding: 52px 44px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             overflow-y: auto;
         }
+        .form-container { width: 100%; max-width: 400px; }
 
-        .form-container {
-            width: 100%;
-            max-width: 400px;
+        .clock-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #f0f9ff;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid #bae6fd;
+            font-size: 12px; font-weight: 600; color: #0369a1;
+            margin-bottom: 26px;
         }
 
-        .form-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 4px;
-        }
+        .form-title { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+        .form-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
 
-        .form-subtitle {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 28px;
-        }
+        /* ── Fields ── */
+        .field-label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
 
-        .field-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 6px;
-        }
+        .input-wrapper { position: relative; margin-bottom: 18px; }
 
+        .input-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af; font-size: 14px; pointer-events: none;
+        }
         .input-field {
-            width: 100%;
-            height: 44px;
+            width: 100%; height: 44px;
             background: #f9fafb;
             border: 1.5px solid #e5e7eb;
             border-radius: 10px;
             padding: 0 14px 0 42px;
-            font-size: 14px;
-            color: #1f2937;
-            transition: all 0.2s ease;
-            outline: none;
+            font-size: 14px; color: #1f2937;
+            transition: all 0.2s ease; outline: none;
         }
-
-        .input-field::placeholder {
-            color: #9ca3af;
-        }
-
+        .input-field::placeholder { color: #9ca3af; }
         .input-field:focus {
-            border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-            background: #ffffff;
-        }
-
-        .input-wrapper {
-            position: relative;
-            margin-bottom: 18px;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            font-size: 14px;
-            pointer-events: none;
+            border-color: #0891b2;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.1);
+            background: #fff;
         }
 
         .toggle-password {
-            position: absolute;
-            right: 14px;
-            top: 50%;
+            position: absolute; right: 14px; top: 50%;
             transform: translateY(-50%);
-            color: #9ca3af;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 4px;
-            font-size: 14px;
+            color: #9ca3af; cursor: pointer;
+            background: none; border: none; padding: 4px; font-size: 14px;
             transition: color 0.2s;
         }
+        .toggle-password:hover { color: #0891b2; }
 
-        .toggle-password:hover {
-            color: #10b981;
-        }
-
-        .strength-bar-container {
-            display: flex;
-            gap: 4px;
-            margin-top: 8px;
-        }
-
+        /* strength bar */
+        .strength-bar-container { display: flex; gap: 4px; margin-top: 8px; }
         .strength-segment {
-            flex: 1;
-            height: 4px;
-            background: #e5e7eb;
-            border-radius: 2px;
-            transition: background 0.3s ease;
+            flex: 1; height: 4px; background: #e5e7eb;
+            border-radius: 2px; transition: background 0.3s;
         }
 
+        /* options row */
         .options-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 24px;
         }
+        .remember-me { display: flex; align-items: center; gap: 8px; }
+        .remember-me input { width: 16px; height: 16px; accent-color: #0891b2; cursor: pointer; }
+        .remember-me label { font-size: 13px; color: #6b7280; cursor: pointer; }
 
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .forgot-link { font-size: 13px; color: #0369a1; font-weight: 500; text-decoration: none; transition: color 0.2s; }
+        .forgot-link:hover { color: #0c4a6e; }
 
-        .remember-me input {
-            width: 16px;
-            height: 16px;
-            accent-color: #10b981;
-            cursor: pointer;
-        }
-
-        .remember-me label {
-            font-size: 13px;
-            color: #6b7280;
-            cursor: pointer;
-        }
-
-        .forgot-link {
-            font-size: 13px;
-            color: #059669;
-            font-weight: 500;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .forgot-link:hover {
-            color: #047857;
-        }
-
+        /* buttons */
         .btn-primary {
-            width: 100%;
-            height: 44px;
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            border: none;
-            border-radius: 10px;
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
+            width: 100%; height: 44px;
+            background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%);
+            border: none; border-radius: 10px;
+            color: #fff; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(8,145,178,0.3);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            position: relative; overflow: hidden;
         }
-
         .btn-primary::before {
             content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
             transition: left 0.5s;
         }
-
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(8,145,178,0.36); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
         .divider {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin: 22px 0;
+            display: flex; align-items: center; gap: 14px; margin: 22px 0;
         }
-
-        .divider-line {
-            flex: 1;
-            height: 1px;
-            background: #e5e7eb;
-        }
-
-        .divider-text {
-            font-size: 12px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .divider-line { flex: 1; height: 1px; background: #e5e7eb; }
+        .divider-text { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; }
 
         .btn-secondary {
-            width: 100%;
-            height: 44px;
-            background: #ffffff;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 10px;
-            color: #374151;
-            font-size: 14px;
-            cursor: pointer;
+            width: 100%; height: 44px;
+            background: #fff; border: 1.5px solid #e5e7eb;
+            border-radius: 10px; color: #374151;
+            font-size: 14px; cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
             text-decoration: none;
         }
+        .btn-secondary:hover { border-color: #0891b2; background: #f0f9ff; }
+        .btn-secondary span { color: #0369a1; font-weight: 600; }
 
-        .btn-secondary:hover {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-
-        .btn-secondary span {
-            color: #059669;
-            font-weight: 600;
-        }
-
-        .clock-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #f0fdf4;
-            padding: 6px 14px;
-            border-radius: 999px;
-            border: 1px solid #bbf7d0;
-            font-size: 12px;
-            font-weight: 600;
-            color: #047857;
-            margin-bottom: 24px;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 18px;
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #15803d;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Security notice */
+        /* security notice */
         .security-notice {
-            margin-top: 20px;
-            padding: 14px;
-            background: #f0fdf4;
-            border-radius: 10px;
-            border: 1px solid #bbf7d0;
+            margin-top: 20px; padding: 14px;
+            background: #f0f9ff; border-radius: 10px;
+            border: 1px solid #bae6fd;
         }
+        .security-notice p { font-size: 12px; color: #0c4a6e; }
+        .security-notice .notice-title { font-weight: 600; margin-bottom: 4px; }
 
-        .security-notice p {
-            font-size: 12px;
-            color: #065f46;
-        }
+        /* alert inline */
+        .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 18px; display: none; animation: slideDown 0.3s ease-out; }
+        .alert.show { display: block; }
+        .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .security-notice .notice-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        /* iOS fixes */
+        /* iOS zoom fix */
         @supports (-webkit-touch-callout: none) {
-            input, select, textarea {
-                font-size: 16px !important;
-            }
-            .input-field {
-                -webkit-appearance: none;
-                appearance: none;
-            }
+            input, select { font-size: 16px !important; -webkit-appearance: none; }
         }
 
-        /* Mobile: stack vertically */
+        /* Mobile */
         @media (max-width: 767px) {
-            .split-container {
-                flex-direction: column;
-            }
-
-            .left-panel {
-                flex: none;
-                padding: 28px 24px;
-                text-align: center;
-                align-items: center;
-            }
-
-            .brand-title {
-                font-size: 22px;
-            }
-
-            .brand-subtitle {
-                font-size: 13px;
-                margin-bottom: 0;
-            }
-
-            .features-list {
-                display: none;
-            }
-
-            .right-panel {
-                padding: 28px 20px;
-            }
-
-            .form-container {
-                max-width: 100%;
-            }
-
-            .form-title {
-                font-size: 20px;
-            }
+            .split-container { flex-direction: column; }
+            .left-panel { flex: none; padding: 28px 24px; text-align: center; align-items: center; }
+            .brand-title { font-size: 22px; }
+            .brand-subtitle { font-size: 13px; margin-bottom: 0; }
+            .features-list { display: none; }
+            .right-panel { padding: 28px 20px; }
+            .form-container { max-width: 100%; }
+            .form-title { font-size: 20px; }
         }
-
-        /* Touch device improvements */
         @media (hover: none) and (pointer: coarse) {
-            .btn-primary,
-            .btn-secondary,
-            button,
-            a {
-                min-height: 44px;
-            }
-
-            .input-field {
-                min-height: 44px;
-            }
-        }
-
-        /* Landscape mode */
-        @media (max-height: 700px) and (orientation: landscape) {
-            .left-panel {
-                padding: 20px 32px;
-            }
-
-            .right-panel {
-                padding: 20px 32px;
-            }
-
-            .logo-box {
-                width: 40px;
-                height: 40px;
-                margin-bottom: 12px;
-            }
-
-            .brand-title {
-                font-size: 20px;
-            }
+            .btn-primary, .btn-secondary, button, a { min-height: 44px; }
+            .input-field { min-height: 44px; }
         }
     </style>
 </head>
 <body>
     <div class="split-container">
-        <!-- Left Panel - Branding -->
+        <!-- ── Left Panel ── -->
         <div class="left-panel">
             <a href="../index.html" style="text-decoration:none;">
                 <div class="logo-box">
@@ -547,60 +265,66 @@
                 </div>
             </a>
             <div class="brand-title">MediTrack</div>
-            <div class="brand-subtitle">Your trusted healthcare management system for the Philippines.</div>
+            <div class="brand-subtitle">Internal Medicine Clinic — your trusted healthcare management system.</div>
 
             <div class="features-list">
                 <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
                     <span class="feature-text">Easy appointment booking</span>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
                     <span class="feature-text">Secure medical records</span>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-icon"><i class="fas fa-qrcode"></i></div>
                     <span class="feature-text">QR code check-in</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-bell"></i></div>
+                    <span class="feature-text">Real-time notifications</span>
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel - Login Form -->
+        <!-- ── Right Panel ── -->
         <div class="right-panel">
             <div class="form-container">
-                <!-- Clock -->
+                <!-- Live clock -->
                 <div class="clock-badge">
                     <i class="fas fa-clock"></i>
-                    <span id="real-time-clock"></span>
+                    <span id="liveClock"></span>
                 </div>
 
                 <div class="form-title">Welcome back</div>
-                <div class="form-subtitle">Sign in to your account</div>
+                <div class="form-subtitle">Sign in to your MediTrack account</div>
 
+                <!-- Inline alert -->
                 <div id="alertBox" class="alert"></div>
 
-                <form id="loginForm" autocomplete="off">
-                    <!-- Username -->
-                    <label class="field-label" for="username">Username</label>
+                <form id="loginForm" autocomplete="off" novalidate>
+                    <!-- Email -->
+                    <label class="field-label" for="email">Email Address</label>
                     <div class="input-wrapper">
-                        <i class="fas fa-user input-icon"></i>
-                        <input id="username" name="username" type="text" required
-                               class="input-field" placeholder="Enter your username"
-                               autocomplete="off" maxlength="50">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input id="email" name="email" type="email" required
+                               class="input-field" placeholder="Enter your email"
+                               autocomplete="off" maxlength="100">
                     </div>
 
                     <!-- Password -->
                     <label class="field-label" for="password">Password</label>
-                    <div class="input-wrapper" style="margin-bottom: 8px;">
+                    <div class="input-wrapper" style="margin-bottom:8px;">
                         <i class="fas fa-lock input-icon"></i>
                         <input id="password" name="password" type="password" required
-                               class="input-field" style="padding-right: 42px;"
+                               class="input-field" style="padding-right:42px;"
                                placeholder="Enter your password"
                                autocomplete="new-password" minlength="6" maxlength="100">
                         <button type="button" id="togglePassword" class="toggle-password">
                             <i class="fas fa-eye" id="eyeIcon"></i>
                         </button>
                     </div>
+                    <!-- Strength bar (visual feedback) -->
                     <div class="strength-bar-container" id="strengthBar">
                         <div class="strength-segment"></div>
                         <div class="strength-segment"></div>
@@ -608,47 +332,42 @@
                         <div class="strength-segment"></div>
                     </div>
 
-                    <div style="height: 18px;"></div>
+                    <div style="height:16px;"></div>
 
-                    <!-- Remember me & Forgot -->
+                    <!-- Remember + Forgot -->
                     <div class="options-row">
                         <div class="remember-me">
-                            <input id="remember-me" name="remember-me" type="checkbox">
-                            <label for="remember-me">Remember me</label>
+                            <input id="rememberMe" name="rememberMe" type="checkbox">
+                            <label for="rememberMe">Remember me</label>
                         </div>
                         <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
                     </div>
 
                     <!-- Submit -->
-                    <button type="submit" id="loginButton" class="btn-primary">
-                        <span id="loginText">
-                            <i class="fas fa-sign-in-alt"></i> Sign In
-                        </span>
-                        <span id="loginSpinner" class="hidden">
+                    <button type="submit" id="loginBtn" class="btn-primary">
+                        <span id="loginText"><i class="fas fa-right-to-bracket"></i> Log In</span>
+                        <span id="loginSpinner" style="display:none;">
                             <i class="fas fa-spinner fa-spin"></i> Authenticating...
                         </span>
                     </button>
                 </form>
 
-                <!-- Divider -->
                 <div class="divider">
                     <div class="divider-line"></div>
                     <span class="divider-text">or</span>
                     <div class="divider-line"></div>
                 </div>
 
-                <!-- Register link -->
                 <a href="register.html" class="btn-secondary">
                     Don't have an account? <span>Create one</span>
                 </a>
 
-                <!-- Security Notice -->
-                <div class="security-notice">
-                    <div style="display:flex;align-items:start;gap:10px;">
-                        <i class="fas fa-info-circle" style="color:#059669;margin-top:2px;"></i>
+                <div class="security-notice" style="margin-top:20px;">
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <i class="fas fa-lock" style="color:#0369a1;margin-top:2px;font-size:13px;"></i>
                         <div>
-                            <p class="notice-title">Security Notice:</p>
-                            <p>Your connection is encrypted and secure. Never share your login credentials with anyone.</p>
+                            <p class="notice-title">Secure Connection</p>
+                            <p>Your connection is encrypted. Never share your login credentials with anyone.</p>
                         </div>
                     </div>
                 </div>
@@ -657,210 +376,121 @@
     </div>
 
     <script>
-        // Disable right-click and keyboard shortcuts for security
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'c')) {
-                e.preventDefault();
+        // ── Auth redirect (already logged in) ──
+        (function() {
+            const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+            if (user && user.role) {
+                const map = { patient: 'patient-dashboard.html', doctor: 'doctor-dashboard.html', admin: 'admin-dashboard.html', reception: 'reception-dashboard.html' };
+                window.location.replace(map[user.role] || 'patient-dashboard.html');
             }
-        });
+        })();
 
-        // Real-Time Clock
-        function updateRealTimeClock() {
-            const now = new Date();
-            const options = {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            };
-            const dateTimeString = now.toLocaleString('en-US', options);
-            const clockElement = document.getElementById('real-time-clock');
-            if (clockElement) {
-                clockElement.textContent = dateTimeString;
-            }
+        // ── Live clock ──
+        function tick() {
+            const el = document.getElementById('liveClock');
+            if (el) el.textContent = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
         }
-        updateRealTimeClock();
-        setInterval(updateRealTimeClock, 1000);
+        tick();
+        setInterval(tick, 1000);
 
-        // Password Toggle
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
+        // ── Password toggle ──
+        const pwInput = document.getElementById('password');
         const eyeIcon = document.getElementById('eyeIcon');
-
-        togglePassword.addEventListener('click', () => {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
+        document.getElementById('togglePassword').addEventListener('click', () => {
+            pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
             eyeIcon.classList.toggle('fa-eye');
             eyeIcon.classList.toggle('fa-eye-slash');
         });
 
-        // Password Strength Indicator (4-segment bar)
-        const strengthSegments = document.querySelectorAll('.strength-segment');
-        passwordInput.addEventListener('input', () => {
-            const password = passwordInput.value;
-            let strength = 0;
-
-            if (password.length >= 6) strength++;
-            if (password.length >= 10) strength++;
-            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-            if (/[0-9]/.test(password)) strength++;
-            if (/[^a-zA-Z0-9]/.test(password)) strength++;
-
-            const filledSegments = Math.min(4, Math.round(strength * 4 / 5));
-            const color = filledSegments <= 1 ? '#ef4444' : filledSegments <= 3 ? '#f59e0b' : '#10b981';
-
-            strengthSegments.forEach((seg, i) => {
-                seg.style.background = i < filledSegments ? color : '#e5e7eb';
-            });
+        // ── Strength bar ──
+        const segments = document.querySelectorAll('.strength-segment');
+        pwInput.addEventListener('input', () => {
+            const v = pwInput.value;
+            let s = 0;
+            if (v.length >= 6) s++;
+            if (v.length >= 10) s++;
+            if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++;
+            if (/[0-9]/.test(v)) s++;
+            if (/[^a-zA-Z0-9]/.test(v)) s++;
+            const filled = Math.min(4, Math.round(s * 4 / 5));
+            const color = filled <= 1 ? '#ef4444' : filled <= 3 ? '#f59e0b' : '#0891b2';
+            segments.forEach((seg, i) => { seg.style.background = i < filled ? color : '#e5e7eb'; });
         });
 
-        // Form Elements
-        const loginForm = document.getElementById('loginForm');
-        const alertBox = document.getElementById('alertBox');
-        const loginText = document.getElementById('loginText');
-        const loginSpinner = document.getElementById('loginSpinner');
-        const loginButton = document.getElementById('loginButton');
-        const usernameInput = document.getElementById('username');
-
-        // Alert Function
-        function showAlert(message, type = 'error') {
-            alertBox.className = `alert show ${type === 'error' ? 'alert-error' : 'alert-success'}`;
-            alertBox.innerHTML = `
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-                    <span style="font-weight:600;font-size:13px;">${message}</span>
-                </div>
-            `;
-            setTimeout(() => {
-                alertBox.className = 'alert';
-            }, 5000);
+        // ── Alert helper ──
+        function showAlert(msg, type = 'error') {
+            const box = document.getElementById('alertBox');
+            box.className = `alert show alert-${type}`;
+            box.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i><span style="font-size:13px;font-weight:600;">${msg}</span></div>`;
+            setTimeout(() => { box.className = 'alert'; }, 6000);
         }
 
-        // Input Sanitization
-        function sanitizeInput(input) {
-            return input.replace(/[<>"'&]/g, '');
-        }
+        // ── Rate limiting ──
+        let attempts = 0, lastAttempt = 0;
+        const MAX = 5, LOCK = 300000;
 
-        // Rate Limiting
-        let loginAttempts = 0;
-        let lastAttemptTime = 0;
-        const MAX_ATTEMPTS = 5;
-        const LOCKOUT_TIME = 300000; // 5 minutes
-
-        // Form Submission
-        loginForm.addEventListener('submit', async (e) => {
+        // ── Form submit ──
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const now = Date.now();
-            if (loginAttempts >= MAX_ATTEMPTS) {
-                const timeLeft = Math.ceil((LOCKOUT_TIME - (now - lastAttemptTime)) / 1000);
-                if (timeLeft > 0) {
-                    showAlert(`Too many login attempts. Please try again in ${timeLeft} seconds.`, 'error');
-                    return;
-                } else {
-                    loginAttempts = 0;
-                }
+            if (attempts >= MAX) {
+                const left = Math.ceil((LOCK - (now - lastAttempt)) / 1000);
+                if (left > 0) { showAlert(`Too many attempts. Try again in ${left}s.`); return; }
+                attempts = 0;
             }
 
-            const username = sanitizeInput(usernameInput.value.trim());
-            const password = passwordInput.value;
-            const recaptchaResponse = 'disabled';
+            const email    = document.getElementById('email').value.trim();
+            const password = pwInput.value;
 
-            if (!username || !password) {
-                showAlert('Please enter both username and password.', 'error');
-                return;
-            }
+            if (!email || !password) { showAlert('Please enter both email and password.'); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('Please enter a valid email address.'); return; }
+            if (password.length < 6) { showAlert('Password must be at least 6 characters.'); return; }
 
-            if (username.length < 3) {
-                showAlert('Username must be at least 3 characters.', 'error');
-                return;
-            }
-
-            if (password.length < 6) {
-                showAlert('Password must be at least 6 characters.', 'error');
-                return;
-            }
-
-            loginButton.disabled = true;
-            loginText.classList.add('hidden');
-            loginSpinner.classList.remove('hidden');
+            const btn    = document.getElementById('loginBtn');
+            const text   = document.getElementById('loginText');
+            const spinner = document.getElementById('loginSpinner');
+            btn.disabled = true;
+            text.style.display = 'none';
+            spinner.style.display = 'flex';
 
             try {
-                const timestamp = Date.now();
-                const sessionToken = btoa(`${username}:${timestamp}`);
-
-                const response = await fetch('../api/auth/login.php', {
+                const res  = await fetch('../api/auth/login.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-Session-Token': sessionToken
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin',
-                    body: JSON.stringify({
-                        username,
-                        password,
-                        timestamp,
-                        recaptcha: recaptchaResponse
-                    })
+                    body: JSON.stringify({ email, password })
                 });
-
-                const data = await response.json();
+                const data = await res.json();
 
                 if (data.success) {
-                    showAlert('Login successful! Redirecting...', 'success');
-                    passwordInput.value = '';
-
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    showAlert('Login successful! Redirecting…', 'success');
+                    pwInput.value = '';
                     setTimeout(() => {
-                        switch(data.user?.role) {
-                            case 'patient':
-                                window.location.replace('patient-dashboard.html');
-                                break;
-                            case 'doctor':
-                                window.location.replace('doctor-dashboard.html');
-                                break;
-                            case 'reception':
-                                window.location.replace('reception-dashboard.html');
-                                break;
-                            case 'admin':
-                                window.location.replace('admin-dashboard.html');
-                                break;
-                            default:
-                                window.location.replace('patient-dashboard.html');
-                        }
-                    }, 1500);
+                        const role = data.user?.role;
+                        const map = { patient: 'patient-dashboard.html', doctor: 'doctor-dashboard.html', admin: 'admin-dashboard.html', reception: 'reception-dashboard.html' };
+                        window.location.replace(map[role] || 'patient-dashboard.html');
+                    }, 1200);
                 } else {
-                    loginAttempts++;
-                    lastAttemptTime = Date.now();
-                    showAlert(data.message || 'Invalid username or password.', 'error');
-                    passwordInput.value = '';
+                    attempts++;
+                    lastAttempt = Date.now();
+                    showAlert(data.message || 'Invalid email or password.');
+                    pwInput.value = '';
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                showAlert('Connection error. Please check your internet and try again.', 'error');
+            } catch (err) {
+                console.error(err);
+                showAlert('Connection error. Please try again.');
             } finally {
-                loginButton.disabled = false;
-                loginText.classList.remove('hidden');
-                loginSpinner.classList.add('hidden');
+                btn.disabled = false;
+                text.style.display = '';
+                spinner.style.display = 'none';
             }
         });
 
-        // Clear cache on load
-        window.addEventListener('load', () => {
-            if (window.performance && window.performance.navigation.type === 2) {
-                window.location.reload(true);
-            }
-        });
-
-        // Prevent back button after logout
+        // Prevent back after logout
         window.history.pushState(null, '', window.location.href);
-        window.addEventListener('popstate', () => {
-            window.history.pushState(null, '', window.location.href);
-        });
+        window.addEventListener('popstate', () => { window.history.pushState(null, '', window.location.href); });
     </script>
 </body>
 </html>

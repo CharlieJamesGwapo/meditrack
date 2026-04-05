@@ -1,194 +1,113 @@
 <?php
-/**
- * Save Medical Record
- * Allows doctor to add notes, prescriptions, and lab orders
- */
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-session_start();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+if (!isLoggedIn() || !hasRole('doctor')) {
+    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+}
 
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+$input = json_decode(file_get_contents('php://input'), true);
+$appointment_id = (int) ($input['appointment_id'] ?? 0);
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-// Handle preflight
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
+if (!$appointment_id) {
+    sendJSON(['success' => false, 'message' => 'Appointment ID is required'], 400);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
-    if (!$db) {
-        throw new Exception('Database connection failed');
-    }
-    
-    // Get POST data
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    $appointmentId = $data['appointment_id'] ?? null;
-    $patientId = $data['patient_id'] ?? null;
-    $chiefComplaint = $data['chief_complaint'] ?? '';
-    $symptoms = $data['symptoms'] ?? '';
-    $diagnosis = $data['diagnosis'] ?? '';
-    $prescription = $data['prescription'] ?? '';
-    $labTests = $data['lab_tests'] ?? '';
-    $notes = $data['notes'] ?? '';
-    $followUpDate = $data['follow_up_date'] ?? null;
-    
-    // Vital signs
-    $vitalBP = $data['vital_bp'] ?? '';
-    $vitalTemp = $data['vital_temp'] ?? '';
-    $vitalPulse = $data['vital_pulse'] ?? '';
-    $vitalWeight = $data['vital_weight'] ?? '';
-    
-    // Combine vital signs
-    $vitalSigns = json_encode([
-        'blood_pressure' => $vitalBP,
-        'temperature' => $vitalTemp,
-        'pulse' => $vitalPulse,
-        'weight' => $vitalWeight
-    ]);
-    
-    // Get doctor ID
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
-        exit;
-    }
-    if ($_SESSION['role'] !== 'doctor') {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Access denied']);
-        exit;
-    }
-    $userId = $_SESSION['user_id'];
-    $doctorQuery = "SELECT id FROM doctors WHERE user_id = :user_id";
-    $doctorStmt = $db->prepare($doctorQuery);
-    $doctorStmt->execute([':user_id' => $userId]);
-    $doctor = $doctorStmt->fetch(PDO::FETCH_ASSOC);
-    
+    $userId = getCurrentUserId();
+
+    $stmt = $db->prepare("SELECT id FROM doctors WHERE user_id = :uid LIMIT 1");
+    $stmt->execute([':uid' => $userId]);
+    $doctor = $stmt->fetch();
     if (!$doctor) {
-        throw new Exception('Doctor not found');
+        sendJSON(['success' => false, 'message' => 'Doctor profile not found'], 404);
     }
-    
-    $doctorId = $doctor['id'];
+    $doctor_id = $doctor['id'];
 
-    // Validate appointment belongs to this doctor and patient
-    if ($appointmentId) {
-        $aptCheck = $db->prepare("SELECT patient_id FROM appointments WHERE id = :id AND doctor_id = :doctor_id");
-        $aptCheck->execute([':id' => $appointmentId, ':doctor_id' => $doctorId]);
-        $aptRow = $aptCheck->fetch(PDO::FETCH_ASSOC);
+    // Verify appointment belongs to doctor and is in correct status
+    $stmt = $db->prepare("SELECT id, patient_id, status FROM appointments WHERE id = :aid AND doctor_id = :did LIMIT 1");
+    $stmt->execute([':aid' => $appointment_id, ':did' => $doctor_id]);
+    $appointment = $stmt->fetch();
 
-        if (!$aptRow) {
-            echo json_encode(['success' => false, 'message' => 'Appointment not found or not assigned to you']);
-            exit;
-        }
-        // Use the patient_id from the appointment to prevent mismatch
-        $patientId = $aptRow['patient_id'];
+    if (!$appointment) {
+        sendJSON(['success' => false, 'message' => 'Appointment not found or not assigned to you'], 404);
+    }
+    if (!in_array($appointment['status'], ['checked_in', 'in_progress'])) {
+        sendJSON(['success' => false, 'message' => 'Patient must be checked in before saving a medical record'], 400);
     }
 
-    // Start transaction
-    $db->beginTransaction();
-    
-    // Insert medical record
-    $insertQuery = "INSERT INTO medical_records 
-                    (patient_id, doctor_id, appointment_id, chief_complaint, symptoms, 
-                     diagnosis, prescription, lab_tests, vital_signs, notes, follow_up_date, created_at) 
-                    VALUES 
-                    (:patient_id, :doctor_id, :appointment_id, :chief_complaint, :symptoms, 
-                     :diagnosis, :prescription, :lab_tests, :vital_signs, :notes, :follow_up_date, NOW())";
-    
-    $insertStmt = $db->prepare($insertQuery);
-    $insertStmt->execute([
-        ':patient_id' => $patientId,
-        ':doctor_id' => $doctorId,
-        ':appointment_id' => $appointmentId,
-        ':chief_complaint' => $chiefComplaint,
-        ':symptoms' => $symptoms,
-        ':diagnosis' => $diagnosis,
-        ':prescription' => $prescription,
-        ':lab_tests' => $labTests,
-        ':vital_signs' => $vitalSigns,
-        ':notes' => $notes,
-        ':follow_up_date' => $followUpDate
+    $patient_id       = $appointment['patient_id'];
+    $chief_complaint  = sanitizeInput($input['chief_complaint'] ?? '');
+    $symptoms         = sanitizeInput($input['symptoms'] ?? '');
+    $diagnosis        = sanitizeInput($input['diagnosis'] ?? '');
+    $prescription     = sanitizeInput($input['prescription'] ?? '');
+    $lab_tests_ordered = sanitizeInput($input['lab_tests_ordered'] ?? '');
+    $notes            = sanitizeInput($input['notes'] ?? '');
+    $follow_up_date   = sanitizeInput($input['follow_up_date'] ?? '') ?: null;
+
+    // Build vital_signs JSON
+    $vital_signs = json_encode([
+        'bp'          => sanitizeInput($input['bp'] ?? ''),
+        'temperature' => sanitizeInput($input['temperature'] ?? ''),
+        'heart_rate'  => sanitizeInput($input['heart_rate'] ?? ''),
+        'weight'      => sanitizeInput($input['weight'] ?? ''),
+        'height'      => sanitizeInput($input['height'] ?? '')
     ]);
-    
-    $recordId = $db->lastInsertId();
-    
-    // Also insert into visits table for doctor-side history
-    if ($appointmentId) {
-        $visitQuery = "INSERT INTO visits
-                       (appointment_id, patient_id, doctor_id, chief_complaint, symptoms,
-                        vital_signs, diagnosis, prescription, lab_tests_ordered, follow_up_date, notes)
-                       VALUES
-                       (:appointment_id, :patient_id, :doctor_id, :chief_complaint, :symptoms,
-                        :vital_signs, :diagnosis, :prescription, :lab_tests_ordered, :follow_up_date, :notes)
-                       ON DUPLICATE KEY UPDATE
-                       chief_complaint = VALUES(chief_complaint),
-                       symptoms = VALUES(symptoms),
-                       vital_signs = VALUES(vital_signs),
-                       diagnosis = VALUES(diagnosis),
-                       prescription = VALUES(prescription),
-                       lab_tests_ordered = VALUES(lab_tests_ordered),
-                       follow_up_date = VALUES(follow_up_date),
-                       notes = VALUES(notes),
-                       updated_at = NOW()";
-        $visitStmt2 = $db->prepare($visitQuery);
-        $visitStmt2->execute([
-            ':appointment_id' => $appointmentId,
-            ':patient_id' => $patientId,
-            ':doctor_id' => $doctorId,
-            ':chief_complaint' => $chiefComplaint,
-            ':symptoms' => $symptoms,
-            ':vital_signs' => $vitalSigns,
-            ':diagnosis' => $diagnosis,
-            ':prescription' => $prescription,
-            ':lab_tests_ordered' => $labTests,
-            ':follow_up_date' => $followUpDate,
-            ':notes' => $notes
-        ]);
-    }
+
+    $db->beginTransaction();
+
+    // INSERT or UPDATE (ON DUPLICATE KEY — appointment_id is UNIQUE)
+    $stmt = $db->prepare("
+        INSERT INTO medical_records
+            (appointment_id, patient_id, doctor_id, chief_complaint, symptoms, vital_signs, diagnosis, prescription, lab_tests_ordered, notes, follow_up_date)
+        VALUES
+            (:aid, :pid, :did, :cc, :sym, :vs, :diag, :rx, :lab, :notes, :fud)
+        ON DUPLICATE KEY UPDATE
+            chief_complaint    = VALUES(chief_complaint),
+            symptoms           = VALUES(symptoms),
+            vital_signs        = VALUES(vital_signs),
+            diagnosis          = VALUES(diagnosis),
+            prescription       = VALUES(prescription),
+            lab_tests_ordered  = VALUES(lab_tests_ordered),
+            notes              = VALUES(notes),
+            follow_up_date     = VALUES(follow_up_date)
+    ");
+    $stmt->execute([
+        ':aid'   => $appointment_id,
+        ':pid'   => $patient_id,
+        ':did'   => $doctor_id,
+        ':cc'    => $chief_complaint,
+        ':sym'   => $symptoms,
+        ':vs'    => $vital_signs,
+        ':diag'  => $diagnosis,
+        ':rx'    => $prescription,
+        ':lab'   => $lab_tests_ordered,
+        ':notes' => $notes,
+        ':fud'   => $follow_up_date
+    ]);
+    $record_id = $db->lastInsertId() ?: $appointment_id;
 
     // Update appointment status to completed
-    if ($appointmentId) {
-        $updateQuery = "UPDATE appointments SET status = 'completed', updated_at = NOW() WHERE id = :id";
-        $updateStmt = $db->prepare($updateQuery);
-        $updateStmt->execute([':id' => $appointmentId]);
-    }
+    $db->prepare("UPDATE appointments SET status = 'completed', completed_at = NOW() WHERE id = :aid")
+       ->execute([':aid' => $appointment_id]);
 
-    // Notify patient
-    if ($patientId) {
-        try {
-            $notifQuery = "INSERT INTO notifications (user_id, type, title, message, related_id)
-                           VALUES ((SELECT user_id FROM patients WHERE id = :patient_id), 'update', 'Medical Record Added', 'Your doctor has added a medical record for your visit. Check your Medical Records tab.', :appointment_id)";
-            $notifStmt = $db->prepare($notifQuery);
-            $notifStmt->execute([':patient_id' => $patientId, ':appointment_id' => $appointmentId]);
-        } catch (Exception $e) {
-            // Don't fail the save if notification fails
-        }
-    }
-
-    // Commit transaction
     $db->commit();
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Medical record saved successfully',
-        'record_id' => $recordId
+
+    logActivity($db, $userId, $_SESSION['username'] ?? '', 'doctor', 'CREATE', 'MedicalRecords', $appointment_id, "Medical record saved for appointment #$appointment_id");
+
+    sendJSON([
+        'success'   => true,
+        'message'   => 'Medical record saved successfully',
+        'record_id' => $record_id
     ]);
-    
+
 } catch (Exception $e) {
-    if (isset($db) && $db && $db->inTransaction()) {
-        $db->rollBack();
-    }
-    
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error saving medical record: ' . $e->getMessage()
-    ]);
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
+    error_log("save-medical-record error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to save medical record'], 500);
 }

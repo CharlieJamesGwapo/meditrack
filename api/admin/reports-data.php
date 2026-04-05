@@ -1,232 +1,87 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-
-require_once '../../config/database.php';
-require_once '../../config/config.php';
-
-// Check authentication
-if (!isLoggedIn() || getCurrentUserRole() !== 'admin') {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
+if (!isLoggedIn() || !hasRole('admin')) {
+    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
-    $range = $_GET['range'] ?? 'today';
-    
-    // Calculate date range
-    $startDate = '';
-    $endDate = date('Y-m-d');
-    
-    switch($range) {
-        case 'today':
-            $startDate = date('Y-m-d');
+
+    $period = sanitizeInput($_GET['period'] ?? 'daily');
+
+    // Appointment stats by period
+    switch ($period) {
+        case 'weekly':
+            $groupBy   = "YEARWEEK(appointment_date,1)";
+            $labelExpr = "CONCAT('Week ', WEEK(appointment_date,1), ' ', YEAR(appointment_date))";
+            $limit     = 12;
             break;
-        case 'week':
-            $startDate = date('Y-m-d', strtotime('-7 days'));
+        case 'monthly':
+            $groupBy   = "DATE_FORMAT(appointment_date, '%Y-%m')";
+            $labelExpr = "DATE_FORMAT(appointment_date, '%b %Y')";
+            $limit     = 12;
             break;
-        case 'month':
-            $startDate = date('Y-m-d', strtotime('-30 days'));
+        default: // daily
+            $groupBy   = "appointment_date";
+            $labelExpr = "appointment_date";
+            $limit     = 30;
             break;
-        case 'year':
-            $startDate = date('Y-m-d', strtotime('-365 days'));
-            break;
-        default:
-            $startDate = date('Y-m-d');
     }
-    
-    // Overview Statistics
-    $overview = [
-        'totalAppointments' => 0,
-        'totalPatients' => 0,
-        'totalDoctors' => 0,
-        'totalDepartments' => 0
-    ];
-    
-    // Total Appointments in range
-    $stmt = $db->prepare("SELECT COUNT(*) as count FROM appointments WHERE appointment_date BETWEEN :start AND :end");
-    $stmt->execute([':start' => $startDate, ':end' => $endDate]);
-    $overview['totalAppointments'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Total Patients
-    $stmt = $db->query("SELECT COUNT(*) as count FROM patients");
-    $overview['totalPatients'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Total Doctors
-    $stmt = $db->query("SELECT COUNT(*) as count FROM users WHERE role = 'doctor'");
-    $overview['totalDoctors'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Total Departments
-    $stmt = $db->query("SELECT COUNT(*) as count FROM departments");
-    $overview['totalDepartments'] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
-    
-    // Appointments Trend (last 7 days)
-    $trendLabels = [];
-    $trendData = [];
-    
-    for ($i = 6; $i >= 0; $i--) {
-        $date = date('Y-m-d', strtotime("-$i days"));
-        $dayName = date('D', strtotime("-$i days"));
-        $trendLabels[] = $dayName;
-        
-        $stmt = $db->prepare("SELECT COUNT(*) as count FROM appointments WHERE appointment_date = :date");
-        $stmt->execute([':date' => $date]);
-        $trendData[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['count'];
-    }
-    
-    $appointmentsTrend = [
-        'labels' => $trendLabels,
-        'data' => $trendData
-    ];
-    
-    // Status Distribution
-    $statusLabels = [];
-    $statusData = [];
-    
-    $stmt = $db->prepare("SELECT status, COUNT(*) as count FROM appointments WHERE appointment_date BETWEEN :start AND :end GROUP BY status");
-    $stmt->execute([':start' => $startDate, ':end' => $endDate]);
-    $statuses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($statuses as $status) {
-        $statusLabels[] = ucfirst($status['status']);
-        $statusData[] = (int)$status['count'];
-    }
-    
-    // If no data, provide empty arrays
-    if (empty($statusLabels)) {
-        $statusLabels = ['No Data'];
-        $statusData = [0];
-    }
-    
-    $statusDistribution = [
-        'labels' => $statusLabels,
-        'data' => $statusData
-    ];
-    
-    // Department Analytics
-    $deptLabels = [];
-    $deptData = [];
-    
-    $stmt = $db->prepare("
-        SELECT 
-            d.name as dept_name,
-            COUNT(a.id) as appointment_count 
-        FROM departments d
-        LEFT JOIN doctors doc ON d.name = doc.department
-        LEFT JOIN appointments a ON doc.id = a.doctor_id AND a.appointment_date BETWEEN :start AND :end
-        GROUP BY d.id, d.name
-        ORDER BY appointment_count DESC
-        LIMIT 8
-    ");
-    $stmt->execute([':start' => $startDate, ':end' => $endDate]);
-    $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($departments as $dept) {
-        $deptLabels[] = $dept['dept_name'];
-        $deptData[] = (int)$dept['appointment_count'];
-    }
-    
-    // If no data, provide empty arrays
-    if (empty($deptLabels)) {
-        $deptLabels = ['No Data'];
-        $deptData = [0];
-    }
-    
-    $departmentAnalytics = [
-        'labels' => $deptLabels,
-        'data' => $deptData
-    ];
-    
-    // Patient Demographics (Age Distribution)
-    $ageLabels = ['18-25', '26-35', '36-45', '46-55', '56+'];
-    $ageData = [0, 0, 0, 0, 0];
-    
+
     $stmt = $db->query("
-        SELECT 
-            YEAR(CURDATE()) - YEAR(date_of_birth) - (DATE_FORMAT(CURDATE(), '%m%d') < DATE_FORMAT(date_of_birth, '%m%d')) as age
-        FROM patients
-        WHERE date_of_birth IS NOT NULL
+        SELECT $labelExpr as label,
+               COUNT(*) as total,
+               SUM(status='completed') as completed,
+               SUM(status='cancelled') as cancelled,
+               SUM(status='scheduled') as scheduled
+        FROM appointments
+        GROUP BY $groupBy
+        ORDER BY $groupBy DESC
+        LIMIT $limit
     ");
-    $ages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($ages as $row) {
-        $age = (int)$row['age'];
-        if ($age >= 18 && $age <= 25) $ageData[0]++;
-        else if ($age >= 26 && $age <= 35) $ageData[1]++;
-        else if ($age >= 36 && $age <= 45) $ageData[2]++;
-        else if ($age >= 46 && $age <= 55) $ageData[3]++;
-        else if ($age >= 56) $ageData[4]++;
+    $appointment_stats = array_reverse($stmt->fetchAll());
+
+    // Gender distribution
+    $stmt = $db->query("SELECT gender, COUNT(*) as count FROM patients WHERE gender IS NOT NULL GROUP BY gender");
+    $gender_distribution = $stmt->fetchAll();
+
+    // Age distribution
+    $age_brackets = ['0-17' => 0, '18-30' => 0, '31-45' => 0, '46-60' => 0, '60+' => 0];
+    $stmt = $db->query("SELECT TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) as age FROM patients WHERE date_of_birth IS NOT NULL");
+    foreach ($stmt->fetchAll() as $row) {
+        $age = (int) $row['age'];
+        if ($age < 18)      $age_brackets['0-17']++;
+        elseif ($age <= 30) $age_brackets['18-30']++;
+        elseif ($age <= 45) $age_brackets['31-45']++;
+        elseif ($age <= 60) $age_brackets['46-60']++;
+        else                $age_brackets['60+']++;
     }
-    
-    $demographics = [
-        'labels' => $ageLabels,
-        'data' => $ageData
-    ];
-    
-    // Doctor Performance
-    $doctorPerformance = [];
-    
-    $stmt = $db->prepare("
-        SELECT 
-            u.username as name,
-            d.department as department,
-            COUNT(DISTINCT a.id) as appointments,
-            COUNT(DISTINCT a.patient_id) as patients,
-            COALESCE(AVG(CASE WHEN a.status = 'completed' THEN 5 ELSE 4 END), 4.5) as rating
-        FROM users u
-        LEFT JOIN doctors d ON d.user_id = u.id AND u.role = 'doctor'
-        LEFT JOIN appointments a ON d.id = a.doctor_id AND a.appointment_date BETWEEN :start AND :end
-        WHERE u.role = 'doctor'
-        GROUP BY u.id, u.username, d.department
-        HAVING appointments > 0
-        ORDER BY appointments DESC, patients DESC
-        LIMIT 10
-    ");
-    $stmt->execute([':start' => $startDate, ':end' => $endDate]);
-    $doctors = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($doctors as $doctor) {
-        $doctorPerformance[] = [
-            'name' => $doctor['name'],
-            'department' => $doctor['department'] ?? 'General',
-            'appointments' => (int)$doctor['appointments'],
-            'patients' => (int)$doctor['patients'],
-            'rating' => round((float)$doctor['rating'], 1)
-        ];
-    }
-    
-    // Prepare response
-    $response = [
-        'success' => true,
-        'overview' => $overview,
-        'appointmentsTrend' => $appointmentsTrend,
-        'statusDistribution' => $statusDistribution,
-        'departmentAnalytics' => $departmentAnalytics,
-        'demographics' => $demographics,
-        'doctorPerformance' => $doctorPerformance
-    ];
-    
-    echo json_encode($response);
-    
-} catch (PDOException $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+    $age_distribution = array_map(
+        fn($bracket, $count) => ['bracket' => $bracket, 'count' => $count],
+        array_keys($age_brackets), array_values($age_brackets)
+    );
+
+    // Completion rate
+    $stmt = $db->query("SELECT COUNT(*) as total, SUM(status='completed') as completed FROM appointments");
+    $row  = $stmt->fetch();
+    $completion_rate = $row['total'] > 0 ? round($row['completed'] / $row['total'] * 100, 1) : 0;
+
+    sendJSON([
+        'success'            => true,
+        'period'             => $period,
+        'appointment_stats'  => $appointment_stats,
+        'gender_distribution'=> $gender_distribution,
+        'age_distribution'   => $age_distribution,
+        'completion_rate'    => $completion_rate
     ]);
+
 } catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error: ' . $e->getMessage()
-    ]);
+    error_log("admin reports-data error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to load report data'], 500);
 }
-?>

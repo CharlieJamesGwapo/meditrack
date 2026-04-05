@@ -1,1145 +1,364 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Modern Healthcare Management System - Book appointments, manage medical records, and access healthcare services with ease">
-    <title>MediTrack - Modern Healthcare Management</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/logo.jpg">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/logo.jpg">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/logo.jpg">
-    <link rel="manifest" href="assets/images/site.webmanifest">
-    
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        
-        body {
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        h1, h2, h3 {
-            font-family: 'Poppins', 'Inter', sans-serif;
-        }
-        
-        .hero-gradient {
-            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero-gradient::before {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: moveGrid 30s linear infinite;
-        }
-        
-        .hero-gradient::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 50%, rgba(6, 182, 212, 0.3), transparent 50%),
-                        radial-gradient(circle at 70% 50%, rgba(20, 184, 166, 0.3), transparent 50%);
-            animation: pulse-gradient 8s ease-in-out infinite;
-        }
-        
-        .medical-pattern {
-            background-image: 
-                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 70px);
-        }
-        
-        @keyframes pulse-gradient {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-        
-        @keyframes moveGrid {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .card-minimal {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(5, 150, 105, 0.1);
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        .card-minimal:hover {
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 20px 40px -12px rgba(5, 150, 105, 0.3);
-            border-color: rgba(16, 185, 129, 0.3);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 20px 35px -5px rgba(5, 150, 105, 0.6);
-        }
-        
-        .hospital-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #047857;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            animation: badgePulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .navbar-minimal {
-            backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.8);
-            transition: all 0.3s ease;
-        }
-        
-        .navbar-minimal.scrolled {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        .mobile-menu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .mobile-menu.active {
-            max-height: 600px;
-        }
-        
-        .feature-icon-minimal {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 8px 20px -5px rgba(5, 150, 105, 0.4);
-        }
-        
-        .card-minimal:hover .feature-icon-minimal {
-            transform: scale(1.15) rotate(360deg);
-            box-shadow: 0 15px 35px -5px rgba(5, 150, 105, 0.6);
-        }
-        
-        .trust-badge {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #bae6fd;
-        }
-        
-        .stat-counter {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 700;
-            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .pulse-ring {
-            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        @keyframes pulse-ring {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MediTrack — Internal Medicine Clinic. Book appointments online, check in with your QR code, and access your medical records anytime." />
+  <title>MediTrack — Internal Medicine Clinic</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 6.4 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            teal: {
+              50:  '#f0fdfa',
+              100: '#ccfbf1',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
             }
-            50% {
-                opacity: 0.5;
-                transform: scale(1.05);
-            }
+          }
         }
-        
-        .text-gradient {
-            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientShift 3s ease infinite;
-        }
-        
-        @keyframes gradientShift {
-            0%, 100% { filter: hue-rotate(0deg); }
-            50% { filter: hue-rotate(10deg); }
-        }
-        
-        .logo-container {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-            transition: all 0.3s ease;
-            border: 2px solid #10b981;
-            animation: logoFloat 3s ease-in-out infinite;
-        }
-        
-        @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-        }
-        
-        .logo-container:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.5);
-            border-color: #059669;
-        }
-        
-        .logo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .logo-placeholder {
-            color: white;
-            font-size: 24px;
-        }
-        
-        .medical-cross {
-            position: relative;
-        }
-        
-        .medical-cross::before,
-        .medical-cross::after {
-            content: '';
-            position: absolute;
-            background: currentColor;
-        }
-        
-        .medical-cross::before {
-            width: 100%;
-            height: 30%;
-            top: 35%;
-            left: 0;
-        }
-        
-        .medical-cross::after {
-            width: 30%;
-            height: 100%;
-            top: 0;
-            left: 35%;
-        }
-        
-        .section-minimal {
-            padding: clamp(3rem, 8vw, 6rem) 0;
-        }
-        
-        .scroll-indicator {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: bounce 2s infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-            40% { transform: translateX(-50%) translateY(-10px); }
-            60% { transform: translateX(-50%) translateY(-5px); }
-        }
-        
-        .loading-shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
-        @media (max-width: 768px) {
-            .hero-gradient::before {
-                background-size: 30px 30px;
-            }
-            .hero-gradient::after {
-                opacity: 0.5;
-            }
-            h1 {
-                font-size: 2.5rem !important;
-                line-height: 1.2 !important;
-            }
-            .stat-counter {
-                font-size: 2rem !important;
-            }
-            .feature-icon-minimal {
-                width: 56px;
-                height: 56px;
-            }
-        }
-        
-        @media (max-width: 640px) {
-            .hospital-badge {
-                font-size: 0.75rem;
-                padding: 0.4rem 0.8rem;
-            }
-            
-            /* Mobile navigation improvements */
-            .navbar-minimal {
-                backdrop-filter: blur(10px);
-            }
-            
-            .logo-container {
-                width: 36px;
-                height: 36px;
-            }
-            
-            /* Hero section mobile */
-            h1 {
-                line-height: 1.2 !important;
-            }
-        }
-        
-        /* Tablet responsive */
-        @media (min-width: 641px) and (max-width: 1024px) {
-            .logo-container {
-                width: 44px;
-                height: 44px;
-            }
-        }
-        
-        /* iOS specific fixes */
-        @supports (-webkit-touch-callout: none) {
-            input, select, textarea {
-                font-size: 16px !important;
-            }
-        }
-        
-        /* Touch device improvements */
-        @media (hover: none) and (pointer: coarse) {
-            .btn-primary,
-            button,
-            a {
-                min-height: 44px;
-            }
-        }
-        
-        /* Enhanced Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease-out;
-        }
-        
-        /* Map Section Styles */
-        .map-iframe {
-            transition: all 0.3s ease;
-        }
-        
-        .map-iframe:hover {
-            transform: scale(1.01);
-        }
-        
-        @keyframes mapLoad {
-            0% { opacity: 0; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        
-        .map-iframe {
-            animation: mapLoad 0.6s ease-out;
-        }
-        
-        /* Contact Card Animations */
-        .card-minimal:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-        
-        .card-minimal:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .card-minimal:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-    </style>
+      }
+    }
+  </script>
+
+  <style>
+    .hero-gradient {
+      background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+    }
+    .card-hover {
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(15, 118, 110, 0.18);
+    }
+    .step-connector::after {
+      content: '';
+      position: absolute;
+      top: 2rem;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, #14b8a6, #0369a1);
+    }
+  </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Minimal Navigation -->
-    <nav class="navbar-minimal fixed w-full top-0 z-50 border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo - Replace the src with your hospital logo -->
-                <div class="flex items-center space-x-3">
-                    <div class="logo-container">
-                        <!-- REPLACE THIS: Add your logo image here -->
-                        <img src="assets/images/logo.jpg" alt="Hospital Logo">                    </div>
-                    <div>
-                        <span class="text-xl font-bold text-gray-900">MediTrack</span>
-                        <span class="block text-xs text-green-600 -mt-1 font-medium">Healthcare Management System</span>
-                    </div>
-                </div>
-                
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-2">
-                    <a href="#features" class="text-gray-800 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-semibold transition hover:bg-green-50">Features</a>
-                    <a href="#how-it-works" class="text-gray-800 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-semibold transition hover:bg-green-50">How It Works</a>
-                    <a href="#map-section" class="text-gray-800 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-semibold transition hover:bg-green-50">Location</a>
-                    <a href="pages/login.html" class="text-gray-800 hover:text-green-600 px-4 py-2 rounded-lg text-sm font-semibold transition hover:bg-green-50">Login</a>
-                    <a href="pages/register.html" class="btn-primary text-white px-6 py-2.5 rounded-lg text-sm font-semibold ml-2">
-                        Get Started
-                    </a>
-                </div>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-                <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition">
-                    <i class="fas fa-bars text-gray-700 text-xl"></i>
-                </button>
-            </div>
+  <!-- ═══════════════════════════════════════════
+       NAVBAR
+  ════════════════════════════════════════════ -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
 
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="mobile-menu md:hidden border-t border-gray-100 bg-white">
-                <div class="py-4 space-y-2">
-                    <a href="#features" class="block text-gray-800 hover:text-green-600 hover:bg-green-50 px-4 py-3 rounded-lg text-base font-semibold transition">Features</a>
-                    <a href="#how-it-works" class="block text-gray-800 hover:text-green-600 hover:bg-green-50 px-4 py-3 rounded-lg text-base font-semibold transition">How It Works</a>
-                    <a href="#map-section" class="block text-gray-800 hover:text-green-600 hover:bg-green-50 px-4 py-3 rounded-lg text-base font-semibold transition">Location</a>
-                    <a href="pages/login.html" class="block text-gray-800 hover:text-green-600 hover:bg-green-50 px-4 py-3 rounded-lg text-base font-semibold transition">Login</a>
-                    <a href="pages/register.html" class="block btn-primary text-white px-4 py-3 rounded-lg text-base font-semibold text-center mt-3">Get Started</a>
-                </div>
-            </div>
+        <!-- Logo -->
+        <a href="index.html" class="flex items-center gap-2 text-teal-700 font-bold text-xl tracking-tight">
+          <i class="fa-solid fa-heart-pulse text-teal-500 text-2xl"></i>
+          <span>MediTrack</span>
+        </a>
+
+        <!-- Nav links -->
+        <div class="flex items-center gap-3">
+          <a href="pages/login.html"
+             class="text-sm font-medium text-gray-600 hover:text-teal-700 transition-colors px-3 py-2 rounded-lg hover:bg-teal-50">
+            <i class="fa-solid fa-right-to-bracket mr-1"></i>Login
+          </a>
+          <a href="pages/register.html"
+             class="text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
+            <i class="fa-solid fa-user-plus mr-1"></i>Register
+          </a>
         </div>
-    </nav>
 
-    <!-- Spacer -->
-    <div class="h-16"></div>
-
-    <!-- Minimal Hero Section -->
-    <div class="hero-gradient text-white relative min-h-screen flex items-center">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
-            <div class="max-w-4xl mx-auto text-center">
-                <!-- Real-Time Clock -->
-                <div class="mb-6" data-aos="fade-down">
-                    <div class="inline-block bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg px-6 py-3 rounded-full border border-white border-opacity-30">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-clock text-white text-lg"></i>
-                            <span id="real-time-clock" class="text-white font-semibold text-base"></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Hospital Badges -->
-                <div class="mb-8 flex flex-wrap justify-center gap-3" data-aos="fade-down">
-                    <span class="hospital-badge">
-                        <i class="fas fa-shield-alt text-green-600"></i>
-                        <span>DOH Accredited</span>
-                    </span>
-                    <span class="hospital-badge">
-                        <i class="fas fa-award text-green-600"></i>
-                        <span>ISO Certified</span>
-                    </span>
-                    <span class="hospital-badge">
-                        <i class="fas fa-user-md text-green-600"></i>
-                        <span>Expert Doctors</span>
-                    </span>
-                </div>
-                
-                <!-- Main Heading -->
-                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight" data-aos="fade-up" style="animation: fadeInUp 1s ease-out;">
-                    MediTrack
-                    <span class="block mt-2 text-3xl sm:text-4xl md:text-5xl lg:text-6xl">Bislig District Hospital Management System</span>
-                </h1>
-                
-                <!-- Subtitle -->
-                <p class="text-base sm:text-lg md:text-xl text-white text-opacity-95 mb-10 max-w-3xl mx-auto leading-relaxed px-4" data-aos="fade-up" data-aos-delay="100">
-                    Providing quality healthcare services to Bislig City and surrounding areas. Streamline hospital operations with our comprehensive digital platform. From patient registration to discharge, manage everything seamlessly with cutting-edge technology.
-                </p>
-                
-                <!-- CTA Buttons -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 px-4" data-aos="fade-up" data-aos-delay="200">
-                    <a href="pages/register.html" class="w-full sm:w-auto bg-white text-green-700 hover:bg-green-50 px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center transition transform hover:scale-105 shadow-2xl">
-                        <i class="fas fa-rocket mr-2"></i>
-                        Start Free Today
-                    </a>
-                    <a href="pages/login.html" class="w-full sm:w-auto glass-effect hover:bg-white hover:bg-opacity-20 px-8 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center transition border-2 border-white border-opacity-30">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Sign In
-                    </a>
-                </div>
-                
-                <!-- Live Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 px-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="glass-effect rounded-2xl p-5 md:p-6 hover:bg-white hover:bg-opacity-15 transition">
-                        <div class="stat-counter" id="stat-patients">0</div>
-                        <div class="text-xs md:text-sm text-white text-opacity-90 mt-1 font-medium">Patients</div>
-                    </div>
-                    <div class="glass-effect rounded-2xl p-5 md:p-6 hover:bg-white hover:bg-opacity-15 transition">
-                        <div class="stat-counter" id="stat-doctors">0</div>
-                        <div class="text-xs md:text-sm text-white text-opacity-90 mt-1 font-medium">Doctors</div>
-                    </div>
-                    <div class="glass-effect rounded-2xl p-5 md:p-6 hover:bg-white hover:bg-opacity-15 transition">
-                        <div class="stat-counter" id="stat-appointments">0</div>
-                        <div class="text-xs md:text-sm text-white text-opacity-90 mt-1 font-medium">Appointments</div>
-                    </div>
-                    <div class="glass-effect rounded-2xl p-5 md:p-6 hover:bg-white hover:bg-opacity-15 transition">
-                        <div class="text-2xl md:text-3xl font-bold">24/7</div>
-                        <div class="text-xs md:text-sm text-white text-opacity-90 mt-1 font-medium">Support</div>
-                    </div>
-                </div>
-                
-                <!-- Scroll Indicator -->
-                <div class="scroll-indicator" data-aos="fade-up" data-aos-delay="400">
-                    <a href="#features" class="glass-effect w-10 h-16 rounded-full flex items-center justify-center">
-                        <i class="fas fa-chevron-down text-white text-sm"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+  </nav>
 
-    <!-- Minimal Features Section -->
-    <div id="features" class="section-minimal bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 px-4" data-aos="fade-up">
-                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Everything You Need</h2>
-                <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">Powerful features designed for modern healthcare facilities</p>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-                <!-- Feature 1 -->
-                <div class="card-minimal bg-white p-6 md:p-8 rounded-2xl" data-aos="fade-up" data-aos-delay="0">
-                    <div class="feature-icon-minimal rounded-2xl flex items-center justify-center mb-5">
-                        <i class="fas fa-calendar-check text-white text-xl md:text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-3">Easy Booking</h3>
-                    <p class="text-sm md:text-base text-gray-600 leading-relaxed">Book appointments instantly with your preferred doctors</p>
-                </div>
+  <!-- ═══════════════════════════════════════════
+       HERO
+  ════════════════════════════════════════════ -->
+  <section class="hero-gradient text-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
 
-                <!-- Feature 2 -->
-                <div class="card-minimal bg-white p-6 md:p-8 rounded-2xl" data-aos="fade-up" data-aos-delay="100">
-                    <div class="feature-icon-minimal rounded-2xl flex items-center justify-center mb-5">
-                        <i class="fas fa-qrcode text-white text-xl md:text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-3">QR Check-In</h3>
-                    <p class="text-sm md:text-base text-gray-600 leading-relaxed">Contactless check-in using secure QR codes</p>
-                </div>
+      <span class="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+        <i class="fa-solid fa-stethoscope"></i> Internal Medicine Clinic
+      </span>
 
-                <!-- Feature 3 -->
-                <div class="card-minimal bg-white p-6 md:p-8 rounded-2xl" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-icon-minimal rounded-2xl flex items-center justify-center mb-5">
-                        <i class="fas fa-file-medical text-white text-xl md:text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-3">Medical Records</h3>
-                    <p class="text-sm md:text-base text-gray-600 leading-relaxed">Access complete medical history anytime</p>
-                </div>
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5">
+        Your Health,<br class="hidden sm:block" />
+        <span class="text-teal-200">Managed Smarter</span>
+      </h1>
 
-                <!-- Feature 4 -->
-                <div class="card-minimal bg-white p-6 md:p-8 rounded-2xl" data-aos="fade-up" data-aos-delay="300">
-                    <div class="feature-icon-minimal rounded-2xl flex items-center justify-center mb-5">
-                        <i class="fas fa-bell text-white text-xl md:text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-3">Real-Time Alerts</h3>
-                    <p class="text-sm md:text-base text-gray-600 leading-relaxed">Stay updated with instant notifications</p>
-                </div>
-            </div>
-        </div>
+      <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10">
+        Book appointments online, check in instantly with your personal QR code,
+        and access your medical records anytime — all in one place.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="pages/register.html"
+           class="inline-flex items-center justify-center gap-2 bg-white text-teal-700 font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:bg-teal-50 transition-all text-base">
+          <i class="fa-solid fa-user-plus"></i> Register Now
+        </a>
+        <a href="pages/login.html"
+           class="inline-flex items-center justify-center gap-2 border-2 border-white/60 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all text-base">
+          <i class="fa-solid fa-right-to-bracket"></i> Log In
+        </a>
+      </div>
+
+      <!-- Floating badge -->
+      <div class="mt-14 flex flex-wrap justify-center gap-6 text-sm text-white/70">
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-teal-300"></i> Secure & Private</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-qrcode text-teal-300"></i> QR Check-In</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock text-teal-300"></i> Real-Time Scheduling</span>
+      </div>
+
     </div>
+  </section>
 
-    <!-- Minimal How It Works -->
-    <div id="how-it-works" class="section-minimal bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16 px-4" data-aos="fade-up">
-                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">How It Works</h2>
-                <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">Get started in 4 simple steps</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="text-center" data-aos="fade-up" data-aos-delay="0">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-6 text-2xl font-bold shadow-lg">
-                        1
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Register</h3>
-                    <p class="text-gray-600 leading-relaxed">Create your account in seconds</p>
-                </div>
-                
-                <div class="text-center" data-aos="fade-up" data-aos-delay="100">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-6 text-2xl font-bold shadow-lg">
-                        2
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Book Appointment</h3>
-                    <p class="text-gray-600 leading-relaxed">Choose doctor and time slot</p>
-                </div>
-                
-                <div class="text-center" data-aos="fade-up" data-aos-delay="200">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-6 text-2xl font-bold shadow-lg">
-                        3
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Get QR Code</h3>
-                    <p class="text-gray-600 leading-relaxed">Receive secure QR for check-in</p>
-                </div>
-                
-                <div class="text-center" data-aos="fade-up" data-aos-delay="300">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-6 text-2xl font-bold shadow-lg">
-                        4
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Visit Doctor</h3>
-                    <p class="text-gray-600 leading-relaxed">Check-in and get consulted</p>
-                </div>
-            </div>
+  <!-- ═══════════════════════════════════════════
+       HOW IT WORKS
+  ════════════════════════════════════════════ -->
+  <section class="py-20 bg-white" id="how-it-works">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div class="text-center mb-14">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">How It Works</h2>
+        <p class="text-gray-500 max-w-xl mx-auto">
+          Getting started with MediTrack takes less than a minute. Follow these four simple steps.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        <!-- Step 1 -->
+        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <div class="w-14 h-14 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-2xl mb-5">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest text-teal-500 mb-2">Step 1</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Scan QR Code</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Scan the clinic QR code or use your personal patient QR to begin your visit or booking.
+          </p>
         </div>
+
+        <!-- Step 2 -->
+        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-5">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest text-blue-500 mb-2">Step 2</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Book Appointment</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Choose your preferred doctor, date, and time slot. Instant confirmation sent to your account.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <div class="w-14 h-14 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-2xl mb-5">
+            <i class="fa-solid fa-hospital-user"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest text-teal-500 mb-2">Step 3</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Visit Clinic</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Arrive at the clinic and check in using your QR code — no paperwork, no long queues.
+          </p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-5">
+            <i class="fa-solid fa-file-medical"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest text-blue-500 mb-2">Step 4</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Get Records</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Access your medical records, prescriptions, and visit history online or print them anytime.
+          </p>
+        </div>
+
+      </div>
     </div>
+  </section>
 
-    <!-- Location Map Section -->
-    <div id="map-section" class="section-minimal bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12" data-aos="fade-up">
-                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Visit Us</h2>
-                <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">Find us at our location in Bislig City, Surigao del Sur</p>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" data-aos="fade-up" data-aos-delay="100">
-                <!-- Contact Information Cards -->
-                <div class="space-y-6">
-                    <!-- Address Card -->
-                    <div class="card-minimal bg-white p-6 rounded-2xl">
-                        <div class="flex items-start gap-4">
-                            <div class="feature-icon-minimal rounded-2xl flex items-center justify-center" style="width: 48px; height: 48px;">
-                                <i class="fas fa-map-marker-alt text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">Our Location</h3>
-                                <p class="text-gray-600 text-sm leading-relaxed">Bislig City, Surigao del Sur, Philippines</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Email Card -->
-                    <div class="card-minimal bg-white p-6 rounded-2xl">
-                        <div class="flex items-start gap-4">
-                            <div class="feature-icon-minimal rounded-2xl flex items-center justify-center" style="width: 48px; height: 48px;">
-                                <i class="fas fa-envelope text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">Email Us</h3>
-                                <a href="mailto:bisligdistricthospital123@gmail.com" class="text-green-600 hover:text-green-700 text-sm font-medium transition break-all">bisligdistricthospital123@gmail.com</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Social Media Card -->
-                    <div class="card-minimal bg-white p-6 rounded-2xl">
-                        <div class="flex items-start gap-4">
-                            <div class="feature-icon-minimal rounded-2xl flex items-center justify-center" style="width: 48px; height: 48px;">
-                                <i class="fab fa-instagram text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">Follow Us</h3>
-                                <a href="https://www.instagram.com/bisligdistricthospital" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-700 text-sm font-medium transition">@bisligdistricthospital</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Directions Button -->
-                    <a href="https://www.google.com/maps/place/Bislig+District+Hospital/@8.2068349,126.3213601,18z/data=!4m14!1m7!3m6!1s0x32fdb965a89ca8ed:0x377385c3ae59182!2sBislig+District+Hospital!8m2!3d8.2067446!4d126.3225832!16s%2Fg%2F11vd6f9hj7!3m5!1s0x32fdb965a89ca8ed:0x377385c3ae59182!8m2!3d8.2067446!4d126.3225832!16s%2Fg%2F11vd6f9hj7?entry=ttu&g_ep=EgoyMDI1MTAyOS4yIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" class="btn-primary text-white px-6 py-4 rounded-xl text-base font-bold inline-flex items-center justify-center transition transform hover:scale-105 shadow-lg w-full">
-                        <i class="fas fa-directions mr-2"></i>
-                        Get Directions
-                    </a>
-                </div>
-                
-                <!-- Interactive Map -->
-                <div class="lg:col-span-2">
-                    <div class="card-minimal bg-white p-2 rounded-2xl overflow-hidden" style="height: 100%; min-height: 500px;">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3947.8634!2d126.3213601!3d8.2068349!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32fdb965a89ca8ed%3A0x377385c3ae59182!2sBislig%20District%20Hospital!5e0!3m2!1sen!2sph!4v1699000000000!5m2!1sen!2sph"
-                            width="100%" 
-                            height="100%" 
-                            style="border:0; border-radius: 1rem; min-height: 480px;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade"
-                            class="map-iframe">
-                        </iframe>
-                    </div>
-                </div>
-            </div>
+  <!-- ═══════════════════════════════════════════
+       QR CODE SECTION
+  ════════════════════════════════════════════ -->
+  <section class="py-20 bg-gradient-to-br from-teal-50 to-blue-50" id="qr-code">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div class="flex flex-col md:flex-row items-center gap-12 bg-white rounded-3xl shadow-md p-10 md:p-14">
+
+        <!-- QR Image -->
+        <div class="flex-shrink-0 text-center">
+          <div class="inline-block p-4 bg-teal-50 rounded-2xl border-2 border-teal-100">
+            <img id="clinic-qr"
+                 src=""
+                 alt="Clinic QR Code for booking"
+                 width="200" height="200"
+                 class="rounded-lg" />
+          </div>
+          <p class="mt-3 text-xs text-gray-400 font-medium uppercase tracking-wider">Scan to Book Online</p>
         </div>
+
+        <!-- Text -->
+        <div>
+          <span class="inline-block bg-teal-100 text-teal-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
+            Quick Access
+          </span>
+          <h2 class="text-3xl font-bold text-gray-900 mb-4">Book in Seconds</h2>
+          <p class="text-gray-500 leading-relaxed mb-6">
+            Point your phone camera at the QR code to instantly open the MediTrack booking page.
+            No app download required — just scan and book your appointment from anywhere.
+          </p>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-500"></i> Works on any smartphone camera</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-500"></i> No login required to scan</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-500"></i> Opens directly to the booking form</li>
+          </ul>
+        </div>
+
+      </div>
     </div>
+  </section>
 
-    <!-- Scan to Visit Section -->
-    <div class="bg-gradient-to-br from-green-50 to-emerald-50 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-                <div class="flex flex-col md:flex-row items-center">
-                    <!-- QR Code -->
-                    <div class="p-8 md:p-12 flex flex-col items-center md:border-r border-gray-100">
-                        <div class="bg-white p-4 rounded-2xl shadow-lg border-4 border-green-500 mb-4">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http%3A%2F%2Fmerry-scarlet-gazelle.31-22-4-108.cpanel.site%2Fmeditrack%2F&format=png&color=059669"
-                                 alt="Scan to visit MediTrack"
-                                 class="w-48 h-48 md:w-52 md:h-52"
-                                 onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://merry-scarlet-gazelle.31-22-4-108.cpanel.site/meditrack/&format=png'">
-                        </div>
-                        <p class="text-xs text-gray-400 font-medium">Scan with your phone camera</p>
-                    </div>
-                    <!-- Info -->
-                    <div class="p-8 md:p-12 flex-1 text-center md:text-left">
-                        <div class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold mb-4">
-                            <i class="fas fa-qrcode mr-2"></i>Quick Access
-                        </div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Scan & Visit MediTrack</h2>
-                        <p class="text-gray-600 text-lg mb-6 leading-relaxed">
-                            Scan this QR code with your phone to instantly access MediTrack.
-                            Book appointments, view your medical records, and manage your healthcare — all from your mobile device.
-                        </p>
-                        <div class="flex flex-wrap gap-4 justify-center md:justify-start">
-                            <div class="flex items-center text-gray-700">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                                    <i class="fas fa-mobile-alt text-green-600"></i>
-                                </div>
-                                <span class="text-sm font-medium">Mobile Friendly</span>
-                            </div>
-                            <div class="flex items-center text-gray-700">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                                    <i class="fas fa-bolt text-green-600"></i>
-                                </div>
-                                <span class="text-sm font-medium">Instant Access</span>
-                            </div>
-                            <div class="flex items-center text-gray-700">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                                    <i class="fas fa-lock text-green-600"></i>
-                                </div>
-                                <span class="text-sm font-medium">Secure & Private</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <!-- ═══════════════════════════════════════════
+       WHY MEDITRACK?
+  ════════════════════════════════════════════ -->
+  <section class="py-20 bg-white" id="features">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <div class="text-center mb-14">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Why MediTrack?</h2>
+        <p class="text-gray-500 max-w-xl mx-auto">
+          Built for patients and clinic staff alike — simple, fast, and secure.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Card 1 -->
+        <div class="card-hover rounded-2xl border border-gray-100 p-8 bg-gradient-to-br from-teal-50 to-white">
+          <div class="w-12 h-12 rounded-xl bg-teal-500 text-white flex items-center justify-center text-xl mb-5">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Fast Check-In</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Skip the front-desk queue. Scan your personal QR code upon arrival and you're checked in instantly —
+            letting staff focus on your care.
+          </p>
         </div>
+
+        <!-- Card 2 -->
+        <div class="card-hover rounded-2xl border border-gray-100 p-8 bg-gradient-to-br from-blue-50 to-white">
+          <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl mb-5">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Secure Records</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Your medical history is encrypted and accessible only to you and your authorized care team.
+            Privacy and compliance are built in from the ground up.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card-hover rounded-2xl border border-gray-100 p-8 bg-gradient-to-br from-teal-50 to-white">
+          <div class="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center text-xl mb-5">
+            <i class="fa-solid fa-print"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Print Anytime</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Generate printable summaries of your visits, prescriptions, and lab results directly from
+            your patient dashboard — ready whenever you need them.
+          </p>
+        </div>
+
+      </div>
+
     </div>
+  </section>
 
-    <!-- Minimal Footer -->
-    <footer class="bg-gray-900 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <!-- Brand -->
-                <div>
-                    <div class="flex items-center space-x-3 mb-4">
-                        <div class="logo-container" style="width: 40px; height: 40px;">
-                            <img src="assets/images/logo.jpg" alt="Basilan District Hospital Logo">
-                        </div>
-                        <div>
-                            <span class="text-xl font-bold block">MediTrack</span>
-                            <span class="text-xs text-gray-400 font-medium">Healthcare Management System</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-400 text-sm leading-relaxed">Providing quality healthcare services to the people of Bislig City and surrounding communities.</p>
-                </div>
-                
-                <!-- Quick Links -->
-                <div>
-                    <h4 class="font-semibold mb-4 text-white">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#features" class="text-gray-400 hover:text-white text-sm transition">Features</a></li>
-                        <li><a href="#how-it-works" class="text-gray-400 hover:text-white text-sm transition">How It Works</a></li>
-                        <li><a href="pages/register.html" class="text-gray-400 hover:text-white text-sm transition">Register</a></li>
-                        <li><a href="pages/login.html" class="text-gray-400 hover:text-white text-sm transition">Login</a></li>
-                    </ul>
-                </div>
-                
-                <!-- For Healthcare -->
-                <div>
-                    <h4 class="font-semibold mb-4 text-white">Healthcare</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">For Doctors</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">For Hospitals</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">For Clinics</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">For Patients</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Contact -->
-                <div>
-                    <h4 class="font-semibold mb-4 text-white">Get In Touch</h4>
-                    <ul class="space-y-3 text-sm text-gray-400">
-                        <li class="flex items-center gap-2">
-                            <i class="fas fa-envelope text-green-500"></i>
-                            <a href="mailto:bisligdistricthospital123@gmail.com" class="hover:text-white transition">bisligdistricthospital123@gmail.com</a>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fas fa-map-marker-alt text-green-500"></i>
-                            <span>Bislig City, Surigao del Sur</span>
-                        </li>
-                    </ul>
-                    <div class="flex space-x-3 mt-6">
-                        <a href="https://www.instagram.com/bisligdistricthospital" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-green-600 flex items-center justify-center transition transform hover:scale-110" title="Follow us on Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#map-section" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-green-600 flex items-center justify-center transition transform hover:scale-110" title="View Location">
-                            <i class="fas fa-map-marked-alt"></i>
-                        </a>
-                        <a href="mailto:bisligdistricthospital123@gmail.com" class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-green-600 flex items-center justify-center transition transform hover:scale-110" title="Email Us">
-                            <i class="fas fa-envelope"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Development Team -->
-            <div class="border-t border-gray-800 pt-8 pb-6">
-                <div class="text-center">
-                    <h4 class="text-white font-semibold mb-3 flex items-center justify-center">
-                        <i class="fas fa-code text-green-400 mr-2"></i>
-                        Development Team
-                    </h4>
-                    <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
-                        <span class="text-gray-400 text-sm font-medium">KC D. Alberca</span>
-                        <span class="text-gray-600 hidden sm:inline">|</span>
-                        <span class="text-gray-400 text-sm font-medium">Ruveliza T. Yongco</span>
-                        <span class="text-gray-600 hidden sm:inline">|</span>
-                        <span class="text-gray-400 text-sm font-medium">Sarah Jean E. Ebon</span>
-                        <span class="text-gray-600 hidden sm:inline">|</span>
-                        <span class="text-gray-400 text-sm font-medium">Hannah Babeth D. Ebrado</span>
-                        <span class="text-gray-600 hidden sm:inline">|</span>
-                        <span class="text-gray-400 text-sm font-medium">Androlito C. Perater</span>
-                    </div>
-                </div>
-            </div>
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ════════════════════════════════════════════ -->
+  <footer class="bg-gray-900 text-gray-300">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-            <!-- Bottom Bar -->
-            <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-400 text-sm">&copy; 2026 MediTrack - Bislig District Hospital. All rights reserved.</p>
-                <div class="flex space-x-6 mt-4 md:mt-0">
-                    <a href="#" class="text-gray-400 hover:text-white text-sm transition">Privacy</a>
-                    <a href="#" class="text-gray-400 hover:text-white text-sm transition">Terms</a>
-                </div>
-            </div>
+      <div class="flex flex-col md:flex-row justify-between items-start gap-8">
+
+        <!-- Brand -->
+        <div>
+          <div class="flex items-center gap-2 text-white font-bold text-xl mb-3">
+            <i class="fa-solid fa-heart-pulse text-teal-400 text-2xl"></i>
+            <span>MediTrack</span>
+          </div>
+          <p class="text-sm text-gray-400 max-w-xs leading-relaxed">
+            Internal Medicine Clinic — delivering compassionate care with modern tools.
+          </p>
         </div>
-    </footer>
 
-    <!-- Back to Top Button -->
-    <button id="backToTop" class="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-40 flex items-center justify-center hover:scale-110">
-        <i class="fas fa-arrow-up"></i>
-    </button>
+        <!-- Quick Links -->
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Quick Links</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#how-it-works" class="hover:text-teal-400 transition-colors">How It Works</a></li>
+            <li><a href="#qr-code" class="hover:text-teal-400 transition-colors">QR Booking</a></li>
+            <li><a href="#features" class="hover:text-teal-400 transition-colors">Features</a></li>
+            <li><a href="pages/register.html" class="hover:text-teal-400 transition-colors">Register</a></li>
+            <li><a href="pages/login.html" class="hover:text-teal-400 transition-colors">Login</a></li>
+          </ul>
+        </div>
 
-    <!-- AOS Animation Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    
-    <script>
-        // Initialize AOS (Animate On Scroll)
-        AOS.init({
-            duration: 800,
-            easing: 'ease-in-out',
-            once: true,
-            offset: 100
-        });
+        <!-- Clinic Info -->
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Clinic Hours</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-calendar-days text-teal-400 w-4"></i>
+              Monday – Friday
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="fa-solid fa-clock text-teal-400 w-4"></i>
+              8:00 AM – 5:00 PM
+            </li>
+            <li class="flex items-center gap-2 mt-3">
+              <i class="fa-solid fa-calendar-xmark text-gray-500 w-4"></i>
+              <span class="text-gray-500">Closed on weekends &amp; holidays</span>
+            </li>
+          </ul>
+        </div>
 
-        // Real-Time Clock
-        function updateRealTimeClock() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            };
-            const dateTimeString = now.toLocaleString('en-US', options);
-            const clockElement = document.getElementById('real-time-clock');
-            if (clockElement) {
-                clockElement.textContent = dateTimeString;
-            }
-        }
-        
-        // Update clock immediately and every second
-        updateRealTimeClock();
-        setInterval(updateRealTimeClock, 1000);
+      </div>
 
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('active');
-            const icon = mobileMenuBtn.querySelector('i');
-            icon.classList.toggle('fa-bars');
-            icon.classList.toggle('fa-times');
-        });
+      <div class="border-t border-gray-700 mt-10 pt-6 text-center text-xs text-gray-500">
+        &copy; 2026 MediTrack — Internal Medicine Clinic. All rights reserved.
+      </div>
 
-        // Close mobile menu when clicking on a link
-        document.querySelectorAll('#mobile-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.remove('active');
-                const icon = mobileMenuBtn.querySelector('i');
-                icon.classList.add('fa-bars');
-                icon.classList.remove('fa-times');
-            });
-        });
+    </div>
+  </footer>
 
-        // Navbar scroll effect
-        const navbar = document.querySelector('.navbar-minimal');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
+  <!-- QR Code generation -->
+  <script>
+    (function () {
+      var bookingUrl = window.location.origin + '/meditrack/pages/qr-booking.html';
+      var encoded   = encodeURIComponent(bookingUrl);
+      var qrSrc     = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encoded;
+      var img       = document.getElementById('clinic-qr');
+      if (img) img.src = qrSrc;
+    })();
+  </script>
 
-        // Animated counter for stats
-        function animateCounter(id, target, duration = 2000) {
-            const element = document.getElementById(id);
-            const start = 0;
-            const increment = target / (duration / 16);
-            let current = start;
-
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    element.textContent = target + '+';
-                    clearInterval(timer);
-                } else {
-                    element.textContent = Math.floor(current);
-                }
-            }, 16);
-        }
-
-        // Load real-time stats from API
-        async function loadStats() {
-            try {
-                // Fetch doctors count
-                const doctorsRes = await fetch('api/doctors/list.php');
-                const doctorsData = await doctorsRes.json();
-                const doctorsCount = doctorsData.success ? doctorsData.doctors.length : 3;
-
-                // Fetch appointments count
-                const appointmentsRes = await fetch('api/appointments/list.php');
-                const appointmentsData = await appointmentsRes.json();
-                const appointmentsCount = appointmentsData.success ? appointmentsData.appointments.length : 0;
-
-                // Count unique patients from appointments
-                const patientsCount = appointmentsData.success ? 
-                    new Set(appointmentsData.appointments.map(a => a.patient_id)).size : 0;
-
-                // Animate counters
-                animateCounter('stat-patients', patientsCount || 150);
-                animateCounter('stat-doctors', doctorsCount || 3);
-                animateCounter('stat-appointments', appointmentsCount || 500);
-            } catch (error) {
-                console.log('Using default stats');
-                // Use default animated numbers if API fails
-                animateCounter('stat-patients', 150);
-                animateCounter('stat-doctors', 3);
-                animateCounter('stat-appointments', 500);
-            }
-        }
-
-        // Load stats when page loads
-        window.addEventListener('load', loadStats);
-
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Feature cards already have data-aos attributes
-        // No need to add them dynamically
-
-        // Real-time clock in footer (optional)
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            const dateString = now.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            // Update if clock element exists
-            const clockElement = document.getElementById('live-clock');
-            if (clockElement) {
-                clockElement.textContent = `${dateString} - ${timeString}`;
-            }
-        }
-
-        // Update clock every second
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // Smooth parallax effect (subtle)
-        let ticking = false;
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const scrolled = window.pageYOffset;
-                    const hero = document.querySelector('.hero-gradient');
-                    if (hero && scrolled < window.innerHeight) {
-                        hero.style.transform = `translateY(${scrolled * 0.3}px)`;
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        });
-
-        // Back to Top Button
-        const backToTop = document.getElementById('backToTop');
-        window.addEventListener('scroll', () => {
-            if (window.pageYOffset > 300) {
-                backToTop.style.opacity = '1';
-                backToTop.style.pointerEvents = 'auto';
-            } else {
-                backToTop.style.opacity = '0';
-                backToTop.style.pointerEvents = 'none';
-            }
-        });
-
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-
-        // Add loading state to buttons
-        document.querySelectorAll('a[href^="pages/"]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                const icon = this.querySelector('i');
-                if (icon) {
-                    icon.classList.add('fa-spin');
-                }
-            });
-        });
-
-        // Preload critical images
-        window.addEventListener('load', () => {
-            document.body.classList.add('loaded');
-        });
-
-        // Add intersection observer for fade-in effects
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('fade-in');
-                }
-            });
-        }, observerOptions);
-
-        // Observe all cards
-        document.querySelectorAll('.card-minimal').forEach(card => {
-            observer.observe(card);
-        });
-
-        // Add ripple effect to buttons
-        document.querySelectorAll('.btn-primary').forEach(button => {
-            button.addEventListener('click', function(e) {
-                const ripple = document.createElement('span');
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size / 2;
-                const y = e.clientY - rect.top - size / 2;
-                
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = x + 'px';
-                ripple.style.top = y + 'px';
-                ripple.classList.add('ripple');
-                
-                this.appendChild(ripple);
-                
-                setTimeout(() => ripple.remove(), 600);
-            });
-        });
-
-        // Console welcome message
-        console.log('%c🏥 MediTrack', 'color: #6366f1; font-size: 24px; font-weight: bold;');
-        console.log('%cModern Healthcare Management System', 'color: #8b5cf6; font-size: 14px;');
-        console.log('%cVersion 1.0.0', 'color: #666; font-size: 12px;');
-    </script>
 </body>
 </html>

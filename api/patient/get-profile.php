@@ -1,84 +1,39 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
-session_start();
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    sendJSON(['success' => false, 'message' => 'Not authenticated'], 401);
+if (!isLoggedIn() || !hasRole('patient')) {
+    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    $userId = $_SESSION['user_id'];
 
-    // Get user and patient data
-    $query = "SELECT 
-                u.id as user_id,
-                u.username,
-                u.email,
-                u.phone,
-                u.profile_picture,
-                p.id as patient_id,
-                p.full_name,
-                p.date_of_birth,
-                p.gender,
-                p.contact_number,
-                p.address,
-                p.region,
-                p.province,
-                p.city,
-                p.zip_code,
-                p.blood_group,
-                p.allergies,
-                p.medical_history,
-                p.emergency_contact_name,
-                p.emergency_contact_number,
-                p.profile_image,
-                p.profile_image_path
-              FROM users u
-              LEFT JOIN patients p ON u.id = p.user_id
-              WHERE u.id = :user_id";
-    
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(':user_id', $userId);
-    $stmt->execute();
-    
-    $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare("
+        SELECT u.id as user_id, u.email, u.username, u.status, u.last_login,
+               p.id as patient_id, p.full_name, p.date_of_birth, p.gender,
+               p.contact_number, p.address, p.region, p.city, p.barangay,
+               p.blood_group, p.allergies, p.emergency_contact_name,
+               p.emergency_contact_number, p.profile_picture, p.created_at
+        FROM users u
+        JOIN patients p ON p.user_id = u.id
+        WHERE u.id = :uid
+        LIMIT 1
+    ");
+    $stmt->execute([':uid' => getCurrentUserId()]);
+    $profile = $stmt->fetch();
 
     if (!$profile) {
         sendJSON(['success' => false, 'message' => 'Profile not found'], 404);
     }
 
-    // Format profile image URL
-    if ($profile['profile_image_path']) {
-        $baseUrl = defined('APP_URL') ? APP_URL : '';
-        $profile['profile_image_url'] = $baseUrl . '/' . $profile['profile_image_path'];
-    } else {
-        $profile['profile_image_url'] = null;
-    }
-
-    sendJSON([
-        'success' => true,
-        'profile' => $profile,
-        'patient' => $profile
-    ]);
+    sendJSON(['success' => true, 'profile' => $profile]);
 
 } catch (Exception $e) {
-    sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+    error_log("get-profile error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to load profile'], 500);
 }

@@ -1,70 +1,47 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+if (!isLoggedIn() || !hasRole('doctor')) {
+    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+}
 
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+$input = json_decode(file_get_contents('php://input'), true);
+$current_password = $input['current_password'] ?? '';
+$new_password     = $input['new_password'] ?? '';
+
+if (empty($current_password) || empty($new_password)) {
+    sendJSON(['success' => false, 'message' => 'Current password and new password are required'], 400);
+}
+if (strlen($new_password) < 6) {
+    sendJSON(['success' => false, 'message' => 'New password must be at least 6 characters'], 400);
+}
 
 try {
     $database = new Database();
     $db = $database->getConnection();
+    $userId = getCurrentUserId();
 
-    if (!$db) {
-        throw new Exception('Database connection failed');
-    }
+    $stmt = $db->prepare("SELECT password_hash FROM users WHERE id = :uid LIMIT 1");
+    $stmt->execute([':uid' => $userId]);
+    $user = $stmt->fetch();
 
-    // Get JSON input
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
-        exit;
-    }
-    if (!in_array($_SESSION['role'], ['doctor', 'reception', 'admin'])) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Access denied']);
-        exit;
-    }
-    $doctor_id = $_SESSION['user_id'];
-    
-    $current_password = $input['current_password'] ?? '';
-    $new_password = $input['new_password'] ?? '';
-    
-    if (empty($current_password) || empty($new_password)) {
-        throw new Exception('Current password and new password are required');
-    }
-    
-    // Verify current password
-    $sql = "SELECT password_hash FROM users WHERE id = :doctor_id";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([':doctor_id' => $doctor_id]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
     if (!$user || !password_verify($current_password, $user['password_hash'])) {
-        throw new Exception('Current password is incorrect');
+        sendJSON(['success' => false, 'message' => 'Current password is incorrect'], 400);
     }
-    
-    // Update password
-    $new_password_hash = password_hash($new_password, PASSWORD_BCRYPT, ['cost' => 10]);
-    $sql = "UPDATE users SET password_hash = :password_hash WHERE id = :doctor_id";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        ':password_hash' => $new_password_hash,
-        ':doctor_id' => $doctor_id
-    ]);
-    
-    echo json_encode([
-        'success' => true,
-        'message' => 'Password changed successfully'
-    ]);
-    
+
+    $new_hash = password_hash($new_password, PASSWORD_HASH_ALGO, ['cost' => PASSWORD_HASH_COST]);
+    $db->prepare("UPDATE users SET password_hash = :hash WHERE id = :uid")
+       ->execute([':hash' => $new_hash, ':uid' => $userId]);
+
+    logActivity($db, $userId, $_SESSION['username'] ?? '', 'doctor', 'UPDATE', 'Auth', $userId, "Doctor password changed");
+
+    sendJSON(['success' => true, 'message' => 'Password changed successfully']);
+
 } catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    error_log("doctor change-password error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to change password'], 500);
 }
-?>

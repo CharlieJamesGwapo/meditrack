@@ -8,1735 +8,534 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
-    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/logo.jpg">
     <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
-    <link rel="manifest" href="../assets/images/site.webmanifest">
 
+    <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Font Awesome 6.4 CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 -->
+    <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- QR Code Scanner -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <style>
         * { font-family: 'Inter', sans-serif; }
         h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
         body { overflow-x: hidden; background: #f0fdf4; }
 
-        /* Pulse animation for online status */
         .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 
-        /* Card hover effects */
         .appointment-card { transition: all 0.3s ease; }
         .appointment-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2); }
 
-        /* Notification badge pulse */
-        .notification-badge {
-            animation: notificationPulse 2s infinite;
-        }
-        @keyframes notificationPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        /* Custom scrollbar - green theme */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f0fdf4; }
         ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #059669; }
 
-        /* SweetAlert2 custom styling */
-        .swal2-popup {
-            border-radius: 1rem;
-        }
-        .swal2-confirm {
-            background-color: #10b981 !important;
-        }
-        .swal2-cancel {
-            background-color: #6b7280 !important;
-        }
+        .swal2-popup { border-radius: 1rem; }
+        .swal2-confirm { background-color: #10b981 !important; }
+        .swal2-cancel { background-color: #6b7280 !important; }
 
-        /* Mobile Bottom Nav */
+        /* Sidebar */
+        #sidebar { transition: transform 0.3s ease; }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem; border-radius: 0.75rem;
+            color: rgba(255,255,255,0.8); transition: all 0.2s;
+            cursor: pointer; font-weight: 500;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .nav-item.active { background: rgba(255,255,255,0.25); color: #fff; font-weight: 600; }
+        .nav-item i { width: 1.25rem; text-align: center; }
+
+        /* Slot buttons */
+        .slot-btn { transition: all 0.2s; }
+        .slot-btn.available { background: #d1fae5; color: #065f46; border: 2px solid #6ee7b7; }
+        .slot-btn.available:hover { background: #6ee7b7; }
+        .slot-btn.booked { background: #f3f4f6; color: #9ca3af; border: 2px solid #e5e7eb; cursor: not-allowed; }
+        .slot-btn.selected { background: #059669; color: #fff; border: 2px solid #047857; }
+        .slot-btn.past { background: #fef3c7; color: #92400e; border: 2px solid #fcd34d; cursor: not-allowed; }
+
+        /* Record card expand */
+        .record-detail { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+        .record-detail.expanded { max-height: 2000px; }
+
+        /* Mobile */
         @media (max-width: 767px) {
-            body { padding-bottom: 80px; }
-            .mobile-nav-btn.active { color: #10b981; }
-            .mobile-nav-btn { transition: color 0.2s; }
-            .mobile-nav-btn:active { transform: scale(0.95); }
-
-            /* Hide desktop tab nav on mobile */
-            .desktop-tabs { display: none !important; }
-
-            /* Stats grid 2x2 on mobile */
-            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .stats-grid > div { padding: 1rem !important; }
-            .stats-grid .text-2xl { font-size: 1.25rem !important; }
-
-            /* Search tabs scrollable */
-            .search-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; }
-            .search-tabs::-webkit-scrollbar { display: none; }
-            .search-tabs button { white-space: nowrap; flex-shrink: 0; }
-
-            /* Full-screen modals on mobile */
-            .modal-content-mobile {
-                position: fixed !important;
-                inset: 0 !important;
-                margin: 0 !important;
-                top: 0 !important;
-                border-radius: 0 !important;
-                max-height: 100vh !important;
-                overflow-y: auto !important;
-                width: 100% !important;
-            }
-
-            /* Touch-friendly inputs */
-            input, select, textarea { font-size: 16px !important; min-height: 44px; }
-            button { min-height: 44px; }
-
-            /* Welcome section compact on mobile */
-            .welcome-section { padding: 1rem !important; }
-            .welcome-section h1 { font-size: 1.5rem !important; }
-            .welcome-section .w-24 { width: 4rem !important; height: 4rem !important; }
-
-            /* Doctor cards single column */
-            .doctor-grid { grid-template-columns: 1fr !important; }
-
-            /* Appointment cards */
-            .appointment-card .grid-cols-2 { grid-template-columns: 1fr !important; }
-
-            /* Nav compact */
-            .nav-brand-text { display: none; }
-
-            /* Prevent iOS zoom */
-            input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="date"], select, textarea {
-                font-size: 16px !important;
-            }
+            body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+            #sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; }
+            input, select, textarea { font-size: 16px !important; }
         }
-
-        /* Safe area for notched phones */
+        @media (min-width: 768px) {
+            #mobileBottomNav { display: none !important; }
+        }
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             @media (max-width: 767px) {
-                body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
                 #mobileBottomNav { padding-bottom: env(safe-area-inset-bottom); }
             }
         }
-
-        /* Touch improvements */
         * { -webkit-tap-highlight-color: transparent; }
-        @media (hover: none) and (pointer: coarse) {
-            .appointment-card:hover { transform: none; box-shadow: none; }
-            button:active { opacity: 0.8; }
-        }
 
-        /* QR Full Screen Modal */
-        .qr-fullscreen {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .qr-fullscreen img { max-width: 80vw; max-height: 80vw; }
+        /* QR Modal */
+        #qrModal { display: none; }
+        #qrModal.active { display: flex; }
     </style>
-    <script src="../js/auth-check.js"></script>
 </head>
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full overflow-hidden bg-green-100 p-1 shadow-md mr-3">
-                        <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full">
-                    </div>
-                    <span class="text-xl font-bold text-gray-800">MediTrack</span>
-                    <span class="ml-2 text-sm text-green-600 font-semibold nav-brand-text">Patient Portal</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="hidden sm:flex items-center space-x-2 text-gray-600">
-                        <i class="fas fa-clock text-green-600"></i>
-                        <span id="realTimeClock" class="text-sm font-medium"></span>
-                    </div>
-                    <span class="pulse px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-semibold">
-                        <i class="fas fa-circle text-xs mr-1"></i>Online
-                    </span>
-                    <div class="relative">
-                        <button id="profileMenuBtn" class="flex items-center space-x-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition">
-                            <div id="profilePicture" class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold overflow-hidden">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <span id="userName" class="hidden sm:block text-gray-700 font-medium"></span>
-                            <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
-                        </button>
 
-                        <!-- Dropdown Menu -->
-                        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                            <div class="p-4 border-b border-gray-200">
-                                <div class="flex items-center space-x-3">
-                                    <div id="dropdownProfilePic" class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold overflow-hidden">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div>
-                                        <p id="dropdownName" class="font-semibold text-gray-800"></p>
-                                        <p id="dropdownEmail" class="text-sm text-gray-500"></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="py-2">
-                                <button onclick="openProfileModal()" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 transition">
-                                    <i class="fas fa-user-circle text-green-600 w-5"></i>
-                                    <span class="text-gray-700">My Profile</span>
-                                </button>
-                                <button onclick="openSettingsModal()" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 transition">
-                                    <i class="fas fa-cog text-green-600 w-5"></i>
-                                    <span class="text-gray-700">Settings</span>
-                                </button>
-                                <button onclick="openScheduleModal()" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 transition">
-                                    <i class="fas fa-calendar-alt text-green-600 w-5"></i>
-                                    <span class="text-gray-700">My Schedule</span>
-                                </button>
-                                <hr class="my-2">
-                                <button onclick="confirmLogout()" class="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center space-x-3 transition">
-                                    <i class="fas fa-sign-out-alt text-red-600 w-5"></i>
-                                    <span class="text-red-600 font-semibold">Logout</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- ===== LAYOUT WRAPPER ===== -->
+    <div class="flex min-h-screen">
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Welcome Section with Profile -->
-        <div class="welcome-section bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-2xl p-6 text-white mb-8">
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-                <div id="welcomeProfilePic" class="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-white text-4xl font-bold shadow-xl overflow-hidden">
-                    <i class="fas fa-user"></i>
+        <!-- ===== SIDEBAR (Desktop) ===== -->
+        <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-teal-700 min-h-screen fixed left-0 top-0 z-40 shadow-xl">
+            <!-- Brand -->
+            <div class="flex items-center gap-3 px-6 py-5 border-b border-teal-600">
+                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                    <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-heartbeat text-white\'></i>'">
                 </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h1 class="text-3xl md:text-4xl font-bold mb-2">Welcome, <span id="welcomeName"></span></h1>
-                    <p class="text-green-100 mb-3">Your Health, Our Priority</p>
-                    <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                        <div class="bg-white/20 px-4 py-2 rounded-lg">
-                            <i class="fas fa-envelope mr-2"></i><span id="patientEmail" class="text-sm"></span>
-                        </div>
-                        <div class="bg-white/20 px-4 py-2 rounded-lg">
-                            <i class="fas fa-phone mr-2"></i><span id="patientPhone" class="text-sm"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center md:text-right">
-                    <div class="text-sm text-green-100 mb-1">Today's Date</div>
-                    <div id="currentDate" class="text-xl font-bold"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                        <i class="fas fa-calendar-day text-white text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Upcoming</p>
-                        <p id="upcomingCount" class="text-2xl font-semibold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                        <i class="fas fa-user-check text-white text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Completed</p>
-                        <p id="completedCount" class="text-2xl font-semibold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                        <i class="fas fa-user-md text-white text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Doctors</p>
-                        <p id="doctorsCount" class="text-2xl font-semibold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                        <i class="fas fa-file-medical text-white text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Records</p>
-                        <p id="recordsCount" class="text-2xl font-semibold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Enhanced Search Section -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-2xl font-bold mb-4 flex items-center">
-                <i class="fas fa-search text-green-600 mr-3"></i>
-                Quick Search
-            </h2>
-
-            <!-- Search Tabs -->
-            <div class="search-tabs flex space-x-4 mb-4 border-b">
-                <button class="search-tab-btn active px-4 py-2 border-b-2 border-green-600 text-green-600 font-medium" data-search-type="all">
-                    <i class="fas fa-globe mr-2"></i>All
-                </button>
-                <button class="search-tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-search-type="appointments">
-                    <i class="fas fa-calendar-alt mr-2"></i>Appointments
-                </button>
-                <button class="search-tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-search-type="records">
-                    <i class="fas fa-file-medical mr-2"></i>Records
-                </button>
-                <button class="search-tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium" data-search-type="qr">
-                    <i class="fas fa-qrcode mr-2"></i>QR Lookup
-                </button>
-            </div>
-
-            <!-- Search Input -->
-            <div id="searchInputContainer" class="mb-4">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="unifiedSearchInput" placeholder="Search appointments, records, or enter QR code..."
-                        class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                    <button id="clearSearchBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div>
+                    <span class="text-white font-bold text-lg block leading-tight">MediTrack</span>
+                    <span class="text-teal-200 text-xs">Patient Portal</span>
                 </div>
             </div>
 
-            <!-- QR Scanner Input -->
-            <div id="qrInputContainer" class="mb-4 hidden">
-                <div class="relative">
-                    <i class="fas fa-qrcode absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="qrTokenInput" placeholder="Enter QR code or scan..."
-                        class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                    <button id="scanQRBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm">
-                        <i class="fas fa-camera mr-1"></i>Scan
-                    </button>
-                </div>
-            </div>
-
-            <!-- Search Results -->
-            <div id="searchResults" class="hidden">
-                <div class="border-t pt-4">
-                    <h3 class="text-lg font-semibold mb-3">Search Results</h3>
-                    <div id="searchResultsContainer" class="space-y-4">
-                        <!-- Results will be loaded here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="mb-6 border-b border-gray-200 desktop-tabs">
-            <nav class="-mb-px flex space-x-8">
-                <button class="tab-btn active border-b-2 border-green-600 py-4 px-1 text-sm font-medium text-green-600" data-tab="doctors">
-                    <i class="fas fa-user-md mr-2"></i>Find Doctors
-                </button>
-                <button class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="appointments">
-                    <i class="fas fa-calendar-alt mr-2"></i>My Appointments
-                </button>
-                <button class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="profile">
-                    <i class="fas fa-user-circle mr-2"></i>My Profile
-                </button>
-                <button class="tab-btn border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="medical-records">
-                    <i class="fas fa-file-medical mr-2"></i>Medical Records
-                </button>
-            </nav>
-        </div>
-
-        <!-- Appointments Tab -->
-        <div id="appointmentsTab" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">My Appointments</h2>
-                    <div class="flex space-x-2">
-                        <input type="date" id="dateFilter" class="px-3 py-2 border border-gray-300 rounded-md">
-                        <button id="refreshBtn" class="text-green-600 hover:text-green-700 px-3">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="appointmentsList" class="space-y-4">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
-                        <p class="mt-2 text-gray-600">Loading appointments...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Find Doctors Tab -->
-        <div id="doctorsTab" class="tab-content">
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-2">
-                        <div class="relative">
-                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="searchDoctors" placeholder="Search by name or specialization..."
-                                class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                oninput="filterDoctors()">
-                        </div>
-                    </div>
-                    <select id="filterDepartment" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" onchange="filterDoctors()">
-                        <option value="">All Departments</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="doctorsList" class="doctor-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                <div class="col-span-full text-center py-12">
-                    <i class="fas fa-spinner fa-spin text-5xl text-green-600 mb-4"></i>
-                    <p class="text-gray-600 text-lg">Loading doctors...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- My Profile Tab -->
-        <div id="profileTab" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold mb-6">My Profile</h2>
-                <form id="patientProfileForm" class="space-y-6">
-                    <!-- Profile content will be loaded here -->
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
-                        <p class="mt-2 text-gray-600">Loading profile...</p>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Medical Records Tab -->
-        <div id="medical-recordsTab" class="tab-content hidden">
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold mb-6">Medical Records</h2>
-                <div id="medicalRecordsList" class="space-y-4">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
-                        <p class="mt-2 text-gray-600">Loading medical records...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile Modal -->
-    <div id="profileModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white modal-content-mobile">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">My Profile</h3>
-                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <form id="profileForm" class="space-y-6">
-                <!-- Profile Picture Section -->
-                <div class="flex flex-col items-center mb-6">
-                    <div id="profilePicPreview" class="w-32 h-32 rounded-full bg-green-500 flex items-center justify-center text-white text-5xl font-bold overflow-hidden mb-4">
+            <!-- User Info -->
+            <div class="px-5 py-4 border-b border-teal-600">
+                <div class="flex items-center gap-3">
+                    <div id="sidebarAvatar" class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-lg overflow-hidden flex-shrink-0">
                         <i class="fas fa-user"></i>
                     </div>
-                    <input type="file" id="profilePicInput" accept="image/*" class="hidden" onchange="previewProfilePic(this)">
-                    <button type="button" onclick="document.getElementById('profilePicInput').click()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-camera mr-2"></i>Change Picture
-                    </button>
-                </div>
-
-                <!-- Personal Information -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
-                        <input type="text" id="profileFirstName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Middle Name</label>
-                        <input type="text" id="profileMiddleName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
-                        <input type="text" id="profileLastName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    <div class="min-w-0">
+                        <p id="sidebarName" class="text-white font-semibold text-sm truncate">Patient</p>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2 h-2 bg-green-400 rounded-full pulse"></span>
+                            <span class="text-teal-200 text-xs">Online</span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                        <input type="email" id="profileEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone *</label>
-                        <input type="tel" id="profilePhone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth</label>
-                        <input type="date" id="profileDOB" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Blood Group</label>
-                        <select id="profileBloodGroup" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">Select Blood Group</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
-                        <select id="profileGender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Address</label>
-                    <textarea id="profileAddress" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Emergency Contact Name</label>
-                        <input type="text" id="profileEmergencyName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Emergency Contact Phone</label>
-                        <input type="tel" id="profileEmergencyPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onclick="closeProfileModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-save mr-2"></i>Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">Settings</h3>
-                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
             </div>
 
-            <div class="space-y-6">
-                <!-- Account Settings -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-lg mb-4 flex items-center">
-                        <i class="fas fa-user-cog text-green-600 mr-2"></i>Account Settings
-                    </h4>
-                    <div class="space-y-3">
-                        <button onclick="openChangePasswordModal()" class="w-full text-left px-4 py-3 bg-white rounded-lg hover:bg-gray-100 transition flex items-center justify-between">
-                            <span class="flex items-center">
-                                <i class="fas fa-key text-green-600 w-5 mr-3"></i>
-                                <span>Change Password</span>
-                            </span>
-                            <i class="fas fa-chevron-right text-gray-400"></i>
+            <!-- Nav Items -->
+            <nav class="flex-1 px-4 py-4 space-y-1">
+                <button class="nav-item w-full active" data-tab="booking" onclick="switchTab('booking')">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>Book Appointment</span>
+                </button>
+                <button class="nav-item w-full" data-tab="appointments" onclick="switchTab('appointments')">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>My Appointments</span>
+                </button>
+                <button class="nav-item w-full" data-tab="records" onclick="switchTab('records')">
+                    <i class="fas fa-file-medical"></i>
+                    <span>Medical Records</span>
+                </button>
+                <button class="nav-item w-full" data-tab="profile" onclick="switchTab('profile')">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profile</span>
+                </button>
+            </nav>
+
+            <!-- Logout at bottom -->
+            <div class="px-4 py-4 border-t border-teal-600">
+                <button onclick="confirmLogout()" class="nav-item w-full text-red-200 hover:bg-red-500/20 hover:text-red-100">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN AREA ===== -->
+        <div class="main-content flex-1 flex flex-col md:ml-64">
+
+            <!-- ===== HEADER ===== -->
+            <header class="bg-white shadow-sm sticky top-0 z-30">
+                <div class="px-4 sm:px-6 h-16 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <!-- Mobile brand -->
+                        <div class="md:hidden flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center overflow-hidden">
+                                <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-heartbeat text-teal-600\'></i>'">
+                            </div>
+                            <span class="font-bold text-gray-800 text-sm">MediTrack</span>
+                        </div>
+                        <div class="hidden md:block">
+                            <h2 id="headerGreeting" class="text-gray-800 font-semibold">Welcome, Patient</h2>
+                            <p class="text-xs text-gray-500" id="headerDate"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="hidden sm:flex items-center gap-2 text-gray-500 text-sm">
+                            <i class="fas fa-clock text-teal-600"></i>
+                            <span id="headerClock">--:--</span>
+                        </div>
+                        <span class="pulse px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-semibold hidden sm:flex items-center gap-1">
+                            <i class="fas fa-circle text-xs"></i>Online
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <div id="headerAvatar" class="w-9 h-9 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span id="headerName" class="hidden sm:block text-gray-700 font-medium text-sm truncate max-w-32"></span>
+                        </div>
+                        <button onclick="confirmLogout()" class="flex items-center gap-1 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="hidden sm:inline">Logout</span>
                         </button>
                     </div>
                 </div>
+            </header>
 
-                <!-- Notification Settings -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-lg mb-4 flex items-center">
-                        <i class="fas fa-bell text-green-600 mr-2"></i>Notifications
-                    </h4>
-                    <div class="space-y-3">
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <span class="text-gray-700">Email Notifications</span>
-                            <input type="checkbox" id="emailNotif" checked class="toggle-checkbox">
-                        </label>
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <span class="text-gray-700">Appointment Reminders</span>
-                            <input type="checkbox" id="apptReminders" checked class="toggle-checkbox">
-                        </label>
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <span class="text-gray-700">New Patient Alerts</span>
-                            <input type="checkbox" id="patientAlerts" checked class="toggle-checkbox">
-                        </label>
-                    </div>
-                </div>
+            <!-- ===== CONTENT AREA ===== -->
+            <main class="flex-1 p-4 sm:p-6">
 
-                <!-- Privacy Settings -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-lg mb-4 flex items-center">
-                        <i class="fas fa-shield-alt text-green-600 mr-2"></i>Privacy
-                    </h4>
-                    <div class="space-y-3">
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <span class="text-gray-700">Show Profile to Patients</span>
-                            <input type="checkbox" id="showProfile" checked class="toggle-checkbox">
-                        </label>
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <span class="text-gray-700">Allow Online Booking</span>
-                            <input type="checkbox" id="onlineBooking" checked class="toggle-checkbox">
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button onclick="closeSettingsModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Close
-                    </button>
-                    <button onclick="saveSettings()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-save mr-2"></i>Save Settings
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div id="changePasswordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-xl bg-white">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-900">Change Password</h3>
-                <button onclick="closeChangePasswordModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <form id="changePasswordForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password *</label>
-                    <input type="password" id="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">New Password *</label>
-                    <input type="password" id="newPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password *</label>
-                    <input type="password" id="confirmPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onclick="closeChangePasswordModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-check mr-2"></i>Change Password
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Logout Confirmation Modal -->
-    <div id="logoutModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-1/3 mx-auto p-5 border w-11/12 md:w-1/3 shadow-lg rounded-xl bg-white">
-            <div class="text-center">
-                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-                    <i class="fas fa-sign-out-alt text-red-600 text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Confirm Logout</h3>
-                <p class="text-gray-600 mb-6">Are you sure you want to logout? Any unsaved changes will be lost.</p>
-
-                <div class="flex justify-center space-x-3">
-                    <button onclick="closeLogoutModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Cancel
-                    </button>
-                    <button onclick="performLogout()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Yes, Logout
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Medical Record Modal -->
-    <div id="recordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Medical Record</h3>
-                <div id="recordAlert" class="hidden mb-4 p-4 rounded-lg"></div>
-
-                <form id="recordForm" class="space-y-4">
-                    <input type="hidden" id="appointmentId">
-
-                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                        <h4 class="font-semibold mb-2">Patient Information</h4>
-                        <div id="patientInfo" class="text-sm text-gray-700"></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Chief Complaint</label>
-                            <textarea id="chiefComplaint" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Symptoms</label>
-                            <textarea id="symptoms" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="font-semibold mb-2">Vital Signs</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div>
-                                <label class="block text-xs text-gray-600">BP (mmHg)</label>
-                                <input type="text" id="vitalBP" placeholder="120/80" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-600">Temp (°F)</label>
-                                <input type="text" id="vitalTemp" placeholder="98.6" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-600">Pulse (bpm)</label>
-                                <input type="text" id="vitalPulse" placeholder="72" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-600">Weight (kg)</label>
-                                <input type="text" id="vitalWeight" placeholder="70" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Diagnosis</label>
-                            <textarea id="diagnosis" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Prescription</label>
-                            <textarea id="prescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Lab Tests Ordered</label>
-                            <textarea id="labTests" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl p-5 text-white mb-6 shadow-lg">
+                    <div class="flex items-center gap-4">
+                        <div id="bannerAvatar" class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold flex-shrink-0 overflow-hidden">
+                            <i class="fas fa-user"></i>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
-                            <input type="date" id="followUpDate" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-                            <textarea id="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                            <h1 class="text-xl sm:text-2xl font-bold">Welcome back, <span id="bannerName">Patient</span>!</h1>
+                            <p class="text-teal-100 text-sm mt-0.5">Internal Medicine Clinic &mdash; MediTrack Patient Portal</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="flex justify-end space-x-2 pt-4">
-                        <button type="button" id="closeRecordModal" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
-                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-                            <span id="saveText">Save Record</span>
-                            <span id="saveSpinner" class="hidden ml-2"><i class="fas fa-spinner fa-spin"></i></span>
+                <!-- ===== TAB: BOOK APPOINTMENT ===== -->
+                <section id="tab-booking" class="tab-content">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
+                                <i class="fas fa-calendar-plus text-teal-600"></i> Book an Appointment
+                            </h2>
+
+                            <!-- Step 1: Select Date -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Select Date</label>
+                                <input type="date" id="appointmentDate" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none transition"
+                                    onchange="onDateChange(this.value)">
+                            </div>
+
+                            <!-- Doctor Card (loaded once) -->
+                            <div id="doctorCard" class="hidden mb-6 bg-teal-50 border border-teal-100 rounded-xl p-4">
+                                <div class="flex items-center gap-4">
+                                    <div id="doctorAvatar" class="w-14 h-14 rounded-full bg-teal-200 flex items-center justify-center text-teal-700 text-2xl font-bold flex-shrink-0 overflow-hidden">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 id="doctorName" class="font-bold text-gray-800 text-lg">Dr. Name</h3>
+                                        <p id="doctorSpecialization" class="text-teal-600 text-sm font-medium"></p>
+                                        <p id="doctorDepartment" class="text-gray-500 text-xs"></p>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <p class="text-xs text-gray-500">Consultation Fee</p>
+                                        <p id="doctorFee" class="text-teal-700 font-bold text-lg"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slots loading -->
+                            <div id="slotsLoading" class="hidden text-center py-8">
+                                <i class="fas fa-spinner fa-spin text-teal-600 text-2xl"></i>
+                                <p class="text-gray-500 mt-2 text-sm">Loading available slots...</p>
+                            </div>
+
+                            <!-- No slots message -->
+                            <div id="noSlotsMsg" class="hidden text-center py-8 text-gray-500">
+                                <i class="fas fa-calendar-times text-4xl text-gray-300 mb-3"></i>
+                                <p class="font-medium">No available slots for this date</p>
+                                <p class="text-sm mt-1">Please try a different date.</p>
+                            </div>
+
+                            <!-- Time Slots Grid -->
+                            <div id="slotsContainer" class="hidden mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Available Time Slots</label>
+                                <div class="mb-2 flex items-center gap-4 text-xs text-gray-500">
+                                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded bg-green-200 border border-green-400"></span>Available</span>
+                                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded bg-teal-600"></span>Selected</span>
+                                    <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded bg-gray-200 border border-gray-300"></span>Booked</span>
+                                </div>
+                                <div id="slotsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+                            </div>
+
+                            <!-- Booking Form (shown after slot selection) -->
+                            <div id="bookingForm" class="hidden">
+                                <div class="bg-teal-50 border border-teal-100 rounded-lg p-3 mb-4 text-sm text-teal-800">
+                                    <i class="fas fa-clock mr-2"></i>Selected: <strong id="selectedSlotDisplay"></strong>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Reason for Visit <span class="text-red-500">*</span></label>
+                                    <textarea id="reasonForVisit" rows="3" placeholder="Describe your symptoms or reason for the visit..."
+                                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none resize-none transition"></textarea>
+                                </div>
+                                <button onclick="bookAppointment()" id="bookBtn"
+                                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span>Book Appointment</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== TAB: MY APPOINTMENTS ===== -->
+                <section id="tab-appointments" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-calendar-check text-teal-600"></i> My Appointments
+                        </h2>
+                        <button onclick="loadAppointments()" class="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1 transition">
+                            <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <!-- Book Appointment Modal -->
-    <div id="bookAppointmentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white modal-content-mobile">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">Book Appointment</h3>
-                <button onclick="closeBookingModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-2xl"></i>
+                    <!-- Filter tabs -->
+                    <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
+                        <button onclick="filterAppointments('all')" class="appt-filter-btn active flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-teal-600 text-white transition" data-filter="all">All</button>
+                        <button onclick="filterAppointments('scheduled')" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-filter="scheduled">Scheduled</button>
+                        <button onclick="filterAppointments('checked_in')" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-filter="checked_in">Checked In</button>
+                        <button onclick="filterAppointments('completed')" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-filter="completed">Completed</button>
+                        <button onclick="filterAppointments('cancelled')" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition" data-filter="cancelled">Cancelled</button>
+                    </div>
+
+                    <div id="appointmentsLoading" class="text-center py-12">
+                        <i class="fas fa-spinner fa-spin text-teal-600 text-3xl"></i>
+                        <p class="text-gray-500 mt-3">Loading appointments...</p>
+                    </div>
+                    <div id="appointmentsList" class="space-y-4"></div>
+                    <div id="noAppointmentsMsg" class="hidden text-center py-12 text-gray-500">
+                        <i class="fas fa-calendar-times text-5xl text-gray-300 mb-4"></i>
+                        <p class="font-medium text-lg">No appointments found</p>
+                        <p class="text-sm mt-1">Book your first appointment to get started.</p>
+                        <button onclick="switchTab('booking')" class="mt-4 px-5 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition">
+                            Book Appointment
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ===== TAB: MEDICAL RECORDS ===== -->
+                <section id="tab-records" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-file-medical text-teal-600"></i> Medical Records
+                        </h2>
+                        <button onclick="loadMedicalRecords()" class="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1 transition">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="recordsLoading" class="text-center py-12">
+                        <i class="fas fa-spinner fa-spin text-teal-600 text-3xl"></i>
+                        <p class="text-gray-500 mt-3">Loading records...</p>
+                    </div>
+                    <div id="recordsList" class="space-y-4"></div>
+                    <div id="noRecordsMsg" class="hidden text-center py-12 text-gray-500">
+                        <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
+                        <p class="font-medium text-lg">No medical records found</p>
+                        <p class="text-sm mt-1">Records from completed consultations will appear here.</p>
+                    </div>
+                </section>
+
+                <!-- ===== TAB: PROFILE ===== -->
+                <section id="tab-profile" class="tab-content hidden">
+                    <div class="max-w-3xl mx-auto space-y-6">
+
+                        <!-- Profile Info Form -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
+                                <i class="fas fa-user-circle text-teal-600"></i> My Profile
+                            </h2>
+                            <div id="profileLoading" class="text-center py-8">
+                                <i class="fas fa-spinner fa-spin text-teal-600 text-2xl"></i>
+                                <p class="text-gray-500 mt-2 text-sm">Loading profile...</p>
+                            </div>
+                            <form id="profileForm" class="hidden" onsubmit="saveProfile(event)">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+                                        <input type="text" id="pFullName" name="full_name" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="pEmail" readonly class="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-gray-50 text-gray-500 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Contact Number <span class="text-red-500">*</span></label>
+                                        <input type="tel" id="pContact" name="contact_number" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
+                                        <input type="date" id="pDob" name="date_of_birth" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
+                                        <select id="pGender" name="gender" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                            <option value="">Select gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Blood Group</label>
+                                        <select id="pBloodGroup" name="blood_group" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                            <option value="">Select blood group</option>
+                                            <option value="A+">A+</option><option value="A-">A-</option>
+                                            <option value="B+">B+</option><option value="B-">B-</option>
+                                            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                            <option value="O+">O+</option><option value="O-">O-</option>
+                                        </select>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+                                        <input type="text" id="pAddress" name="address" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Barangay</label>
+                                        <input type="text" id="pBarangay" name="barangay" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">City / Municipality</label>
+                                        <input type="text" id="pCity" name="city" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Region</label>
+                                        <input type="text" id="pRegion" name="region" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Allergies</label>
+                                        <input type="text" id="pAllergies" name="allergies" placeholder="e.g. Penicillin, Aspirin" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Emergency Contact Name</label>
+                                        <input type="text" id="pEmergencyName" name="emergency_contact_name" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-1">Emergency Contact Number</label>
+                                        <input type="tel" id="pEmergencyNumber" name="emergency_contact_number" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Change Password Section -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+                                <i class="fas fa-lock text-teal-600"></i> Change Password
+                            </h3>
+                            <form id="passwordForm" onsubmit="changePassword(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Current Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="currentPassword" required placeholder="Enter current password"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-10 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                        <button type="button" onclick="togglePwd('currentPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="newPassword" required placeholder="Minimum 6 characters"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-10 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                        <button type="button" onclick="togglePwd('newPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Confirm New Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="confirmPassword" required placeholder="Repeat new password"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-10 focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none">
+                                        <button type="button" onclick="togglePwd('confirmPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2">
+                                    <i class="fas fa-key"></i> Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </section>
+
+            </main>
+        </div><!-- end main-content -->
+
+    </div><!-- end layout wrapper -->
+
+    <!-- ===== QR MODAL ===== -->
+    <div id="qrModal" class="fixed inset-0 bg-black/60 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-qrcode text-teal-600"></i> Appointment QR Code
+                </h3>
+                <button onclick="closeQRModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <form id="bookingForm" class="space-y-4">
-                <input type="hidden" id="bookingDoctorId">
-
-                <div class="bg-green-50 p-4 rounded-lg mb-4">
-                    <h4 class="font-semibold mb-2">Doctor Information</h4>
-                    <div id="bookingDoctorInfo" class="text-sm text-gray-700"></div>
+            <div class="text-center mb-4">
+                <p id="qrApptNumber" class="text-sm text-gray-500 mb-1"></p>
+                <p id="qrApptInfo" class="text-sm font-medium text-gray-700 mb-4"></p>
+                <div id="qrLoading" class="hidden py-8">
+                    <i class="fas fa-spinner fa-spin text-teal-600 text-2xl"></i>
+                    <p class="text-gray-500 text-sm mt-2">Generating QR code...</p>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Appointment Date *</label>
-                        <input type="date" id="bookingDate" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Appointment Time *</label>
-                        <select id="bookingTime" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">Select Time</option>
-                        </select>
-                    </div>
+                <div id="qrImageWrapper" class="inline-block p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                    <img id="qrImage" src="" alt="QR Code" class="w-48 h-48 object-contain">
                 </div>
+                <p class="text-xs text-gray-400 mt-3">Present this QR code at the clinic reception</p>
+            </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Reason for Visit *</label>
-                    <textarea id="bookingReason" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onclick="closeBookingModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-calendar-check mr-2"></i>Book Appointment
-                    </button>
-                </div>
-            </form>
+            <div class="flex gap-2">
+                <button onclick="regenerateQR()" id="regenerateBtn"
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-teal-600 text-teal-600 hover:bg-teal-50 rounded-lg text-sm font-semibold transition">
+                    <i class="fas fa-redo"></i> Regenerate
+                </button>
+                <button onclick="downloadQR()" id="downloadBtn"
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-semibold transition">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
-        <div class="flex justify-around items-center h-16">
-            <button class="mobile-nav-btn active flex flex-col items-center justify-center w-full h-full text-green-600" data-tab="doctors" onclick="switchMobileTab('doctors')">
-                <i class="fas fa-home text-xl"></i>
-                <span class="text-xs mt-1 font-medium">Home</span>
+    <!-- ===== MOBILE BOTTOM NAV ===== -->
+    <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 md:hidden">
+        <div class="flex">
+            <button onclick="switchTab('booking')" data-tab="booking" class="mobile-nav-btn flex-1 flex flex-col items-center py-3 text-gray-400 transition">
+                <i class="fas fa-calendar-plus text-lg"></i>
+                <span class="text-xs mt-0.5 font-medium">Book</span>
             </button>
-            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" data-tab="doctors" onclick="switchMobileTab('doctors')">
-                <i class="fas fa-user-md text-xl"></i>
-                <span class="text-xs mt-1 font-medium">Doctors</span>
+            <button onclick="switchTab('appointments')" data-tab="appointments" class="mobile-nav-btn flex-1 flex flex-col items-center py-3 text-gray-400 transition">
+                <i class="fas fa-calendar-check text-lg"></i>
+                <span class="text-xs mt-0.5 font-medium">Appts</span>
             </button>
-            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" data-tab="appointments" onclick="switchMobileTab('appointments')">
-                <i class="fas fa-calendar-alt text-xl"></i>
-                <span class="text-xs mt-1 font-medium">Bookings</span>
+            <button onclick="switchTab('records')" data-tab="records" class="mobile-nav-btn flex-1 flex flex-col items-center py-3 text-gray-400 transition">
+                <i class="fas fa-file-medical text-lg"></i>
+                <span class="text-xs mt-0.5 font-medium">Records</span>
             </button>
-            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" onclick="generateLatestQR()">
-                <i class="fas fa-qrcode text-xl"></i>
-                <span class="text-xs mt-1 font-medium">QR Code</span>
-            </button>
-            <button class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-400" data-tab="profile" onclick="switchMobileTab('profile')">
-                <i class="fas fa-user text-xl"></i>
-                <span class="text-xs mt-1 font-medium">Profile</span>
+            <button onclick="switchTab('profile')" data-tab="profile" class="mobile-nav-btn flex-1 flex flex-col items-center py-3 text-gray-400 transition">
+                <i class="fas fa-user-circle text-lg"></i>
+                <span class="text-xs mt-0.5 font-medium">Profile</span>
             </button>
         </div>
     </nav>
 
-    <script>
-        // Modal & utility functions only. Main logic in patient-dashboard-complete.js
-
-        // Clock (also in external JS but needed immediately)
-        function updateClock() {
-            const now = new Date();
-            const options = {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('realTimeClock').textContent = now.toLocaleString('en-US', options);
-
-            // Update current date
-            const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', dateOptions);
-        }
-
-        updateClock();
-        setInterval(updateClock, 1000);
-
-        // Profile Dropdown Toggle
-        document.getElementById('profileMenuBtn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('hidden');
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('profileDropdown');
-            const button = document.getElementById('profileMenuBtn');
-            if (!dropdown.contains(e.target) && !button.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-
-        // Modal Functions
-        function openProfileModal() {
-            document.getElementById('profileModal').classList.remove('hidden');
-            document.getElementById('profileDropdown').classList.add('hidden');
-            loadProfileData();
-        }
-
-        function closeProfileModal() {
-            document.getElementById('profileModal').classList.add('hidden');
-        }
-
-        function openSettingsModal() {
-            document.getElementById('settingsModal').classList.remove('hidden');
-            document.getElementById('profileDropdown').classList.add('hidden');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
-
-        function openScheduleModal() {
-            Swal.fire({
-                title: 'Schedule Management',
-                text: 'Schedule management feature coming soon!',
-                icon: 'info',
-                confirmButtonColor: '#10b981',
-                confirmButtonText: 'OK'
-            });
-            document.getElementById('profileDropdown').classList.add('hidden');
-        }
-
-        function openChangePasswordModal() {
-            document.getElementById('changePasswordModal').classList.remove('hidden');
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
-
-        function closeChangePasswordModal() {
-            document.getElementById('changePasswordModal').classList.add('hidden');
-            document.getElementById('settingsModal').classList.remove('hidden');
-        }
-
-        function confirmLogout() {
-            document.getElementById('logoutModal').classList.remove('hidden');
-            document.getElementById('profileDropdown').classList.add('hidden');
-        }
-
-        function closeLogoutModal() {
-            document.getElementById('logoutModal').classList.add('hidden');
-        }
-
-        function performLogout() {
-            // Clear session
-            localStorage.clear();
-            sessionStorage.clear();
-
-            // Show loading
-            Swal.fire({
-                title: 'Logging out...',
-                text: 'Please wait',
-                icon: 'info',
-                showConfirmButton: false,
-                timer: 1000,
-                timerProgressBar: true
-            });
-
-            // Redirect to login
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1000);
-        }
-
-        // Profile Picture Preview
-        function previewProfilePic(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('profilePicPreview').innerHTML =
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('profilePicture').innerHTML =
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('dropdownProfilePic').innerHTML =
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                    document.getElementById('welcomeProfilePic').innerHTML =
-                        '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Load Profile Data
-        function loadProfileData() {
-            // Use patientProfile global from patient-dashboard-complete.js if available
-            if (typeof patientProfile !== 'undefined' && patientProfile) {
-                const p = patientProfile;
-                document.getElementById('profileFirstName').value = p.first_name || p.firstName || '';
-                document.getElementById('profileMiddleName').value = p.middle_name || p.middleName || '';
-                document.getElementById('profileLastName').value = p.last_name || p.lastName || '';
-                document.getElementById('profileEmail').value = p.email || '';
-                document.getElementById('profilePhone').value = p.contact_number || p.phone || '';
-                document.getElementById('profileDOB').value = p.date_of_birth || p.dob || '';
-                document.getElementById('profileBloodGroup').value = p.blood_group || p.bloodGroup || '';
-                document.getElementById('profileGender').value = p.gender || '';
-                document.getElementById('profileAddress').value = p.address || '';
-                document.getElementById('profileEmergencyName').value = p.emergency_contact_name || p.emergencyContactName || '';
-                document.getElementById('profileEmergencyPhone').value = p.emergency_contact_phone || p.emergencyContactPhone || '';
-            } else {
-                // Fallback: try to fetch from API
-                fetch('../api/patient/get-profile.php')
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            const p = data.patient || data.profile || {};
-                            document.getElementById('profileFirstName').value = p.first_name || '';
-                            document.getElementById('profileMiddleName').value = p.middle_name || '';
-                            document.getElementById('profileLastName').value = p.last_name || '';
-                            document.getElementById('profileEmail').value = p.email || '';
-                            document.getElementById('profilePhone').value = p.contact_number || p.phone || '';
-                            document.getElementById('profileDOB').value = p.date_of_birth || '';
-                            document.getElementById('profileBloodGroup').value = p.blood_group || '';
-                            document.getElementById('profileGender').value = p.gender || '';
-                            document.getElementById('profileAddress').value = p.address || '';
-                            document.getElementById('profileEmergencyName').value = p.emergency_contact_name || '';
-                            document.getElementById('profileEmergencyPhone').value = p.emergency_contact_phone || '';
-                        }
-                    })
-                    .catch(err => console.error('Error loading profile:', err));
-            }
-        }
-
-        // Profile Form Submit
-        document.getElementById('profileForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Show loading
-            Swal.fire({
-                title: 'Updating Profile...',
-                text: 'Please wait',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            const formData = new FormData();
-            formData.append('first_name', document.getElementById('profileFirstName').value);
-            formData.append('middle_name', document.getElementById('profileMiddleName').value);
-            formData.append('last_name', document.getElementById('profileLastName').value);
-            formData.append('email', document.getElementById('profileEmail').value);
-            formData.append('phone', document.getElementById('profilePhone').value);
-            formData.append('date_of_birth', document.getElementById('profileDOB').value);
-            formData.append('blood_group', document.getElementById('profileBloodGroup').value);
-            formData.append('gender', document.getElementById('profileGender').value);
-            formData.append('address', document.getElementById('profileAddress').value);
-            formData.append('emergency_contact_name', document.getElementById('profileEmergencyName').value);
-            formData.append('emergency_contact_phone', document.getElementById('profileEmergencyPhone').value);
-
-            const profilePic = document.getElementById('profilePicInput').files[0];
-            if (profilePic) {
-                formData.append('profile_picture', profilePic);
-            }
-
-            try {
-                const response = await fetch('../api/patient/update-profile.php', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Profile updated successfully',
-                        confirmButtonColor: '#10b981',
-                        timer: 2000
-                    });
-
-                    // Update display with new data
-                    const fullName = formData.get('first_name') + ' ' + (formData.get('middle_name') ? formData.get('middle_name') + ' ' : '') + formData.get('last_name');
-                    document.getElementById('userName').textContent = fullName;
-                    document.getElementById('welcomeName').textContent = fullName;
-                    document.getElementById('dropdownName').textContent = fullName;
-                    document.getElementById('dropdownEmail').textContent = formData.get('email');
-                    if (document.getElementById('patientEmail')) document.getElementById('patientEmail').textContent = formData.get('email');
-                    if (document.getElementById('patientPhone')) document.getElementById('patientPhone').textContent = formData.get('phone');
-
-                    // Reload profile to get updated data including new profile picture
-                    setTimeout(() => {
-                        if (typeof loadDoctorProfile === 'function') loadDoctorProfile();
-                    }, 500);
-
-                    closeProfileModal();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: result.message || 'Failed to update profile',
-                        confirmButtonColor: '#10b981'
-                    });
-                }
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error updating profile: ' + error.message,
-                    confirmButtonColor: '#10b981'
-                });
-            }
-        });
-
-        // Change Password Form Submit
-        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (newPassword !== confirmPassword) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'New passwords do not match!',
-                    confirmButtonColor: '#10b981'
-                });
-                return;
-            }
-
-            if (newPassword.length < 6) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Warning',
-                    text: 'Password must be at least 6 characters!',
-                    confirmButtonColor: '#10b981'
-                });
-                return;
-            }
-
-            try {
-                // Simulate API call
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: 'Password changed successfully',
-                    confirmButtonColor: '#10b981',
-                    timer: 2000
-                });
-                closeChangePasswordModal();
-                document.getElementById('changePasswordForm').reset();
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error changing password: ' + error.message,
-                    confirmButtonColor: '#10b981'
-                });
-            }
-        });
-
-        // Save Settings
-        function saveSettings() {
-            const settings = {
-                emailNotif: document.getElementById('emailNotif').checked,
-                apptReminders: document.getElementById('apptReminders').checked,
-                patientAlerts: document.getElementById('patientAlerts').checked,
-                showProfile: document.getElementById('showProfile').checked,
-                onlineBooking: document.getElementById('onlineBooking').checked
-            };
-
-            // Simulate saving to database
-            Swal.fire({
-                icon: 'success',
-                title: 'Saved!',
-                text: 'Settings saved successfully',
-                confirmButtonColor: '#10b981',
-                timer: 2000
-            });
-            closeSettingsModal();
-        }
-
-        // Idle Timeout Security
-        let idleTime = 0;
-        let idleInterval;
-        let idleWarningShown = false;
-        const IDLE_TIMEOUT = 30; // 30 seconds
-        const WARNING_TIME = 20; // Show warning at 20 seconds
-
-        function resetIdleTimer() {
-            idleTime = 0;
-            idleWarningShown = false;
-        }
-
-        function startIdleTimer() {
-            // Reset timer on user activity
-            document.addEventListener('mousemove', resetIdleTimer);
-            document.addEventListener('keypress', resetIdleTimer);
-            document.addEventListener('click', resetIdleTimer);
-            document.addEventListener('scroll', resetIdleTimer);
-
-            // Check idle time every second
-            idleInterval = setInterval(function() {
-                idleTime++;
-
-                // Show warning at 20 seconds
-                if (idleTime >= WARNING_TIME && !idleWarningShown) {
-                    idleWarningShown = true;
-                    showIdleWarning();
-                }
-
-                // Auto logout at 30 seconds
-                if (idleTime >= IDLE_TIMEOUT) {
-                    clearInterval(idleInterval);
-                    performIdleLogout();
-                }
-            }, 1000);
-        }
-
-        function showIdleWarning() {
-            const timeLeft = IDLE_TIMEOUT - idleTime;
-
-            Swal.fire({
-                title: 'Inactivity Warning',
-                html: `You will be logged out in <b>${timeLeft}</b> seconds due to inactivity.<br><br>Do you want to continue your session?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#ef4444',
-                confirmButtonText: 'Continue Session',
-                cancelButtonText: 'Logout Now',
-                allowOutsideClick: false,
-                timer: (timeLeft * 1000),
-                timerProgressBar: true,
-                didOpen: () => {
-                    const timer = Swal.getHtmlContainer().querySelector('b');
-                    const timerInterval = setInterval(() => {
-                        const remaining = Math.ceil((Swal.getTimerLeft() || 0) / 1000);
-                        timer.textContent = remaining;
-                        if (remaining <= 0) {
-                            clearInterval(timerInterval);
-                        }
-                    }, 100);
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // User wants to continue
-                    resetIdleTimer();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Session Extended',
-                        text: 'Your session has been extended',
-                        confirmButtonColor: '#10b981',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // User clicked logout
-                    performIdleLogout();
-                } else {
-                    // Timer expired
-                    performIdleLogout();
-                }
-            });
-        }
-
-        function performIdleLogout() {
-            clearInterval(idleInterval);
-
-            Swal.fire({
-                title: 'Session Expired',
-                text: 'You have been logged out due to inactivity',
-                icon: 'info',
-                confirmButtonColor: '#10b981',
-                showConfirmButton: false,
-                timer: 2000
-            }).then(() => {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '../index.html';
-            });
-        }
-
-        // Load Patient Profile from Database
-        async function loadDoctorProfile() {
-            try {
-                const response = await fetch('../api/patient/get-profile.php');
-                const data = await response.json();
-
-                if (data.success) {
-                    const profile = data.patient || data.profile;
-
-                    // Update all display elements
-                    const fullName = profile.full_name || profile.username || 'Patient';
-                    const el = (id) => document.getElementById(id);
-                    if (el('userName')) el('userName').textContent = fullName;
-                    if (el('welcomeName')) el('welcomeName').textContent = fullName;
-                    if (el('dropdownName')) el('dropdownName').textContent = fullName;
-                    if (el('dropdownEmail')) el('dropdownEmail').textContent = profile.email || '';
-                    if (el('patientEmail')) el('patientEmail').textContent = profile.email || '';
-                    if (el('patientPhone')) el('patientPhone').textContent = profile.contact_number || profile.phone || '';
-
-                    // Update profile pictures if exists
-                    const profileImg = profile.profile_image || profile.profile_image_path || profile.profile_picture;
-                    if (profileImg) {
-                        const imgSrc = profileImg.startsWith('http') || profileImg.startsWith('../') ? profileImg : `../uploads/${profileImg}`;
-                        const imgHtml = `<img src="${imgSrc}" class="w-full h-full object-cover">`;
-                        if (el('profilePicture')) el('profilePicture').innerHTML = imgHtml;
-                        if (el('dropdownProfilePic')) el('dropdownProfilePic').innerHTML = imgHtml;
-                        if (el('welcomeProfilePic')) el('welcomeProfilePic').innerHTML = imgHtml;
-                    }
-                } else {
-                    // Fallback to default data
-                    const patientName = 'Patient';
-                    document.getElementById('userName').textContent = patientName;
-                    document.getElementById('welcomeName').textContent = patientName;
-                    document.getElementById('dropdownName').textContent = patientName;
-                    document.getElementById('dropdownEmail').textContent = '';
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-            }
-        }
-
-        // Enhanced Search Functionality
-        let currentSearchType = 'all';
-        let searchTimeout;
-
-        // Search tab switching
-        document.querySelectorAll('.search-tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Update active tab
-                document.querySelectorAll('.search-tab-btn').forEach(b => {
-                    b.classList.remove('active', 'border-green-600', 'text-green-600');
-                    b.classList.add('border-transparent', 'text-gray-500');
-                });
-                this.classList.add('active', 'border-green-600', 'text-green-600');
-                this.classList.remove('border-transparent', 'text-gray-500');
-
-                // Update search type
-                currentSearchType = this.dataset.searchType;
-
-                // Toggle input containers
-                if (currentSearchType === 'qr') {
-                    document.getElementById('searchInputContainer').classList.add('hidden');
-                    document.getElementById('qrInputContainer').classList.remove('hidden');
-                } else {
-                    document.getElementById('searchInputContainer').classList.remove('hidden');
-                    document.getElementById('qrInputContainer').classList.add('hidden');
-                }
-
-                // Clear previous results
-                document.getElementById('searchResults').classList.add('hidden');
-                clearSearchInputs();
-            });
-        });
-
-        // Unified search input
-        const searchInput = document.getElementById('unifiedSearchInput');
-        const clearSearchBtn = document.getElementById('clearSearchBtn');
-
-        searchInput.addEventListener('input', function() {
-            const query = this.value.trim();
-
-            // Show/hide clear button
-            if (query) {
-                clearSearchBtn.classList.remove('hidden');
-            } else {
-                clearSearchBtn.classList.add('hidden');
-            }
-
-            // Debounced search
-            clearTimeout(searchTimeout);
-            if (query.length >= 2) {
-                searchTimeout = setTimeout(() => performSearch(query), 500);
-            } else if (query.length === 0) {
-                document.getElementById('searchResults').classList.add('hidden');
-            }
-        });
-
-        clearSearchBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            clearSearchBtn.classList.add('hidden');
-            document.getElementById('searchResults').classList.add('hidden');
-        });
-
-        // QR token input
-        const qrTokenInput = document.getElementById('qrTokenInput');
-        qrTokenInput.addEventListener('input', function() {
-            const token = this.value.trim();
-            if (token.length >= 10) {
-                performQRSearch(token);
-            }
-        });
-
-        // Scan QR button - opens real camera scanner
-        document.getElementById('scanQRBtn').addEventListener('click', function() {
-            let html5QrScanner = null;
-
-            Swal.fire({
-                title: 'QR Scanner',
-                html: `
-                    <div class="text-center">
-                        <div id="patient-qr-reader" style="width: 100%;"></div>
-                        <p class="mt-2 text-gray-600 text-sm">Position QR code within the frame</p>
-                    </div>
-                `,
-                showCancelButton: true,
-                showConfirmButton: false,
-                cancelButtonText: 'Cancel',
-                didOpen: () => {
-                    if (typeof Html5Qrcode === 'undefined') {
-                        document.getElementById('patient-qr-reader').innerHTML = '<p class="text-red-500">QR scanner library not loaded. Please refresh.</p>';
-                        return;
-                    }
-                    html5QrScanner = new Html5Qrcode("patient-qr-reader");
-                    html5QrScanner.start(
-                        { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        (decodedText) => {
-                            // Extract token from URL if it's a full URL
-                            let token = decodedText;
-                            try {
-                                const url = new URL(decodedText);
-                                const urlToken = url.searchParams.get('token');
-                                if (urlToken) token = urlToken;
-                            } catch (e) {
-                                // Not a URL, use as-is
-                            }
-
-                            // Stop scanner and close modal
-                            html5QrScanner.stop().then(() => {
-                                html5QrScanner.clear();
-                                Swal.close();
-                                qrTokenInput.value = token;
-                                performQRSearch(token);
-                            });
-                        },
-                        (errorMessage) => { /* ignore scan errors */ }
-                    ).catch((err) => {
-                        console.error('Camera error:', err);
-                        document.getElementById('patient-qr-reader').innerHTML = `
-                            <div class="text-center py-4">
-                                <i class="fas fa-camera-slash text-4xl text-red-400 mb-2" style="display:block;"></i>
-                                <p class="text-red-500 text-sm">Could not access camera. Please check permissions or enter the QR code manually.</p>
-                            </div>`;
-                    });
-                },
-                willClose: () => {
-                    if (html5QrScanner) {
-                        html5QrScanner.stop().catch(() => {});
-                    }
-                }
-            });
-        });
-
-        // Perform search
-        async function performSearch(query) {
-            try {
-                showSearchLoading();
-
-                const response = await fetch(`../api/search/unified-search.php?q=${encodeURIComponent(query)}&type=${currentSearchType}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    displaySearchResults(data.results, data.type);
-                } else {
-                    showSearchError(data.message);
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                showSearchError('Search failed. Please try again.');
-            }
-        }
-
-        // Perform QR search
-        async function performQRSearch(token) {
-            try {
-                showSearchLoading();
-
-                const response = await fetch(`../api/search/unified-search.php?type=qr&qr_token=${encodeURIComponent(token)}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    displaySearchResults(data.results, 'qr');
-                } else {
-                    showSearchError(data.message || 'Invalid QR code');
-                }
-            } catch (error) {
-                console.error('QR search error:', error);
-                showSearchError('QR lookup failed. Please try again.');
-            }
-        }
-
-        // Display search results
-        function displaySearchResults(results, type) {
-            const container = document.getElementById('searchResultsContainer');
-            const resultsDiv = document.getElementById('searchResults');
-
-            let html = '';
-
-            if (type === 'qr') {
-                if (results.qr && results.qr.success) {
-                    html += displayQRResult(results.qr);
-                } else {
-                    html += `<div class="text-center py-8 text-red-600">
-                        <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
-                        <p>${results.qr?.message || 'QR code not found'}</p>
-                    </div>`;
-                }
-            } else {
-                // Display appointments
-                if (results.appointments && results.appointments.data.length > 0) {
-                    html += '<div class="mb-6"><h4 class="font-semibold text-gray-700 mb-3"><i class="fas fa-calendar-alt mr-2"></i>Appointments</h4>';
-                    results.appointments.data.forEach(apt => {
-                        html += displayAppointmentResult(apt);
-                    });
-                    html += '</div>';
-                }
-
-                // Display medical records
-                if (results.records && results.records.data.length > 0) {
-                    html += '<div><h4 class="font-semibold text-gray-700 mb-3"><i class="fas fa-file-medical mr-2"></i>Medical Records</h4>';
-                    results.records.data.forEach(record => {
-                        html += displayRecordResult(record);
-                    });
-                    html += '</div>';
-                }
-
-                if (!html) {
-                    html = `<div class="text-center py-8 text-gray-600">
-                        <i class="fas fa-search text-4xl mb-2"></i>
-                        <p>No results found</p>
-                    </div>`;
-                }
-            }
-
-            container.innerHTML = html;
-            resultsDiv.classList.remove('hidden');
-        }
-
-        // Display appointment result
-        function displayAppointmentResult(apt) {
-            const statusColor = apt.status === 'confirmed' ? 'green' :
-                              apt.status === 'pending' ? 'yellow' :
-                              apt.status === 'completed' ? 'blue' : 'red';
-
-            return `
-                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer" onclick="viewAppointmentDetails(${apt.id})">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <h5 class="font-semibold text-gray-800">${apt.patient_name || 'Appointment'}</h5>
-                                <span class="px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-700">
-                                    ${apt.status}
-                                </span>
-                            </div>
-                            <div class="text-sm text-gray-600 space-y-1">
-                                <div><i class="fas fa-user-md w-4 text-green-600"></i> Dr. ${apt.doctor_name}</div>
-                                <div><i class="fas fa-calendar w-4 text-blue-600"></i> ${formatDate(apt.appointment_date)}</div>
-                                <div><i class="fas fa-clock w-4 text-purple-600"></i> ${apt.appointment_time}</div>
-                                ${apt.reason ? `<div><i class="fas fa-notes-medical w-4 text-yellow-600"></i> ${apt.reason}</div>` : ''}
-                            </div>
-                        </div>
-                        ${apt.token_hash ? `
-                        <div class="ml-4">
-                            <button onclick="event.stopPropagation(); showQRCode('${apt.token_hash}')" class="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200">
-                                <i class="fas fa-qrcode"></i>
-                            </button>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Display medical record result
-        function displayRecordResult(record) {
-            return `
-                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer" onclick="viewRecordDetails(${record.id})">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <h5 class="font-semibold text-gray-800 mb-2">${record.patient_name} - ${formatDate(record.visit_date)}</h5>
-                            <div class="text-sm text-gray-600 space-y-1">
-                                <div><i class="fas fa-user-md w-4 text-green-600"></i> Dr. ${record.doctor_name}</div>
-                                ${record.diagnosis ? `<div><i class="fas fa-stethoscope w-4 text-blue-600"></i> ${record.diagnosis}</div>` : ''}
-                                ${record.treatment ? `<div><i class="fas fa-prescription w-4 text-purple-600"></i> ${record.treatment}</div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Display QR result
-        function displayQRResult(qrData) {
-            const apt = qrData.appointment;
-            return `
-                <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <div class="flex items-center mb-4">
-                        <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
-                        <h4 class="font-semibold text-green-800">QR Code Valid</h4>
-                    </div>
-                    <div class="bg-white rounded-lg p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <h5 class="font-semibold text-gray-700 mb-2">Appointment Details</h5>
-                                <div class="text-sm text-gray-600 space-y-1">
-                                    <div><strong>Patient:</strong> ${apt.patient_name}</div>
-                                    <div><strong>Doctor:</strong> Dr. ${apt.doctor_name}</div>
-                                    <div><strong>Date:</strong> ${formatDate(apt.appointment_date)}</div>
-                                    <div><strong>Time:</strong> ${apt.appointment_time}</div>
-                                    <div><strong>Status:</strong> <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">${apt.status}</span></div>
-                                </div>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-gray-700 mb-2">Patient Information</h5>
-                                <div class="text-sm text-gray-600 space-y-1">
-                                    <div><strong>Contact:</strong> ${apt.patient_contact}</div>
-                                    <div><strong>DOB:</strong> ${formatDate(apt.patient_dob)}</div>
-                                    <div><strong>Blood Group:</strong> ${apt.blood_group || 'N/A'}</div>
-                                    <div><strong>Allergies:</strong> ${apt.allergies || 'None'}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t">
-                            <button onclick="checkInPatient(${apt.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                <i class="fas fa-sign-in-alt mr-2"></i>Check In Patient
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Helper functions
-        function showSearchLoading() {
-            const container = document.getElementById('searchResultsContainer');
-            container.innerHTML = `
-                <div class="text-center py-8">
-                    <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
-                    <p class="mt-2 text-gray-600">Searching...</p>
-                </div>
-            `;
-            document.getElementById('searchResults').classList.remove('hidden');
-        }
-
-        function showSearchError(message) {
-            const container = document.getElementById('searchResultsContainer');
-            container.innerHTML = `
-                <div class="text-center py-8 text-red-600">
-                    <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
-                    <p>${message}</p>
-                </div>
-            `;
-            document.getElementById('searchResults').classList.remove('hidden');
-        }
-
-        function clearSearchInputs() {
-            searchInput.value = '';
-            qrTokenInput.value = '';
-            clearSearchBtn.classList.add('hidden');
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        function viewAppointmentDetails(id) {
-            // Implementation for viewing appointment details
-            console.log('View appointment:', id);
-        }
-
-        function viewRecordDetails(id) {
-            // Implementation for viewing record details
-            console.log('View record:', id);
-        }
-
-        function showQRCode(tokenHash) {
-            // Implementation for showing QR code
-            console.log('Show QR code:', tokenHash);
-        }
-
-        function checkInPatient(appointmentId) {
-            // Implementation for patient check-in
-            console.log('Check in patient:', appointmentId);
-        }
-
-        // Mobile tab switching
-        function switchMobileTab(tabName) {
-            // Switch tab content
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            const targetTab = document.getElementById(tabName + 'Tab');
-            if (targetTab) targetTab.classList.remove('hidden');
-
-            // Update desktop tabs too
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-green-600', 'text-green-600');
-                btn.classList.add('border-transparent', 'text-gray-500');
-            });
-            const desktopBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-            if (desktopBtn) {
-                desktopBtn.classList.add('active', 'border-green-600', 'text-green-600');
-                desktopBtn.classList.remove('border-transparent', 'text-gray-500');
-            }
-
-            // Update mobile nav active state
-            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.remove('text-green-600');
-                btn.classList.add('text-gray-400');
-            });
-
-            const activeBtn = document.querySelector(`.mobile-nav-btn[data-tab="${tabName}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-                activeBtn.classList.add('text-green-600');
-                activeBtn.classList.remove('text-gray-400');
-            }
-
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // Generate QR for latest appointment
-        function generateLatestQR() {
-            if (typeof allAppointments !== 'undefined' && allAppointments.length > 0) {
-                const scheduled = allAppointments.filter(a => a.status === 'scheduled' || a.status === 'checked_in');
-                if (scheduled.length > 0) {
-                    generateQRCode(scheduled[0].id);
-                } else {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'No Active Appointments',
-                        text: 'You need a scheduled appointment to generate a QR code. Book an appointment first!',
-                        confirmButtonColor: '#10b981',
-                        confirmButtonText: 'Find Doctors'
-                    }).then((result) => {
-                        if (result.isConfirmed) switchMobileTab('doctors');
-                    });
-                }
-            } else {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'No Appointments',
-                    text: 'Book an appointment first to get a QR code.',
-                    confirmButtonColor: '#10b981'
-                });
-            }
-        }
-
-    </script>
-
-    <!-- Patient Dashboard Complete JavaScript -->
-    <script src="../js/patient-dashboard-complete.js"></script>
+    <!-- Scripts -->
+    <script src="../js/auth.js"></script>
+    <script src="../js/patient-dashboard.js"></script>
 </body>
 </html>

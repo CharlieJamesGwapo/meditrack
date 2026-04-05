@@ -1,88 +1,59 @@
 <?php
-require_once '../../config/database.php';
-require_once '../../config/config.php';
-require_once '../../utils/QRCodeGenerator.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/QRCodeGenerator.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
-    exit;
 }
-
 if (!isLoggedIn()) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
-    exit;
 }
 
-$data = json_decode(file_get_contents("php://input"), true);
-$appointmentId = $data['appointment_id'] ?? '';
+$input          = json_decode(file_get_contents('php://input'), true);
+$appointment_id = (int) ($input['appointment_id'] ?? 0);
 
-if (empty($appointmentId)) {
-    sendJSON(['success' => false, 'message' => 'Appointment ID required'], 400);
-    exit;
+if (!$appointment_id) {
+    sendJSON(['success' => false, 'message' => 'Appointment ID is required'], 400);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-
-    // Verify appointment exists and user has access
-    $role = getCurrentUserRole();
     $userId = getCurrentUserId();
-    $profileId = $_SESSION['profile_id'] ?? null;
-    
-    $whereCondition = '';
-    if ($role === 'patient') {
-        $whereCondition = 'AND a.patient_id = :profile_id';
-    } elseif ($role === 'doctor') {
-        $whereCondition = 'AND a.doctor_id = :profile_id';
-    }
-    
-    $query = "SELECT a.*, p.full_name as patient_name, d.full_name as doctor_name 
-              FROM appointments a
-              JOIN patients p ON a.patient_id = p.id
-              JOIN doctors d ON a.doctor_id = d.id
-              WHERE a.id = :appointment_id $whereCondition";
-    
-    $stmt = $db->prepare($query);
-    $stmt->bindValue(':appointment_id', $appointmentId);
-    if ($role === 'patient' || $role === 'doctor') {
-        $stmt->bindValue(':profile_id', $profileId);
-    }
-    $stmt->execute();
-    
+    $role   = getCurrentUserRole();
+
+    // Verify appointment exists, not cancelled
+    $stmt = $db->prepare("SELECT a.id, a.status, a.patient_id, a.doctor_id FROM appointments a WHERE a.id = :aid AND a.status != 'cancelled' LIMIT 1");
+    $stmt->execute([':aid' => $appointment_id]);
     $appointment = $stmt->fetch();
-    
+
     if (!$appointment) {
-        sendJSON(['success' => false, 'message' => 'Appointment not found or access denied'], 404);
-        exit;
+        sendJSON(['success' => false, 'message' => 'Appointment not found or cancelled'], 404);
     }
 
-    // Generate QR code
-    try {
-        $qrGenerator = new QRCodeGenerator($db);
-        $qrResult = $qrGenerator->generateQRCode($appointmentId);
-    } catch (Exception $qrEx) {
-        error_log("QR generation failed: " . $qrEx->getMessage());
-        sendJSON(['success' => false, 'message' => 'Failed to generate QR code: ' . $qrEx->getMessage()], 500);
-        exit;
+    // If patient role, verify belongs to them
+    if ($role === 'patient') {
+        $stmt = $db->prepare("SELECT id FROM patients WHERE user_id = :uid LIMIT 1");
+        $stmt->execute([':uid' => $userId]);
+        $patient = $stmt->fetch();
+        if (!$patient || (int) $appointment['patient_id'] !== (int) $patient['id']) {
+            sendJSON(['success' => false, 'message' => 'Access denied'], 403);
+        }
     }
 
-    if ($qrResult) {
-        sendJSON([
-            'success' => true,
-            'qr_code' => $qrResult,
-            'appointment' => $appointment
-        ]);
-        exit;
-    } else {
-        sendJSON(['success' => false, 'message' => 'Failed to generate QR code'], 500);
-        exit;
-    }
+    $qrGenerator = new QRCodeGenerator($db);
+    $qrData = $qrGenerator->generateQRCode($appointment_id);
+
+    sendJSON([
+        'success'    => true,
+        'qr_image'   => $qrData['qr_image'],
+        'token_hash' => $qrData['token_hash'],
+        'expires_at' => $qrData['expires_at'],
+        'qr_url'     => $qrData['qr_url']
+    ]);
 
 } catch (Exception $e) {
-    sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
-    exit;
+    error_log("generate-qr error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to generate QR code'], 500);
 }
-?>

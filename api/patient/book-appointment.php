@@ -1,214 +1,137 @@
 <?php
-session_start();
-require_once '../../config/database.php';
-require_once '../../config/config.php';
-require_once '../../utils/EmailService.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/QRCodeGenerator.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    sendJSON(['success' => false, 'message' => 'Not authenticated'], 401);
+if (!isLoggedIn() || !hasRole('patient')) {
+    sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
-$data = json_decode(file_get_contents("php://input"), true);
+$input = json_decode(file_get_contents('php://input'), true);
+$appointment_date = sanitizeInput($input['appointment_date'] ?? '');
+$appointment_time = sanitizeInput($input['appointment_time'] ?? '');
+$reason_for_visit = sanitizeInput($input['reason_for_visit'] ?? '');
 
-// Validate required fields
-$required = ['doctor_id', 'appointment_date', 'appointment_time', 'reason_for_visit'];
-foreach ($required as $field) {
-    if (empty($data[$field])) {
-        sendJSON(['success' => false, 'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required'], 400);
-    }
+if (empty($appointment_date) || empty($appointment_time) || empty($reason_for_visit)) {
+    sendJSON(['success' => false, 'message' => 'Appointment date, time, and reason are required'], 400);
+}
+
+// Validate date not in the past
+if ($appointment_date < date('Y-m-d')) {
+    sendJSON(['success' => false, 'message' => 'Appointment date cannot be in the past'], 400);
 }
 
 try {
     $database = new Database();
     $db = $database->getConnection();
-    $userId = $_SESSION['user_id'];
+    $userId = getCurrentUserId();
 
-    // Get patient ID
-    $patientQuery = "SELECT id FROM patients WHERE user_id = :user_id";
-    $patientStmt = $db->prepare($patientQuery);
-    $patientStmt->bindParam(':user_id', $userId);
-    $patientStmt->execute();
-    $patient = $patientStmt->fetch(PDO::FETCH_ASSOC);
-
+    // Get patient profile
+    $stmt = $db->prepare("SELECT id, full_name FROM patients WHERE user_id = :uid LIMIT 1");
+    $stmt->execute([':uid' => $userId]);
+    $patient = $stmt->fetch();
     if (!$patient) {
         sendJSON(['success' => false, 'message' => 'Patient profile not found'], 404);
     }
+    $patient_id = $patient['id'];
 
-    $patientId = $patient['id'];
-    $doctorId = $data['doctor_id'];
-    $appointmentDate = $data['appointment_date'];
-    $appointmentTime = $data['appointment_time'];
-    $reasonForVisit = sanitizeInput($data['reason_for_visit']);
-
-    // Verify doctor exists and is active
-    $doctorQuery = "SELECT id, department FROM doctors WHERE id = :doctor_id AND status = 'active'";
-    $doctorStmt = $db->prepare($doctorQuery);
-    $doctorStmt->bindParam(':doctor_id', $doctorId);
-    $doctorStmt->execute();
-    $doctor = $doctorStmt->fetch(PDO::FETCH_ASSOC);
-
+    // Auto-select single active doctor
+    $stmt = $db->prepare("SELECT id, full_name FROM doctors WHERE status = 'active' LIMIT 1");
+    $stmt->execute();
+    $doctor = $stmt->fetch();
     if (!$doctor) {
-        sendJSON(['success' => false, 'message' => 'Doctor not found or not available'], 404);
+        sendJSON(['success' => false, 'message' => 'No active doctor available'], 503);
+    }
+    $doctor_id = $doctor['id'];
+
+    // Get day_of_week (0=Sunday, 6=Saturday)
+    $day_of_week = (int) date('w', strtotime($appointment_date));
+
+    // Check doctor has schedule for that day
+    $stmt = $db->prepare("SELECT * FROM doctor_schedules WHERE doctor_id = :did AND day_of_week = :dow AND is_active = 1 LIMIT 1");
+    $stmt->execute([':did' => $doctor_id, ':dow' => $day_of_week]);
+    $schedule = $stmt->fetch();
+    if (!$schedule) {
+        sendJSON(['success' => false, 'message' => 'Doctor is not available on this day'], 400);
     }
 
-    // Check if time slot is available (exclude only cancelled, no_show, and completed)
-    $checkQuery = "SELECT id FROM appointments
-                   WHERE doctor_id = :doctor_id
-                   AND appointment_date = :appointment_date
-                   AND appointment_time = :appointment_time
-                   AND status NOT IN ('cancelled', 'no_show', 'completed')";
-    $checkStmt = $db->prepare($checkQuery);
-    $checkStmt->execute([
-        ':doctor_id' => $doctorId,
-        ':appointment_date' => $appointmentDate,
-        ':appointment_time' => $appointmentTime
-    ]);
-
-    if ($checkStmt->rowCount() > 0) {
-        sendJSON(['success' => false, 'message' => 'This time slot is already booked'], 400);
+    // Validate time within schedule
+    if ($appointment_time < $schedule['start_time'] || $appointment_time >= $schedule['end_time']) {
+        sendJSON(['success' => false, 'message' => 'Appointment time is outside doctor\'s schedule'], 400);
     }
 
-    // Generate appointment number
-    $appointmentNumber = 'APT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+    // Check slot not taken
+    $stmt = $db->prepare("SELECT id FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND appointment_time = :time AND status NOT IN ('cancelled','no_show') LIMIT 1");
+    $stmt->execute([':did' => $doctor_id, ':date' => $appointment_date, ':time' => $appointment_time]);
+    if ($stmt->rowCount() > 0) {
+        sendJSON(['success' => false, 'message' => 'This time slot is already booked'], 409);
+    }
 
-    // Start transaction
+    // Patient doesn't already have appointment that day
+    $stmt = $db->prepare("SELECT id FROM appointments WHERE patient_id = :pid AND appointment_date = :date AND status NOT IN ('cancelled','no_show') LIMIT 1");
+    $stmt->execute([':pid' => $patient_id, ':date' => $appointment_date]);
+    if ($stmt->rowCount() > 0) {
+        sendJSON(['success' => false, 'message' => 'You already have an appointment on this date'], 409);
+    }
+
+    // Check max_patients not exceeded
+    $stmt = $db->prepare("SELECT COUNT(*) as booked FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND status NOT IN ('cancelled','no_show')");
+    $stmt->execute([':did' => $doctor_id, ':date' => $appointment_date]);
+    $booked = (int) $stmt->fetch()['booked'];
+    if ($booked >= $schedule['max_patients']) {
+        sendJSON(['success' => false, 'message' => 'Doctor has reached maximum patients for this day'], 400);
+    }
+
     $db->beginTransaction();
 
-    // Insert appointment
-    $insertQuery = "INSERT INTO appointments 
-                    (appointment_number, patient_id, doctor_id, appointment_date, appointment_time, 
-                     reason_for_visit, status, priority, created_at) 
-                    VALUES 
-                    (:appointment_number, :patient_id, :doctor_id, :appointment_date, :appointment_time, 
-                     :reason_for_visit, 'scheduled', 'normal', CURRENT_TIMESTAMP)";
-    
-    $insertStmt = $db->prepare($insertQuery);
-    $insertStmt->execute([
-        ':appointment_number' => $appointmentNumber,
-        ':patient_id' => $patientId,
-        ':doctor_id' => $doctorId,
-        ':appointment_date' => $appointmentDate,
-        ':appointment_time' => $appointmentTime,
-        ':reason_for_visit' => $reasonForVisit
+    // Generate appointment number: APT-YYYYMMDD-XXXX
+    $date_part = date('Ymd', strtotime($appointment_date));
+    $stmt = $db->prepare("SELECT COUNT(*) as cnt FROM appointments WHERE appointment_date = :date");
+    $stmt->execute([':date' => $appointment_date]);
+    $cnt = (int) $stmt->fetch()['cnt'] + 1;
+    $appointment_number = 'APT-' . $date_part . '-' . str_pad($cnt, 4, '0', STR_PAD_LEFT);
+
+    $stmt = $db->prepare("INSERT INTO appointments (appointment_number, patient_id, doctor_id, appointment_date, appointment_time, reason_for_visit, status) VALUES (:num, :pid, :did, :date, :time, :reason, 'scheduled')");
+    $stmt->execute([
+        ':num'    => $appointment_number,
+        ':pid'    => $patient_id,
+        ':did'    => $doctor_id,
+        ':date'   => $appointment_date,
+        ':time'   => $appointment_time,
+        ':reason' => $reason_for_visit
     ]);
+    $appointment_id = (int) $db->lastInsertId();
 
-    $appointmentId = $db->lastInsertId();
+    // Generate QR code
+    $qrGenerator = new QRCodeGenerator($db);
+    $qrData = $qrGenerator->generateQRCode($appointment_id);
 
-    // Commit transaction
     $db->commit();
 
-    // Log audit
-    logAudit($db, $userId, 'book_appointment', 'appointments', $appointmentId, 'New appointment booked');
-    
-    // Get patient and doctor details first
-    $detailsQuery = "SELECT 
-                        p.full_name as patient_name,
-                        p.email as patient_email,
-                        p.contact_number as patient_phone,
-                        d.full_name as doctor_name,
-                        d.specialization,
-                        d.department,
-                        d.email as doctor_email,
-                        du.id as doctor_user_id
-                     FROM appointments a
-                     JOIN patients p ON a.patient_id = p.id
-                     JOIN doctors d ON a.doctor_id = d.id
-                     LEFT JOIN users du ON d.user_id = du.id
-                     WHERE a.id = :appointment_id";
-    $detailsStmt = $db->prepare($detailsQuery);
-    $detailsStmt->execute([
-        ':appointment_id' => $appointmentId
-    ]);
-    $details = $detailsStmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Create notification for patient
-    $notificationQuery = "INSERT INTO notifications (user_id, type, title, message, related_id, created_at) 
-                          VALUES (:user_id, 'appointment', :title, :message, :related_id, CURRENT_TIMESTAMP)";
-    $notificationStmt = $db->prepare($notificationQuery);
-    $notificationStmt->execute([
-        ':user_id' => $userId,
-        ':title' => 'Appointment Confirmed',
-        ':message' => "Your appointment with Dr. {$details['doctor_name']} on " . date('M j, Y', strtotime($appointmentDate)) . " at " . date('g:i A', strtotime($appointmentTime)) . " has been confirmed.",
-        ':related_id' => $appointmentId
-    ]);
-    
-    // Create notification for doctor
-    if ($details['doctor_user_id']) {
-        $doctorNotificationStmt = $db->prepare($notificationQuery);
-        $doctorNotificationStmt->execute([
-            ':user_id' => $details['doctor_user_id'],
-            ':title' => 'New Appointment',
-            ':message' => "New appointment from {$details['patient_name']} on " . date('M j, Y', strtotime($appointmentDate)) . " at " . date('g:i A', strtotime($appointmentTime)) . ".",
-            ':related_id' => $appointmentId
-        ]);
-    }
-
-    // Send email notifications
-    try {
-        $emailService = new EmailService();
-        $appointmentDetails = [
-            'appointment_number' => $appointmentNumber,
-            'doctor_name' => $details['doctor_name'],
-            'patient_name' => $details['patient_name'],
-            'patient_phone' => $details['patient_phone'],
-            'specialization' => $details['specialization'],
-            'department' => $details['department'],
-            'date' => date('F j, Y', strtotime($appointmentDate)),
-            'time' => date('g:i A', strtotime($appointmentTime)),
-            'reason' => $reasonForVisit
-        ];
-        
-        // Send confirmation email to patient
-        $patientEmailSent = $emailService->sendAppointmentConfirmation(
-            $details['patient_email'],
-            $details['patient_name'],
-            $appointmentDetails
-        );
-        
-        if ($patientEmailSent) {
-            error_log("Appointment confirmation email sent to patient: {$details['patient_email']}");
-        }
-        
-        // Send notification email to doctor
-        if (!empty($details['doctor_email'])) {
-            $doctorEmailSent = $emailService->sendDoctorAppointmentNotification(
-                $details['doctor_email'],
-                $details['doctor_name'],
-                $appointmentDetails
-            );
-            
-            if ($doctorEmailSent) {
-                error_log("Appointment notification email sent to doctor: {$details['doctor_email']}");
-            }
-        }
-    } catch (Exception $emailError) {
-        // Log error but don't fail the appointment booking
-        error_log("Email notification error: " . $emailError->getMessage());
-    }
+    logActivity($db, $userId, $_SESSION['username'] ?? '', 'patient', 'CREATE', 'Appointments', $appointment_id, "Appointment booked: $appointment_number");
 
     sendJSON([
-        'success' => true,
-        'message' => 'Appointment booked successfully! A confirmation email has been sent.',
+        'success'            => true,
+        'message'            => 'Appointment booked successfully',
         'appointment' => [
-            'id' => $appointmentId,
-            'appointment_number' => $appointmentNumber,
-            'appointment_date' => $appointmentDate,
-            'appointment_time' => $appointmentTime,
-            'doctor_name' => $details['doctor_name'],
-            'specialization' => $details['specialization']
+            'id'                 => $appointment_id,
+            'appointment_number' => $appointment_number,
+            'appointment_date'   => $appointment_date,
+            'appointment_time'   => $appointment_time,
+            'doctor_name'        => $doctor['full_name'],
+            'reason_for_visit'   => $reason_for_visit,
+            'status'             => 'scheduled',
+            'qr_image'           => $qrData['qr_image'],
+            'token_hash'         => $qrData['token_hash'],
+            'qr_expires_at'      => $qrData['expires_at']
         ]
-    ]);
+    ], 201);
 
 } catch (Exception $e) {
-    if (isset($db) && $db && $db->inTransaction()) {
-        $db->rollBack();
-    }
-    sendJSON(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
+    error_log("book-appointment error: " . $e->getMessage());
+    sendJSON(['success' => false, 'message' => 'Failed to book appointment. Please try again.'], 500);
 }
