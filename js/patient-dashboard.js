@@ -263,17 +263,24 @@ async function bookAppointment() {
             let htmlContent = `<p class="text-gray-600 mb-3">Your appointment has been confirmed!</p>
                 <div class="text-left bg-gray-50 rounded-lg p-3 text-sm space-y-1">
                     <p><span class="font-semibold">Number:</span> ${escHtml(appt.appointment_number || '')}</p>
-                    <p><span class="font-semibold">Doctor:</span> ${escHtml(appt.doctor_name || '')}</p>
+                    <p><span class="font-semibold">Doctor:</span> Dr. Maria Santos</p>
                     <p><span class="font-semibold">Date:</span> ${appt.appointment_date ? formatDate(appt.appointment_date) : ''}</p>
                     <p><span class="font-semibold">Time:</span> ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}</p>
-                </div>`;
+                </div>
+                ${appt.qr_image ? `
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-gray-500 mb-2">Your QR Code for Check-in:</p>
+                    <img src="${appt.qr_image}" alt="QR Code" class="w-40 h-40 mx-auto border rounded-lg p-1">
+                    <p class="text-xs text-gray-400 mt-1">Show this to the doctor when you arrive</p>
+                </div>` : ''}`;
 
             await Swal.fire({
                 icon:  'success',
                 title: 'Appointment Booked!',
                 html:  htmlContent,
                 confirmButtonText: 'View My Appointments',
-                confirmButtonColor: '#0d9488'
+                confirmButtonColor: '#0d9488',
+                width: '480px'
             });
 
             // Reset form
@@ -775,9 +782,9 @@ async function showQRModal(appointmentId) {
     if (modal) modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // Check if appointment already has qr_code_url
-    if (appt && appt.qr_code_url) {
-        renderQRImage(appt.qr_code_url);
+    // Check if appointment already has cached QR image
+    if (appt && appt.qr_image) {
+        renderQRImage(appt.qr_image);
     } else {
         await fetchQRCode(appointmentId);
     }
@@ -797,11 +804,11 @@ async function fetchQRCode(appointmentId) {
 
         hide('qrLoading');
 
-        if (data && data.success && data.qr_code) {
-            renderQRImage(data.qr_code);
+        if (data && data.success && data.qr_image) {
+            renderQRImage(data.qr_image);
             // Update cached appointment
             const cached = allAppointments.find(a => a.id == appointmentId);
-            if (cached) cached.qr_code_url = data.qr_code;
+            if (cached) cached.qr_image = data.qr_image;
         } else {
             showError(data?.message || 'Failed to generate QR code.');
             closeQRModal();
@@ -825,7 +832,7 @@ async function regenerateQR() {
     if (!currentQRApptId) return;
     // Remove cached qr
     const cached = allAppointments.find(a => a.id == currentQRApptId);
-    if (cached) cached.qr_code_url = null;
+    if (cached) cached.qr_image = null;
 
     await fetchQRCode(currentQRApptId);
 }

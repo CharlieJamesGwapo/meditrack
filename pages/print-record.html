@@ -9,88 +9,140 @@
     <style>
         @media print {
             .no-print { display: none !important; }
-            body { background: white; font-size: 12pt; }
-            .print-container { box-shadow: none; max-width: 100%; padding: 0; }
+            body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-page { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; border-radius: 0 !important; }
         }
         @page { margin: 1.5cm; size: A4; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="no-print fixed top-4 right-4 flex gap-2 z-50">
-        <button onclick="window.print()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition flex items-center gap-2">
-            <i class="fas fa-print"></i> Print
-        </button>
-        <button onclick="window.close()" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
-            <i class="fas fa-times"></i> Close
-        </button>
+<body class="bg-gray-200 min-h-screen">
+
+    <!-- Action Bar -->
+    <div class="no-print bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-heartbeat text-teal-600 text-xl"></i>
+                <span class="font-bold text-gray-800">MediTrack — Print Medical Record</span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition flex items-center gap-2 text-sm font-semibold">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button onclick="history.back()" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2 text-sm font-semibold">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="print-container max-w-3xl mx-auto bg-white shadow-lg my-8 p-8">
-        <div class="border-b-2 border-teal-600 pb-4 mb-6">
-            <div class="flex justify-between items-start">
+    <!-- Loading -->
+    <div id="loading" class="flex items-center justify-center py-32">
+        <i class="fas fa-spinner fa-spin text-teal-600 text-3xl mr-3"></i>
+        <span class="text-gray-500">Loading medical record...</span>
+    </div>
+
+    <!-- Error -->
+    <div id="errorMsg" class="hidden max-w-md mx-auto mt-20 text-center">
+        <i class="fas fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
+        <p class="text-gray-600 text-lg" id="errorText">Record not found.</p>
+        <button onclick="history.back()" class="mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg text-sm">Go Back</button>
+    </div>
+
+    <!-- Print Content -->
+    <div id="printContent" class="hidden print-page max-w-4xl mx-auto bg-white shadow-xl my-6 rounded-xl overflow-hidden">
+
+        <!-- Clinic Header -->
+        <div class="bg-gradient-to-r from-teal-700 to-blue-700 text-white px-8 py-5">
+            <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-bold text-teal-700">MediTrack</h1>
-                    <p class="text-gray-600 text-sm">Internal Medicine Clinic</p>
-                    <p class="text-gray-500 text-xs mt-1">Mon–Fri, 8:00 AM – 5:00 PM</p>
+                    <h1 class="text-2xl font-bold tracking-wide">MediTrack</h1>
+                    <p class="text-teal-200 text-sm">Internal Medicine Clinic</p>
                 </div>
-                <div class="text-right">
-                    <p class="font-semibold text-gray-700" id="aptNumber"></p>
-                    <p class="text-sm text-gray-500" id="aptDate"></p>
+                <div class="text-right text-sm">
+                    <p class="font-semibold text-lg" id="hdrApptNum"></p>
+                    <p class="text-teal-200" id="hdrDate"></p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
-            <div><p class="text-xs text-gray-500 uppercase">Patient Name</p><p class="font-semibold" id="patientName">—</p></div>
-            <div><p class="text-xs text-gray-500 uppercase">Date of Birth</p><p id="patientDOB">—</p></div>
-            <div><p class="text-xs text-gray-500 uppercase">Gender</p><p id="patientGender">—</p></div>
-            <div><p class="text-xs text-gray-500 uppercase">Contact</p><p id="patientContact">—</p></div>
+        <!-- Patient & Doctor Info -->
+        <div class="px-8 py-5 border-b">
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Patient Information</h3>
+                    <table class="text-sm w-full">
+                        <tr><td class="text-gray-500 pr-3 py-0.5 w-28">Name</td><td class="font-semibold text-gray-800" id="pName">—</td></tr>
+                        <tr><td class="text-gray-500 pr-3 py-0.5">Date of Birth</td><td id="pDob">—</td></tr>
+                        <tr><td class="text-gray-500 pr-3 py-0.5">Gender</td><td id="pGender">—</td></tr>
+                        <tr><td class="text-gray-500 pr-3 py-0.5">Contact</td><td id="pContact">—</td></tr>
+                        <tr><td class="text-gray-500 pr-3 py-0.5">Blood Group</td><td class="font-semibold text-red-600" id="pBlood">—</td></tr>
+                        <tr id="pAllergiesRow"><td class="text-gray-500 pr-3 py-0.5">Allergies</td><td class="text-orange-600 font-semibold" id="pAllergies">—</td></tr>
+                    </table>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Attending Physician</h3>
+                    <table class="text-sm w-full">
+                        <tr><td class="text-gray-500 pr-3 py-0.5 w-28">Doctor</td><td class="font-semibold text-teal-700" id="dName">—</td></tr>
+                        <tr><td class="text-gray-500 pr-3 py-0.5">Specialization</td><td id="dSpec">—</td></tr>
+                        <tr><td class="text-gray-500 pr-3 py-0.5">License No.</td><td id="dLicense">—</td></tr>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-6">
-            <p class="text-xs text-gray-500 uppercase">Attending Physician</p>
-            <p class="font-semibold text-teal-700" id="doctorName">—</p>
-            <p class="text-sm text-gray-500" id="doctorSpec">Internal Medicine</p>
+        <!-- Vital Signs -->
+        <div class="px-8 py-4 border-b" id="vitalsSection">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Vital Signs</h3>
+            <div class="grid grid-cols-5 gap-3" id="vitalsGrid"></div>
         </div>
 
-        <div class="mb-6" id="vitalsSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-3">Vital Signs</h3>
-            <div class="grid grid-cols-5 gap-3 text-center" id="vitalsGrid"></div>
+        <!-- Chief Complaint -->
+        <div class="px-8 py-4 border-b" id="complaintSec">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Chief Complaint</h3>
+            <p class="text-gray-800" id="complaint">—</p>
         </div>
 
-        <div class="mb-4" id="complaintSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Chief Complaint</h3>
-            <p class="text-gray-800" id="chiefComplaint">—</p>
+        <!-- Symptoms -->
+        <div class="px-8 py-4 border-b" id="symptomsSec">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Symptoms</h3>
+            <p class="text-gray-800" id="symptoms">—</p>
         </div>
 
-        <div class="mb-4" id="diagnosisSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Diagnosis</h3>
-            <p class="text-gray-800" id="diagnosis">—</p>
+        <!-- Diagnosis -->
+        <div class="px-8 py-4 border-b bg-teal-50" id="diagnosisSec">
+            <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider mb-2"><i class="fas fa-stethoscope mr-1"></i> Diagnosis</h3>
+            <p class="text-gray-900 font-semibold text-lg" id="diagnosis">—</p>
         </div>
 
-        <div class="mb-4" id="prescriptionSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Prescription</h3>
-            <p class="text-gray-800 whitespace-pre-line" id="prescription">—</p>
+        <!-- Prescription -->
+        <div class="px-8 py-4 border-b bg-blue-50" id="prescriptionSec">
+            <h3 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2"><i class="fas fa-prescription mr-1"></i> Prescription</h3>
+            <pre class="text-gray-800 whitespace-pre-wrap font-sans text-sm" id="prescription">—</pre>
         </div>
 
-        <div class="mb-4" id="labSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Lab Tests Ordered</h3>
-            <p class="text-gray-800 whitespace-pre-line" id="labTests">—</p>
+        <!-- Lab Tests -->
+        <div class="px-8 py-4 border-b" id="labSec">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2"><i class="fas fa-flask mr-1"></i> Lab Tests Ordered</h3>
+            <pre class="text-gray-800 whitespace-pre-wrap font-sans text-sm" id="labTests">—</pre>
         </div>
 
-        <div class="mb-4" id="notesSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Notes</h3>
-            <p class="text-gray-800 whitespace-pre-line" id="notes">—</p>
+        <!-- Notes -->
+        <div class="px-8 py-4 border-b" id="notesSec">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Doctor's Notes</h3>
+            <p class="text-gray-800 text-sm" id="notes">—</p>
         </div>
 
-        <div class="mb-6" id="followupSection">
-            <h3 class="text-sm font-bold text-gray-700 uppercase border-b pb-1 mb-2">Follow-up Date</h3>
-            <p class="text-gray-800 font-semibold" id="followUp">—</p>
+        <!-- Follow-up -->
+        <div class="px-8 py-4 border-b" id="followupSec">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Follow-up Date</h3>
+            <p class="text-teal-700 font-semibold" id="followUp">—</p>
         </div>
 
-        <div class="border-t pt-4 mt-8 text-center text-xs text-gray-400">
-            <p>This is a computer-generated document.</p>
-            <p>Printed on: <span id="printDate"></span></p>
+        <!-- Footer -->
+        <div class="px-8 py-4 bg-gray-50 text-center text-xs text-gray-400">
+            <p>This is a computer-generated document from MediTrack Internal Medicine Clinic.</p>
+            <p class="mt-1">Printed on: <span id="printDate"></span></p>
         </div>
     </div>
 
@@ -101,56 +153,117 @@
         const recordId = params.get('id');
 
         if (!recordId) {
-            document.querySelector('.print-container').innerHTML = '<p class="text-center text-red-500 py-20">No record ID specified.</p>';
+            showError('No record ID specified.');
         } else {
             loadRecord();
         }
 
         async function loadRecord() {
-            const data = await apiRequest('/patient/get-medical-records.php');
-            if (data && data.success) {
-                const record = data.records.find(r => r.id == recordId);
-                if (record) { renderRecord(record); return; }
+            try {
+                const data = await apiRequest(`/patient/get-record-detail.php?id=${recordId}`);
+                if (data && data.success && data.record) {
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('printContent').classList.remove('hidden');
+                    render(data.record);
+                } else {
+                    showError(data?.message || 'Record not found.');
+                }
+            } catch (err) {
+                showError('Could not load medical record.');
             }
-            document.querySelector('.print-container').innerHTML = '<p class="text-center text-gray-500 py-20">Record not found.</p>';
         }
 
-        function renderRecord(r) {
-            document.getElementById('aptNumber').textContent = r.appointment_number || '';
-            document.getElementById('aptDate').textContent = fmtDate(r.appointment_date) + ' at ' + fmtTime(r.appointment_time);
-            document.getElementById('patientName').textContent = r.patient_name || r.full_name || '—';
-            document.getElementById('patientDOB').textContent = r.date_of_birth ? fmtDate(r.date_of_birth) : '—';
-            document.getElementById('patientGender').textContent = r.gender || '—';
-            document.getElementById('patientContact').textContent = r.contact_number || '—';
-            document.getElementById('doctorName').textContent = r.doctor_name || '—';
-            document.getElementById('doctorSpec').textContent = r.specialization || 'Internal Medicine';
-
-            const vitals = typeof r.vital_signs === 'string' ? JSON.parse(r.vital_signs) : (r.vital_signs || {});
-            document.getElementById('vitalsGrid').innerHTML = [
-                { l: 'Blood Pressure', v: vitals.bp, u: 'mmHg' },
-                { l: 'Temperature', v: vitals.temp, u: '°C' },
-                { l: 'Heart Rate', v: vitals.heart_rate, u: 'bpm' },
-                { l: 'Weight', v: vitals.weight, u: 'kg' },
-                { l: 'Height', v: vitals.height, u: 'cm' }
-            ].map(x => `<div class="bg-gray-50 p-2 rounded"><p class="text-xs text-gray-500">${x.l}</p><p class="font-semibold text-sm">${x.v || '—'} ${x.v ? x.u : ''}</p></div>`).join('');
-
-            set('chiefComplaint', r.chief_complaint);
-            set('diagnosis', r.diagnosis);
-            set('prescription', r.prescription);
-            set('labTests', r.lab_tests_ordered);
-            set('notes', r.notes);
-            document.getElementById('followUp').textContent = r.follow_up_date ? fmtDate(r.follow_up_date) : 'None scheduled';
-
-            if (!r.chief_complaint) hide('complaintSection');
-            if (!r.lab_tests_ordered) hide('labSection');
-            if (!r.notes) hide('notesSection');
-            document.getElementById('printDate').textContent = new Date().toLocaleString();
+        function showError(msg) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('errorMsg').classList.remove('hidden');
+            document.getElementById('errorText').textContent = msg;
         }
 
-        function set(id, v) { document.getElementById(id).textContent = v || '—'; }
-        function hide(id) { document.getElementById(id).style.display = 'none'; }
-        function fmtDate(d) { return d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—'; }
-        function fmtTime(t) { if(!t)return''; const[h,m]=t.split(':'); const hr=parseInt(h); return `${hr>12?hr-12:hr||12}:${m} ${hr>=12?'PM':'AM'}`; }
+        function render(r) {
+            // Header
+            setText('hdrApptNum', r.appointment_number || '');
+            setText('hdrDate', fmtDate(r.appointment_date) + ' at ' + fmtTime(r.appointment_time));
+
+            // Patient
+            setText('pName', r.patient_name || '—');
+            setText('pDob', r.date_of_birth ? fmtDate(r.date_of_birth) : '—');
+            setText('pGender', r.gender || '—');
+            setText('pContact', r.contact_number || '—');
+            setText('pBlood', r.blood_group || '—');
+            if (r.allergies) {
+                setText('pAllergies', r.allergies);
+            } else {
+                document.getElementById('pAllergiesRow').style.display = 'none';
+            }
+
+            // Doctor
+            setText('dName', r.doctor_name || '—');
+            setText('dSpec', r.specialization || 'Internal Medicine');
+            setText('dLicense', r.license_number || '—');
+
+            // Vital Signs
+            const vs = r.vital_signs || {};
+            const vitals = [
+                { label: 'Blood Pressure', value: vs.bp, unit: 'mmHg', color: 'bg-red-50 text-red-700', icon: 'fa-heart-pulse' },
+                { label: 'Temperature', value: vs.temperature || vs.temp, unit: '°C', color: 'bg-orange-50 text-orange-700', icon: 'fa-temperature-half' },
+                { label: 'Heart Rate', value: vs.heart_rate, unit: 'bpm', color: 'bg-pink-50 text-pink-700', icon: 'fa-heartbeat' },
+                { label: 'Weight', value: vs.weight, unit: 'kg', color: 'bg-blue-50 text-blue-700', icon: 'fa-weight-scale' },
+                { label: 'Height', value: vs.height, unit: 'cm', color: 'bg-purple-50 text-purple-700', icon: 'fa-ruler-vertical' }
+            ];
+
+            const hasVitals = vitals.some(v => v.value);
+            if (hasVitals) {
+                document.getElementById('vitalsGrid').innerHTML = vitals.map(v => `
+                    <div class="rounded-lg p-3 text-center ${v.color} border">
+                        <i class="fas ${v.icon} text-xs mb-1 block opacity-60"></i>
+                        <p class="text-xs opacity-75">${v.label}</p>
+                        <p class="font-bold text-lg">${v.value || '—'}</p>
+                        ${v.value ? `<p class="text-xs opacity-60">${v.unit}</p>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                hideEl('vitalsSection');
+            }
+
+            // Content sections
+            setOrHide('complaint', 'complaintSec', r.chief_complaint);
+            setOrHide('symptoms', 'symptomsSec', r.symptoms);
+            setOrHide('diagnosis', 'diagnosisSec', r.diagnosis);
+            setOrHide('prescription', 'prescriptionSec', r.prescription);
+            setOrHide('labTests', 'labSec', r.lab_tests_ordered);
+            setOrHide('notes', 'notesSec', r.notes);
+
+            if (r.follow_up_date) {
+                setText('followUp', fmtDate(r.follow_up_date));
+            } else {
+                setText('followUp', 'No follow-up scheduled');
+            }
+
+            document.getElementById('printDate').textContent = new Date().toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+        function hideEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+        function setOrHide(contentId, sectionId, value) {
+            if (value && value.trim()) {
+                setText(contentId, value);
+            } else {
+                hideEl(sectionId);
+            }
+        }
+        function fmtDate(d) {
+            if (!d) return '—';
+            return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        function fmtTime(t) {
+            if (!t) return '';
+            const [h, m] = t.split(':');
+            const hr = parseInt(h);
+            return `${hr > 12 ? hr - 12 : (hr || 12)}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+        }
     </script>
 </body>
 </html>

@@ -42,8 +42,9 @@ try {
     $stmt = $db->prepare("
         SELECT a.id as appointment_id, a.appointment_number, a.appointment_date, a.appointment_time,
                a.reason_for_visit, a.status,
-               p.id as patient_id, p.full_name as patient_name, p.date_of_birth, p.gender,
-               p.blood_group, p.allergies, p.contact_number,
+               p.id as patient_id, p.full_name as patient_name, p.date_of_birth as patient_dob, p.gender as patient_gender,
+               p.blood_group, p.allergies, p.contact_number as patient_contact,
+               p.emergency_contact_name, p.emergency_contact_number,
                d.full_name as doctor_name, d.specialization
         FROM appointments a
         JOIN patients p ON a.patient_id = p.id
