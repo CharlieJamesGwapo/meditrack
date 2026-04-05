@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard — MediTrack</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/logo.jpg">
-    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/logo.jpg">
-
     <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome 6.4 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
@@ -141,9 +137,8 @@
 <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-teal-700 text-white shadow-2xl flex flex-col">
     <!-- Logo -->
     <div class="p-5 border-b border-teal-600 flex items-center space-x-3 flex-shrink-0">
-        <div class="w-11 h-11 rounded-full overflow-hidden bg-white p-0.5 shadow-lg flex-shrink-0">
-            <img src="../assets/images/logo.jpg" alt="MediTrack" class="w-full h-full object-cover rounded-full"
-                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><rect width=%2240%22 height=%2240%22 fill=%22%230d9488%22 rx=%2220%22/><text x=%2220%22 y=%2226%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22>M</text></svg>'">
+        <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center shadow-lg flex-shrink-0">
+            <i class="fas fa-heartbeat text-teal-600 text-xl"></i>
         </div>
         <div>
             <h1 class="text-lg font-bold font-poppins leading-tight">MediTrack</h1>
@@ -253,22 +248,23 @@
             </div>
 
             <!-- Quick links -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <button onclick="switchTab('appointments')"
-                        class="bg-teal-600 hover:bg-teal-700 text-white rounded-xl p-4 text-sm font-semibold transition shadow flex flex-col items-center space-y-2">
-                    <i class="fas fa-calendar-check text-xl"></i><span>Appointments</span>
+                        class="bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
+                    <i class="fas fa-calendar-check text-2xl"></i><span>Appointments</span>
                 </button>
                 <button onclick="switchTab('patients')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-4 text-sm font-semibold transition shadow flex flex-col items-center space-y-2">
-                    <i class="fas fa-users text-xl"></i><span>Patients</span>
+                        class="bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
+                    <i class="fas fa-users text-2xl"></i><span>Patients</span>
                 </button>
                 <button onclick="switchTab('schedule')"
-                        class="bg-purple-600 hover:bg-purple-700 text-white rounded-xl p-4 text-sm font-semibold transition shadow flex flex-col items-center space-y-2">
-                    <i class="fas fa-clock text-xl"></i><span>Schedule</span>
+                        class="bg-gradient-to-br from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
+                    <i class="fas fa-clock text-2xl"></i><span>Schedule</span>
                 </button>
                 <button onclick="switchTab('reports')"
-                        class="bg-orange-500 hover:bg-orange-600 text-white rounded-xl p-4 text-sm font-semibold transition shadow flex flex-col items-center space-y-2">
-                    <i class="fas fa-chart-bar text-xl"></i><span>Reports</span>
+                        class="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-xl p-5 text-sm font-semibold transition shadow-md flex flex-col items-center space-y-2">
+                    <i class="fas fa-chart-bar text-2xl"></i><span>Reports</span>
                 </button>
             </div>
         </div>
