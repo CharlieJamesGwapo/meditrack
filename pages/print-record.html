@@ -9,23 +9,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome 6.4 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
+    <!-- Google Fonts: DM Sans + Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
-        h1, h2, h3, h4, h5 { font-family: 'Poppins', 'Inter', sans-serif; }
+
+        h1, h2, h3, h4, h5, .outfit {
+            font-family: 'Outfit', sans-serif;
+        }
 
         /* ── Print styles ── */
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
             .print-page {
                 box-shadow: none !important;
                 margin: 0 !important;
@@ -33,10 +41,16 @@
                 border-radius: 0 !important;
             }
             .print-page .section-card { break-inside: avoid; }
+            /* Show signature block only when printing */
+            .print-only { display: block !important; }
         }
+
         @page { margin: 1.2cm 1.5cm; size: A4 portrait; }
 
-        /* ── Screen wrapper ── */
+        /* Hidden by default, shown only on print */
+        .print-only { display: none; }
+
+        /* ── Screen background ── */
         .page-bg { background: #e5e7eb; min-height: 100vh; }
 
         /* ── Action bar ── */
@@ -48,14 +62,14 @@
             z-index: 50;
         }
 
-        /* ── Print card ── */
+        /* ── Print document card ── */
         .print-page {
             background: #fff;
             max-width: 860px;
             margin: 24px auto;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
         }
 
         /* ── Clinic header gradient ── */
@@ -68,74 +82,147 @@
         /* ── Section cards ── */
         .section-card { padding: 20px 36px; border-bottom: 1px solid #f1f5f9; }
         .section-card:last-child { border-bottom: none; }
+
         .section-label {
             font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             color: #94a3b8;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 6px;
+            font-family: 'DM Sans', sans-serif;
         }
         .section-label i { font-size: 11px; }
 
-        /* ── Vital chips ── */
+        /* ── Vital sign colored cards ── */
         .vital-chip {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            padding: 12px 10px;
-            border-radius: 10px;
+            padding: 14px 12px;
+            border-radius: 12px;
             border: 1px solid;
-            min-width: 100px;
+            min-width: 108px;
+            flex: 1 1 auto;
+        }
+        .vital-chip .vital-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .vital-chip .vital-label {
+            font-size: 11px;
+            opacity: 0.75;
+            margin-bottom: 4px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .vital-chip .vital-unit {
+            font-size: 10px;
+            opacity: 0.60;
+            margin-top: 2px;
         }
 
-        /* ── Table rows ── */
+        /* ── Info table rows ── */
         .info-row td { padding: 3px 0; font-size: 13px; vertical-align: top; }
-        .info-row td:first-child { color: #94a3b8; width: 120px; padding-right: 12px; white-space: nowrap; }
+        .info-row td:first-child {
+            color: #94a3b8;
+            width: 120px;
+            padding-right: 12px;
+            white-space: nowrap;
+            font-size: 12px;
+        }
         .info-row td:last-child { color: #1f2937; font-weight: 500; }
 
-        /* ── Doctor signature line ── */
-        .sig-line { border-top: 1.5px solid #cbd5e1; margin-top: 8px; padding-top: 6px; font-size: 11px; color: #64748b; }
+        /* ── Doctor signature line (print only) ── */
+        .sig-line {
+            border-top: 1.5px solid #cbd5e1;
+            margin-top: 32px;
+            padding-top: 6px;
+            font-size: 11px;
+            color: #64748b;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── Content text ── */
+        .content-text {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: #1f2937;
+            line-height: 1.65;
+        }
 
         /* ── Loading / Error states ── */
-        .state-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; }
+        .state-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            gap: 16px;
+        }
 
+        /* ── Appointment badge in header ── */
+        .appt-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            margin-top: 8px;
+        }
+
+        /* ── Mobile responsive ── */
         @media (max-width: 640px) {
             .clinic-header { padding: 20px 20px; }
             .section-card { padding: 16px 20px; }
-            .info-row td:first-child { width: 100px; font-size: 12px; }
+            .info-row td:first-child { width: 96px; font-size: 11px; }
             .info-row td:last-child { font-size: 12px; }
-            .vital-chip { min-width: 80px; padding: 10px 6px; }
+            .vital-chip { min-width: 80px; padding: 10px 8px; }
+            .vital-chip .vital-value { font-size: 1rem; }
+            .print-page { border-radius: 0; margin: 0; }
         }
+
+        /* ── Spinner animation ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fa-spin { animation: spin 1s linear infinite; display: inline-block; }
     </style>
 </head>
 <body class="page-bg">
 
-    <!-- ── Action Bar ── -->
+    <!-- ── Action Bar (hidden on print) ── -->
     <div class="action-bar no-print">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
                 <i class="fas fa-heart-pulse text-xl" style="color:#0891b2;"></i>
                 <div>
-                    <span class="font-bold text-gray-800 text-sm" style="font-family:'Poppins',sans-serif;">MediTrack</span>
-                    <span class="hidden sm:inline text-gray-400 text-sm ml-1">— Medical Record</span>
+                    <span class="outfit font-bold text-gray-800 text-sm">MediTrack</span>
+                    <span class="hidden sm:inline text-gray-400 text-sm ml-1.5">— Medical Record</span>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="window.print()"
+                <button id="printBtn"
+                        onclick="window.print()"
                         class="flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl min-h-[40px] transition-all"
-                        style="background:#0891b2;"
-                        onmouseover="this.style.background='#0e7490'" onmouseout="this.style.background='#0891b2'">
-                    <i class="fas fa-print"></i>
+                        style="background:#0891b2; font-family:'DM Sans',sans-serif;"
+                        onmouseover="this.style.background='#0e7490'"
+                        onmouseout="this.style.background='#0891b2'">
+                    <i class="fas fa-print text-sm"></i>
                     <span>Print</span>
                 </button>
                 <button onclick="history.back()"
-                        class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl min-h-[40px] transition-all">
-                    <i class="fas fa-arrow-left"></i>
+                        class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl min-h-[40px] transition-all"
+                        style="font-family:'DM Sans',sans-serif;">
+                    <i class="fas fa-arrow-left text-sm"></i>
                     <span class="hidden sm:inline">Back</span>
                 </button>
             </div>
@@ -144,10 +231,13 @@
 
     <!-- ── Loading State ── -->
     <div id="loading" class="state-center no-print">
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:#f0fdfa;">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background:#f0fdfa; border:1px solid #ccfbf1;">
             <i class="fas fa-spinner fa-spin text-2xl" style="color:#0891b2;"></i>
         </div>
-        <p class="text-gray-500 text-sm font-medium">Loading medical record&hellip;</p>
+        <div class="text-center">
+            <p class="text-gray-700 font-semibold text-sm" style="font-family:'DM Sans',sans-serif;">Loading medical record&hellip;</p>
+            <p class="text-gray-400 text-xs mt-1" style="font-family:'DM Sans',sans-serif;">Please wait a moment</p>
+        </div>
     </div>
 
     <!-- ── Error State ── -->
@@ -156,170 +246,244 @@
             <i class="fas fa-triangle-exclamation text-2xl text-red-400"></i>
         </div>
         <div class="text-center">
-            <p class="text-gray-700 font-semibold mb-1" id="errorText">Record not found.</p>
-            <p class="text-gray-400 text-sm mb-4">The requested medical record could not be loaded.</p>
+            <p class="text-gray-800 font-semibold mb-1 outfit" id="errorText">Record not found.</p>
+            <p class="text-gray-400 text-sm mb-5" style="font-family:'DM Sans',sans-serif;">The requested medical record could not be loaded.</p>
             <button onclick="history.back()"
-                    class="px-5 py-2.5 text-white text-sm font-semibold rounded-xl"
-                    style="background:#0891b2;">
-                <i class="fas fa-arrow-left mr-1.5"></i>Go Back
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-xl"
+                    style="background:#0891b2; font-family:'DM Sans',sans-serif;">
+                <i class="fas fa-arrow-left"></i>Go Back
             </button>
         </div>
     </div>
 
-    <!-- ── Print Content ── -->
+    <!-- ── Print Document ── -->
     <div id="printContent" class="hidden print-page">
 
-        <!-- Clinic Header -->
+        <!-- Clinic Header with gradient banner -->
         <div class="clinic-header">
             <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <!-- Left: Clinic branding -->
                 <div>
                     <div class="flex items-center gap-2.5 mb-1">
                         <i class="fas fa-heart-pulse text-2xl" style="color:#a5f3fc;"></i>
-                        <h1 class="text-2xl font-bold tracking-wide">MediTrack</h1>
+                        <h1 class="text-2xl font-bold tracking-wide" style="font-family:'Outfit',sans-serif;">MediTrack</h1>
                     </div>
-                    <p class="text-sm" style="color:rgba(255,255,255,0.75);">Internal Medicine Clinic</p>
-                    <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.55);">Official Medical Record Document</p>
+                    <p class="text-sm" style="color:rgba(255,255,255,0.80); font-family:'DM Sans',sans-serif;">Internal Medicine Clinic</p>
+                    <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.55); font-family:'DM Sans',sans-serif;">Official Medical Record Document</p>
                 </div>
-                <div class="text-left sm:text-right text-sm">
-                    <p class="font-bold text-lg tracking-wide" id="hdrApptNum" style="color:#a5f3fc;"></p>
-                    <p id="hdrDate" style="color:rgba(255,255,255,0.8);"></p>
-                    <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                         style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);">
-                        <i class="fas fa-circle-check text-xs"></i> Official Record
+                <!-- Right: Appointment info -->
+                <div class="sm:text-right">
+                    <p id="hdrApptNum"
+                       class="font-bold text-lg tracking-wide outfit"
+                       style="color:#a5f3fc;"></p>
+                    <p id="hdrDate"
+                       class="text-sm mt-0.5"
+                       style="color:rgba(255,255,255,0.80); font-family:'DM Sans',sans-serif;"></p>
+                    <div class="appt-badge">
+                        <i class="fas fa-circle-check text-xs"></i>
+                        <span style="font-family:'DM Sans',sans-serif;">Official Record</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Patient & Doctor Info -->
+        <!-- Patient Info + Attending Physician -->
         <div class="section-card">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                <!-- Patient Information -->
                 <div>
-                    <div class="section-label"><i class="fas fa-id-card"></i> Patient Information</div>
+                    <div class="section-label">
+                        <i class="fas fa-id-card"></i> Patient Information
+                    </div>
                     <table class="w-full">
                         <tbody>
-                            <tr class="info-row"><td>Name</td><td class="font-semibold text-gray-900" id="pName">—</td></tr>
-                            <tr class="info-row"><td>Date of Birth</td><td id="pDob">—</td></tr>
-                            <tr class="info-row"><td>Gender</td><td id="pGender">—</td></tr>
-                            <tr class="info-row"><td>Contact</td><td id="pContact">—</td></tr>
+                            <tr class="info-row">
+                                <td>Full Name</td>
+                                <td class="font-semibold" style="color:#0f172a;" id="pName">—</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td>Date of Birth</td>
+                                <td id="pDob">—</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td>Gender</td>
+                                <td id="pGender">—</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td>Contact</td>
+                                <td id="pContact">—</td>
+                            </tr>
                             <tr class="info-row">
                                 <td>Blood Group</td>
-                                <td><span id="pBlood" class="font-bold" style="color:#dc2626;">—</span></td>
+                                <td>
+                                    <span id="pBlood"
+                                          class="font-bold outfit"
+                                          style="color:#dc2626;">—</span>
+                                </td>
                             </tr>
                             <tr class="info-row" id="pAllergiesRow">
                                 <td>Allergies</td>
-                                <td><span id="pAllergies" class="font-semibold" style="color:#d97706;">—</span></td>
+                                <td>
+                                    <span id="pAllergies"
+                                          class="font-semibold"
+                                          style="color:#d97706;">—</span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Attending Physician -->
                 <div>
-                    <div class="section-label"><i class="fas fa-user-doctor"></i> Attending Physician</div>
+                    <div class="section-label">
+                        <i class="fas fa-user-doctor"></i> Attending Physician
+                    </div>
                     <table class="w-full">
                         <tbody>
-                            <tr class="info-row"><td>Doctor</td><td class="font-semibold" style="color:#0891b2;" id="dName">—</td></tr>
-                            <tr class="info-row"><td>Specialization</td><td id="dSpec">—</td></tr>
-                            <tr class="info-row"><td>License No.</td><td id="dLicense">—</td></tr>
+                            <tr class="info-row">
+                                <td>Doctor</td>
+                                <td class="font-semibold" style="color:#0891b2;" id="dName">—</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td>Specialization</td>
+                                <td id="dSpec">—</td>
+                            </tr>
+                            <tr class="info-row">
+                                <td>License No.</td>
+                                <td id="dLicense">—</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <!-- Signature area (print only) -->
-                    <div class="mt-6 hidden print:block">
+                    <!-- Signature area — visible only when printing -->
+                    <div class="print-only">
                         <div class="sig-line">Physician's Signature over Printed Name</div>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- Vital Signs -->
+        <!-- Vital Signs in colored cards -->
         <div class="section-card" id="vitalsSection">
-            <div class="section-label"><i class="fas fa-heart-pulse"></i> Vital Signs</div>
+            <div class="section-label">
+                <i class="fas fa-heart-pulse"></i> Vital Signs
+            </div>
             <div class="flex flex-wrap gap-3" id="vitalsGrid"></div>
         </div>
 
         <!-- Chief Complaint -->
         <div class="section-card" id="complaintSec">
-            <div class="section-label"><i class="fas fa-comment-medical"></i> Chief Complaint</div>
-            <p class="text-gray-800 text-sm leading-relaxed" id="complaint">—</p>
+            <div class="section-label">
+                <i class="fas fa-comment-medical"></i> Chief Complaint
+            </div>
+            <p class="content-text" id="complaint">—</p>
         </div>
 
         <!-- Symptoms -->
         <div class="section-card" id="symptomsSec">
-            <div class="section-label"><i class="fas fa-list-check"></i> Symptoms</div>
-            <p class="text-gray-800 text-sm leading-relaxed" id="symptoms">—</p>
+            <div class="section-label">
+                <i class="fas fa-list-check"></i> Symptoms
+            </div>
+            <p class="content-text" id="symptoms">—</p>
         </div>
 
-        <!-- Diagnosis -->
+        <!-- Diagnosis — teal tinted background -->
         <div class="section-card" id="diagnosisSec" style="background:#f0fdfa;">
-            <div class="section-label" style="color:#0891b2;"><i class="fas fa-stethoscope"></i> Diagnosis</div>
-            <p class="text-gray-900 font-semibold text-base leading-relaxed" id="diagnosis">—</p>
+            <div class="section-label" style="color:#0891b2;">
+                <i class="fas fa-stethoscope"></i> Diagnosis
+            </div>
+            <p class="content-text font-semibold text-base" style="color:#0f172a;" id="diagnosis">—</p>
         </div>
 
-        <!-- Prescription -->
+        <!-- Prescription — blue tinted background -->
         <div class="section-card" id="prescriptionSec" style="background:#eff6ff;">
-            <div class="section-label" style="color:#2563eb;"><i class="fas fa-prescription"></i> Prescription</div>
-            <pre class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed font-sans" id="prescription">—</pre>
+            <div class="section-label" style="color:#2563eb;">
+                <i class="fas fa-prescription"></i> Prescription
+            </div>
+            <pre class="content-text whitespace-pre-wrap" id="prescription">—</pre>
         </div>
 
-        <!-- Lab Tests -->
+        <!-- Lab Tests Ordered -->
         <div class="section-card" id="labSec">
-            <div class="section-label"><i class="fas fa-flask"></i> Lab Tests Ordered</div>
-            <pre class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed font-sans" id="labTests">—</pre>
+            <div class="section-label">
+                <i class="fas fa-flask"></i> Lab Tests Ordered
+            </div>
+            <pre class="content-text whitespace-pre-wrap" id="labTests">—</pre>
         </div>
 
         <!-- Doctor's Notes -->
         <div class="section-card" id="notesSec">
-            <div class="section-label"><i class="fas fa-pen-to-square"></i> Doctor's Notes</div>
-            <p class="text-gray-800 text-sm leading-relaxed" id="notes">—</p>
+            <div class="section-label">
+                <i class="fas fa-pen-to-square"></i> Doctor's Notes
+            </div>
+            <p class="content-text" id="notes">—</p>
         </div>
 
-        <!-- Follow-up -->
+        <!-- Follow-up Date -->
         <div class="section-card" id="followupSec">
-            <div class="section-label"><i class="fas fa-calendar-check"></i> Follow-up</div>
-            <p class="font-semibold text-sm" style="color:#0891b2;" id="followUp">—</p>
+            <div class="section-label">
+                <i class="fas fa-calendar-check"></i> Follow-up Appointment
+            </div>
+            <p class="font-semibold outfit" style="color:#0891b2; font-size:15px;" id="followUp">—</p>
         </div>
 
         <!-- Document Footer -->
-        <div class="section-card" style="background:#f8fafc;text-align:center;">
-            <p class="text-xs text-gray-400 mb-1">This is a computer-generated document from MediTrack Internal Medicine Clinic.</p>
-            <p class="text-xs text-gray-400">Printed on: <span id="printDate" class="font-medium text-gray-500"></span></p>
+        <div class="section-card" style="background:#f8fafc; text-align:center; padding-top:18px; padding-bottom:22px;">
+            <p class="text-xs text-gray-400 mb-1" style="font-family:'DM Sans',sans-serif;">
+                This is a computer-generated document from MediTrack Internal Medicine Clinic.
+            </p>
+            <p class="text-xs text-gray-400" style="font-family:'DM Sans',sans-serif;">
+                Printed on: <span id="printDate" class="font-medium text-gray-500"></span>
+            </p>
             <div class="flex items-center justify-center gap-1.5 mt-3">
                 <i class="fas fa-shield-halved text-xs" style="color:#0891b2;"></i>
-                <span class="text-xs" style="color:#0891b2;">Confidential Medical Document — For Patient Use Only</span>
+                <span class="text-xs font-medium" style="color:#0891b2; font-family:'DM Sans',sans-serif;">
+                    Confidential Medical Document — For Authorized Use Only
+                </span>
             </div>
         </div>
 
     </div>
 
-    <!-- bottom spacer on screen -->
-    <div class="no-print h-8"></div>
+    <!-- Bottom spacer (screen only) -->
+    <div class="no-print h-10"></div>
 
     <script>
-        // ── Auth guard (graceful: uses sessionStorage, no external dependency) ──
-        (function() {
+        // ── Auth guard — uses sessionStorage only, no auth.js dependency ──
+        (function () {
             try {
                 const user = JSON.parse(sessionStorage.getItem('user') || 'null');
                 if (!user) {
                     window.location.replace('login.html');
                 }
-            } catch(e) { /* allow through if sessionStorage unavailable */ }
+            } catch (e) {
+                // Allow through if sessionStorage is unavailable (e.g. print preview)
+            }
         })();
 
-        // ── Load record ──
+        // ── Resolve record ID from query string ──
         const params   = new URLSearchParams(window.location.search);
         const recordId = params.get('id');
 
         if (!recordId) {
-            showError('No record ID specified. Please go back and try again.');
+            showError('No record ID specified. Please go back and select a valid record.');
         } else {
             loadRecord();
         }
 
+        // ── Fetch medical record from API ──
         async function loadRecord() {
             try {
                 const res  = await fetch(`../api/patient/get-record-detail.php?id=${encodeURIComponent(recordId)}`, {
                     credentials: 'same-origin',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
                 const data = await res.json();
 
                 if (data && data.success && data.record) {
@@ -327,64 +491,70 @@
                     document.getElementById('printContent').classList.remove('hidden');
                     render(data.record);
                 } else {
-                    showError(data?.message || 'Record not found.');
+                    showError(data?.message || 'Record not found or access denied.');
                 }
             } catch (err) {
-                console.error(err);
-                showError('Could not load medical record. Please check your connection and try again.');
+                console.error('[print-record] fetch error:', err);
+                showError('Could not load the medical record. Please check your connection and try again.');
             }
         }
 
+        // ── Show error state ──
         function showError(msg) {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('errorMsg').classList.remove('hidden');
             document.getElementById('errorText').textContent = msg;
         }
 
+        // ── Render data into the document ──
         function render(r) {
             // Header
-            setText('hdrApptNum', r.appointment_number ? 'Appt # ' + r.appointment_number : '');
-            setText('hdrDate', r.appointment_date
-                ? fmtDate(r.appointment_date) + (r.appointment_time ? ' at ' + fmtTime(r.appointment_time) : '')
-                : '');
+            setText('hdrApptNum', r.appointment_number ? 'Appointment #' + r.appointment_number : '');
+            setText('hdrDate',
+                r.appointment_date
+                    ? fmtDate(r.appointment_date) + (r.appointment_time ? '  ·  ' + fmtTime(r.appointment_time) : '')
+                    : ''
+            );
 
-            // Patient
+            // Patient info
             setText('pName',    r.patient_name    || '—');
             setText('pDob',     r.date_of_birth   ? fmtDate(r.date_of_birth) : '—');
-            setText('pGender',  r.gender          || '—');
+            setText('pGender',  capitalize(r.gender)     || '—');
             setText('pContact', r.contact_number  || '—');
             setText('pBlood',   r.blood_group     || '—');
+
             if (r.allergies && r.allergies.trim()) {
                 setText('pAllergies', r.allergies);
             } else {
                 hideEl('pAllergiesRow');
             }
 
-            // Doctor
-            setText('dName',    r.doctor_name     || '—');
-            setText('dSpec',    r.specialization  || 'Internal Medicine');
-            setText('dLicense', r.license_number  || '—');
+            // Doctor info
+            setText('dName',    r.doctor_name       || '—');
+            setText('dSpec',    r.specialization    || 'Internal Medicine');
+            setText('dLicense', r.license_number    || '—');
 
-            // Vital Signs
+            // Vital Signs — colored cards
             const vs = r.vital_signs || {};
             const vitals = [
-                { label: 'Blood Pressure', value: vs.bp,                          unit: 'mmHg', bg: '#fef2f2', color: '#dc2626',  border: '#fecaca', icon: 'fa-heart-pulse'      },
-                { label: 'Temperature',    value: vs.temperature || vs.temp,       unit: '°C',   bg: '#fff7ed', color: '#ea580c',  border: '#fed7aa', icon: 'fa-temperature-half' },
-                { label: 'Heart Rate',     value: vs.heart_rate,                   unit: 'bpm',  bg: '#fdf2f8', color: '#db2777',  border: '#f9a8d4', icon: 'fa-heartbeat'        },
-                { label: 'Weight',         value: vs.weight,                       unit: 'kg',   bg: '#eff6ff', color: '#2563eb',  border: '#bfdbfe', icon: 'fa-weight-scale'     },
-                { label: 'Height',         value: vs.height,                       unit: 'cm',   bg: '#f5f3ff', color: '#7c3aed',  border: '#ddd6fe', icon: 'fa-ruler-vertical'   }
+                { label: 'Blood Pressure', value: vs.bp,                        unit: 'mmHg', bg: '#fef2f2', color: '#dc2626', border: '#fecaca', icon: 'fa-heart-pulse'      },
+                { label: 'Temperature',    value: vs.temperature || vs.temp,    unit: '°C',   bg: '#fff7ed', color: '#ea580c', border: '#fed7aa', icon: 'fa-temperature-half' },
+                { label: 'Heart Rate',     value: vs.heart_rate,                unit: 'bpm',  bg: '#fdf2f8', color: '#db2777', border: '#f9a8d4', icon: 'fa-heartbeat'        },
+                { label: 'Weight',         value: vs.weight,                    unit: 'kg',   bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', icon: 'fa-weight-scale'     },
+                { label: 'Height',         value: vs.height,                    unit: 'cm',   bg: '#f5f3ff', color: '#7c3aed', border: '#ddd6fe', icon: 'fa-ruler-vertical'   }
             ];
 
             const hasVitals = vitals.some(v => v.value);
             if (hasVitals) {
-                document.getElementById('vitalsGrid').innerHTML = vitals.map(v => `
-                    <div class="vital-chip" style="background:${v.bg};color:${v.color};border-color:${v.border};">
-                        <i class="fas ${v.icon} text-xs mb-1 opacity-70"></i>
-                        <p class="text-xs opacity-75 mb-0.5">${v.label}</p>
-                        <p class="font-bold text-lg leading-tight">${v.value || '—'}</p>
-                        ${v.value ? `<p class="text-xs opacity-60 mt-0.5">${v.unit}</p>` : ''}
-                    </div>
-                `).join('');
+                document.getElementById('vitalsGrid').innerHTML = vitals
+                    .map(v => `
+                        <div class="vital-chip" style="background:${v.bg};color:${v.color};border-color:${v.border};">
+                            <i class="fas ${v.icon} text-xs mb-1.5" style="opacity:0.65;"></i>
+                            <p class="vital-label">${v.label}</p>
+                            <p class="vital-value">${v.value || '—'}</p>
+                            ${v.value ? `<p class="vital-unit">${v.unit}</p>` : ''}
+                        </div>
+                    `).join('');
             } else {
                 hideEl('vitalsSection');
             }
@@ -397,14 +567,16 @@
             setOrHide('labTests',     'labSec',          r.lab_tests_ordered);
             setOrHide('notes',        'notesSec',        r.notes);
 
+            // Follow-up
             setText('followUp', r.follow_up_date ? fmtDate(r.follow_up_date) : 'No follow-up scheduled');
 
+            // Print timestamp
             setText('printDate', new Date().toLocaleString('en-US', {
                 year: 'numeric', month: 'long', day: 'numeric',
                 hour: '2-digit', minute: '2-digit'
             }));
 
-            // Update page title
+            // Update browser tab title
             document.title = `Medical Record${r.appointment_number ? ' #' + r.appointment_number : ''} — MediTrack`;
         }
 
@@ -413,10 +585,12 @@
             const el = document.getElementById(id);
             if (el) el.textContent = v;
         }
+
         function hideEl(id) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         }
+
         function setOrHide(contentId, sectionId, value) {
             if (value && value.trim()) {
                 setText(contentId, value);
@@ -424,17 +598,24 @@
                 hideEl(sectionId);
             }
         }
+
         function fmtDate(d) {
             if (!d) return '—';
             return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
                 year: 'numeric', month: 'long', day: 'numeric'
             });
         }
+
         function fmtTime(t) {
             if (!t) return '';
             const [h, m] = t.split(':');
-            const hr = parseInt(h);
+            const hr = parseInt(h, 10);
             return `${hr > 12 ? hr - 12 : (hr || 12)}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+        }
+
+        function capitalize(s) {
+            if (!s) return s;
+            return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
         }
     </script>
 </body>
