@@ -10,22 +10,32 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome 6.4 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            teal: {
+            brand: {
               50:  '#f0fdfa',
               100: '#ccfbf1',
-              400: '#2dd4bf',
-              500: '#14b8a6',
-              600: '#0d9488',
-              700: '#0f766e',
-              800: '#115e59',
-              900: '#134e4a',
-            }
+              200: '#a7f3d0',
+              400: '#22D3EE',
+              500: '#0891B2',
+              600: '#0e7490',
+              700: '#0d4f6e',
+              800: '#083344',
+              900: '#042f2e',
+            },
+            accent: '#16A34A',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            heading: ['Poppins', 'Inter', 'sans-serif'],
           }
         }
       }
@@ -33,28 +43,48 @@
   </script>
 
   <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    h1, h2, h3, h4, h5 { font-family: 'Poppins', 'Inter', sans-serif; }
+
     .hero-gradient {
-      background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+      background: linear-gradient(135deg, #0d4f6e 0%, #0891B2 60%, #22D3EE 100%);
     }
     .card-hover {
       transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
     .card-hover:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 28px rgba(15, 118, 110, 0.18);
+      box-shadow: 0 16px 32px rgba(8, 145, 178, 0.15);
     }
-    .step-connector::after {
-      content: '';
-      position: absolute;
-      top: 2rem;
-      right: -50%;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, #14b8a6, #0369a1);
+    .nav-link-btn {
+      transition: all 0.2s ease;
     }
+    .btn-primary-hero {
+      background: #fff;
+      color: #0891B2;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+    .btn-primary-hero:hover {
+      background: #f0fdfa;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      transform: translateY(-1px);
+    }
+    .btn-outline-hero {
+      border: 2px solid rgba(255,255,255,0.65);
+      color: #fff;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn-outline-hero:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: #fff;
+      transform: translateY(-1px);
+    }
+    /* Smooth scroll already on html tag */
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+<body class="bg-[#F0FDFA] text-gray-800 antialiased">
 
   <!-- ═══════════════════════════════════════════
        NAVBAR
@@ -64,20 +94,20 @@
       <div class="flex items-center justify-between h-16">
 
         <!-- Logo -->
-        <a href="index.html" class="flex items-center gap-2 text-teal-700 font-bold text-xl tracking-tight">
-          <i class="fa-solid fa-heart-pulse text-teal-500 text-2xl"></i>
-          <span>MediTrack</span>
+        <a href="index.html" class="flex items-center gap-2 font-bold text-xl tracking-tight" style="color:#0891B2;">
+          <i class="fa-solid fa-heart-pulse text-2xl" style="color:#22D3EE;"></i>
+          <span style="font-family:'Poppins',sans-serif;">MediTrack</span>
         </a>
 
         <!-- Nav links -->
         <div class="flex items-center gap-3">
           <a href="pages/login.html"
-             class="text-sm font-medium text-gray-600 hover:text-teal-700 transition-colors px-3 py-2 rounded-lg hover:bg-teal-50">
-            <i class="fa-solid fa-right-to-bracket mr-1"></i>Login
+             class="nav-link-btn text-sm font-medium text-gray-600 hover:text-[#0891B2] px-3 py-2 rounded-xl hover:bg-[#f0fdfa] min-h-[44px] flex items-center">
+            <i class="fa-solid fa-right-to-bracket mr-1.5"></i>Login
           </a>
           <a href="pages/register.html"
-             class="text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
-            <i class="fa-solid fa-user-plus mr-1"></i>Register
+             class="nav-link-btn text-sm font-semibold text-white px-5 py-2 rounded-xl shadow-sm min-h-[44px] flex items-center" style="background:#0891B2;" onmouseover="this.style.background='#0e7490'" onmouseout="this.style.background='#0891B2'">
+            <i class="fa-solid fa-user-plus mr-1.5"></i>Register
           </a>
         </div>
 
@@ -89,38 +119,39 @@
        HERO
   ════════════════════════════════════════════ -->
   <section class="hero-gradient text-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36 text-center">
 
-      <span class="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+      <span class="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 border border-white/20">
         <i class="fa-solid fa-stethoscope"></i> Internal Medicine Clinic
       </span>
 
-      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5" style="font-family:'Poppins',sans-serif;">
         Your Health,<br class="hidden sm:block" />
-        <span class="text-teal-200">Managed Smarter</span>
+        <span style="color:#a5f3fc;">Managed Smarter</span>
       </h1>
 
-      <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10">
+      <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
         Book appointments online, check in instantly with your personal QR code,
-        and access your medical records anytime — all in one place.
+        and access your medical records anytime &mdash; all in one place.
       </p>
 
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="pages/register.html"
-           class="inline-flex items-center justify-center gap-2 bg-white text-teal-700 font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:bg-teal-50 transition-all text-base">
+           class="btn-primary-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl shadow-lg text-base min-h-[52px]">
           <i class="fa-solid fa-user-plus"></i> Register Now
         </a>
         <a href="pages/login.html"
-           class="inline-flex items-center justify-center gap-2 border-2 border-white/60 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all text-base">
+           class="btn-outline-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base min-h-[52px]">
           <i class="fa-solid fa-right-to-bracket"></i> Log In
         </a>
       </div>
 
-      <!-- Floating badge -->
-      <div class="mt-14 flex flex-wrap justify-center gap-6 text-sm text-white/70">
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-teal-300"></i> Secure & Private</span>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-qrcode text-teal-300"></i> QR Check-In</span>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock text-teal-300"></i> Real-Time Scheduling</span>
+      <!-- Trust badges -->
+      <div class="mt-14 flex flex-wrap justify-center gap-6 text-sm text-white/75">
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved" style="color:#a5f3fc;"></i> Secure &amp; Private</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-qrcode" style="color:#a5f3fc;"></i> QR Check-In</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock" style="color:#a5f3fc;"></i> Real-Time Scheduling</span>
+        <span class="flex items-center gap-1.5"><i class="fa-solid fa-mobile-screen" style="color:#a5f3fc;"></i> Mobile-Friendly</span>
       </div>
 
     </div>
@@ -133,7 +164,8 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <div class="text-center mb-14">
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">How It Works</h2>
+        <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3" style="background:#f0fdfa;color:#0891B2;">Simple Process</span>
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3" style="font-family:'Poppins',sans-serif;">How It Works</h2>
         <p class="text-gray-500 max-w-xl mx-auto">
           Getting started with MediTrack takes less than a minute. Follow these four simple steps.
         </p>
@@ -142,48 +174,48 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
         <!-- Step 1 -->
-        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
-          <div class="w-14 h-14 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-2xl mb-5">
+        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#f0fdfa;color:#0891B2;">
             <i class="fa-solid fa-qrcode"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-teal-500 mb-2">Step 1</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Scan QR Code</h3>
+          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#0891B2;">Step 1</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Scan QR Code</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
             Scan the clinic QR code or use your personal patient QR to begin your visit or booking.
           </p>
         </div>
 
         <!-- Step 2 -->
-        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
-          <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-5">
+        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#eff6ff;color:#2563eb;">
             <i class="fa-solid fa-calendar-check"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-blue-500 mb-2">Step 2</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Book Appointment</h3>
+          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#2563eb;">Step 2</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Book Appointment</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
             Choose your preferred doctor, date, and time slot. Instant confirmation sent to your account.
           </p>
         </div>
 
         <!-- Step 3 -->
-        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
-          <div class="w-14 h-14 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-2xl mb-5">
+        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#f0fdf4;color:#16A34A;">
             <i class="fa-solid fa-hospital-user"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-teal-500 mb-2">Step 3</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Visit Clinic</h3>
+          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#16A34A;">Step 3</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Visit Clinic</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
-            Arrive at the clinic and check in using your QR code — no paperwork, no long queues.
+            Arrive at the clinic and check in using your QR code &mdash; no paperwork, no long queues.
           </p>
         </div>
 
         <!-- Step 4 -->
-        <div class="card-hover flex flex-col items-center text-center bg-gray-50 rounded-2xl p-8 border border-gray-100">
-          <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-5">
+        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#fdf4ff;color:#9333ea;">
             <i class="fa-solid fa-file-medical"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-blue-500 mb-2">Step 4</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2">Get Records</h3>
+          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#9333ea;">Step 4</span>
+          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Get Records</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
             Access your medical records, prescriptions, and visit history online or print them anytime.
           </p>
@@ -196,37 +228,39 @@
   <!-- ═══════════════════════════════════════════
        QR CODE SECTION
   ════════════════════════════════════════════ -->
-  <section class="py-20 bg-gradient-to-br from-teal-50 to-blue-50" id="qr-code">
+  <section class="py-20" style="background:linear-gradient(135deg,#f0fdfa 0%,#eff6ff 100%);" id="qr-code">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      <div class="flex flex-col md:flex-row items-center gap-12 bg-white rounded-3xl shadow-md p-10 md:p-14">
+      <div class="flex flex-col md:flex-row items-center gap-10 lg:gap-16 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 lg:p-14">
 
-        <!-- QR Image -->
-        <div class="flex-shrink-0 text-center">
-          <div class="inline-block p-4 bg-teal-50 rounded-2xl border-2 border-teal-100">
+        <!-- QR Image — centered on mobile, left on desktop -->
+        <div class="flex-shrink-0 text-center w-full md:w-auto">
+          <div class="inline-block p-4 rounded-2xl border-2 mx-auto" style="background:#f0fdfa;border-color:#a5f3fc;">
             <img id="clinic-qr"
                  src=""
                  alt="Clinic QR Code for booking"
                  width="200" height="200"
-                 class="rounded-lg" />
+                 class="rounded-xl block"
+                 style="min-width:160px;min-height:160px;" />
           </div>
-          <p class="mt-3 text-xs text-gray-400 font-medium uppercase tracking-wider">Scan to Book Online</p>
+          <p class="mt-3 text-xs font-semibold uppercase tracking-widest" style="color:#0891B2;">Scan to Book Online</p>
         </div>
 
         <!-- Text -->
         <div>
-          <span class="inline-block bg-teal-100 text-teal-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
+          <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4" style="background:#f0fdfa;color:#0891B2;">
             Quick Access
           </span>
-          <h2 class="text-3xl font-bold text-gray-900 mb-4">Book in Seconds</h2>
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4" style="font-family:'Poppins',sans-serif;">Book in Seconds</h2>
           <p class="text-gray-500 leading-relaxed mb-6">
             Point your phone camera at the QR code to instantly open the MediTrack booking page.
-            No app download required — just scan and book your appointment from anywhere.
+            No app download required &mdash; just scan and book your appointment from anywhere.
           </p>
-          <ul class="space-y-2 text-sm text-gray-600">
-            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-500"></i> Works on any smartphone camera</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-500"></i> No login required to scan</li>
-            <li class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-teal-500"></i> Opens directly to the booking form</li>
+          <ul class="space-y-3 text-sm text-gray-600">
+            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> Works on any smartphone camera</li>
+            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> No login required to scan</li>
+            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> Opens directly to the booking form</li>
+            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> Available 24/7 from anywhere</li>
           </ul>
         </div>
 
@@ -241,47 +275,48 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <div class="text-center mb-14">
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Why MediTrack?</h2>
+        <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3" style="background:#f0fdf4;color:#16A34A;">Why Choose Us</span>
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3" style="font-family:'Poppins',sans-serif;">Why MediTrack?</h2>
         <p class="text-gray-500 max-w-xl mx-auto">
-          Built for patients and clinic staff alike — simple, fast, and secure.
+          Built for patients and clinic staff alike &mdash; simple, fast, and secure.
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         <!-- Card 1 -->
-        <div class="card-hover rounded-2xl border border-gray-100 p-8 bg-gradient-to-br from-teal-50 to-white">
-          <div class="w-12 h-12 rounded-xl bg-teal-500 text-white flex items-center justify-center text-xl mb-5">
+        <div class="card-hover rounded-2xl border border-gray-100 p-8 shadow-sm" style="background:linear-gradient(135deg,#f0fdfa 0%,#fff 60%);">
+          <div class="w-12 h-12 rounded-xl text-white flex items-center justify-center text-xl mb-5" style="background:#0891B2;">
             <i class="fa-solid fa-bolt"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">Fast Check-In</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Fast Check-In</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
-            Skip the front-desk queue. Scan your personal QR code upon arrival and you're checked in instantly —
+            Skip the front-desk queue. Scan your personal QR code upon arrival and you&rsquo;re checked in instantly &mdash;
             letting staff focus on your care.
           </p>
         </div>
 
         <!-- Card 2 -->
-        <div class="card-hover rounded-2xl border border-gray-100 p-8 bg-gradient-to-br from-blue-50 to-white">
+        <div class="card-hover rounded-2xl border border-gray-100 p-8 shadow-sm" style="background:linear-gradient(135deg,#eff6ff 0%,#fff 60%);">
           <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl mb-5">
             <i class="fa-solid fa-lock"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">Secure Records</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Secure Records</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
-            Your medical history is encrypted and accessible only to you and your authorized care team.
+            Your medical history is accessible only to you and your authorized care team.
             Privacy and compliance are built in from the ground up.
           </p>
         </div>
 
         <!-- Card 3 -->
-        <div class="card-hover rounded-2xl border border-gray-100 p-8 bg-gradient-to-br from-teal-50 to-white">
-          <div class="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center text-xl mb-5">
+        <div class="card-hover rounded-2xl border border-gray-100 p-8 shadow-sm" style="background:linear-gradient(135deg,#f0fdf4 0%,#fff 60%);">
+          <div class="w-12 h-12 rounded-xl text-white flex items-center justify-center text-xl mb-5" style="background:#16A34A;">
             <i class="fa-solid fa-print"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">Print Anytime</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Print Anytime</h3>
           <p class="text-sm text-gray-500 leading-relaxed">
             Generate printable summaries of your visits, prescriptions, and lab results directly from
-            your patient dashboard — ready whenever you need them.
+            your patient dashboard &mdash; ready whenever you need them.
           </p>
         </div>
 
@@ -291,50 +326,70 @@
   </section>
 
   <!-- ═══════════════════════════════════════════
+       CTA STRIP
+  ════════════════════════════════════════════ -->
+  <section class="py-16" style="background:linear-gradient(135deg,#0d4f6e 0%,#0891B2 100%);">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+      <h2 class="text-2xl sm:text-3xl font-bold mb-3" style="font-family:'Poppins',sans-serif;">Ready to get started?</h2>
+      <p class="text-white/75 mb-8 text-base">Create your free patient account today and take control of your health journey.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="pages/register.html"
+           class="btn-primary-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-bold min-h-[52px] shadow-lg">
+          <i class="fa-solid fa-user-plus"></i> Create Free Account
+        </a>
+        <a href="pages/login.html"
+           class="btn-outline-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base min-h-[52px]">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
        FOOTER
   ════════════════════════════════════════════ -->
   <footer class="bg-gray-900 text-gray-300">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
 
-      <div class="flex flex-col md:flex-row justify-between items-start gap-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
 
         <!-- Brand -->
         <div>
-          <div class="flex items-center gap-2 text-white font-bold text-xl mb-3">
-            <i class="fa-solid fa-heart-pulse text-teal-400 text-2xl"></i>
+          <div class="flex items-center gap-2 text-white font-bold text-xl mb-3" style="font-family:'Poppins',sans-serif;">
+            <i class="fa-solid fa-heart-pulse text-2xl" style="color:#22D3EE;"></i>
             <span>MediTrack</span>
           </div>
           <p class="text-sm text-gray-400 max-w-xs leading-relaxed">
-            Internal Medicine Clinic — delivering compassionate care with modern tools.
+            Internal Medicine Clinic &mdash; delivering compassionate care with modern, secure tools.
           </p>
         </div>
 
         <!-- Quick Links -->
         <div>
-          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Quick Links</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a href="#how-it-works" class="hover:text-teal-400 transition-colors">How It Works</a></li>
-            <li><a href="#qr-code" class="hover:text-teal-400 transition-colors">QR Booking</a></li>
-            <li><a href="#features" class="hover:text-teal-400 transition-colors">Features</a></li>
-            <li><a href="pages/register.html" class="hover:text-teal-400 transition-colors">Register</a></li>
-            <li><a href="pages/login.html" class="hover:text-teal-400 transition-colors">Login</a></li>
+          <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-widest">Quick Links</h4>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="#how-it-works" class="text-gray-400 hover:text-[#22D3EE] transition-colors">How It Works</a></li>
+            <li><a href="#qr-code" class="text-gray-400 hover:text-[#22D3EE] transition-colors">QR Booking</a></li>
+            <li><a href="#features" class="text-gray-400 hover:text-[#22D3EE] transition-colors">Features</a></li>
+            <li><a href="pages/register.html" class="text-gray-400 hover:text-[#22D3EE] transition-colors">Register</a></li>
+            <li><a href="pages/login.html" class="text-gray-400 hover:text-[#22D3EE] transition-colors">Login</a></li>
           </ul>
         </div>
 
         <!-- Clinic Info -->
         <div>
-          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Clinic Hours</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
+          <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-widest">Clinic Hours</h4>
+          <ul class="space-y-2.5 text-sm text-gray-400">
             <li class="flex items-center gap-2">
-              <i class="fa-solid fa-calendar-days text-teal-400 w-4"></i>
-              Monday – Friday
+              <i class="fa-solid fa-calendar-days w-4" style="color:#22D3EE;"></i>
+              Monday &ndash; Friday
             </li>
             <li class="flex items-center gap-2">
-              <i class="fa-solid fa-clock text-teal-400 w-4"></i>
-              8:00 AM – 5:00 PM
+              <i class="fa-solid fa-clock w-4" style="color:#22D3EE;"></i>
+              8:00 AM &ndash; 5:00 PM
             </li>
-            <li class="flex items-center gap-2 mt-3">
-              <i class="fa-solid fa-calendar-xmark text-gray-500 w-4"></i>
+            <li class="flex items-center gap-2 mt-2">
+              <i class="fa-solid fa-calendar-xmark text-gray-600 w-4"></i>
               <span class="text-gray-500">Closed on weekends &amp; holidays</span>
             </li>
           </ul>
@@ -342,8 +397,8 @@
 
       </div>
 
-      <div class="border-t border-gray-700 mt-10 pt-6 text-center text-xs text-gray-500">
-        &copy; 2026 MediTrack — Internal Medicine Clinic. All rights reserved.
+      <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-600">
+        &copy; 2026 MediTrack &mdash; Internal Medicine Clinic. All rights reserved.
       </div>
 
     </div>

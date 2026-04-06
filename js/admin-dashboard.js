@@ -234,29 +234,28 @@ async function loadAppointments() {
 
         const appts = data.appointments || [];
 
-        // Client-side pagination (API returns max 100 records; page size = 15)
-        const pageSize = 15;
-        const total    = appts.length;
-        apptTotalPages = Math.max(1, Math.ceil(total / pageSize));
+        // Use server-side pagination data from API response
+        const pagination = data.pagination || {};
+        apptTotalPages = pagination.total_pages || Math.max(1, Math.ceil((pagination.total || appts.length) / 20));
+        const pageSize = pagination.per_page || 20;
         const start    = (apptPage - 1) * pageSize;
-        const slice    = appts.slice(start, start + pageSize);
 
         updateApptPagination();
 
-        if (!slice.length) {
+        if (!appts.length) {
             tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-400">
                 <i class="fas fa-calendar-times mr-2"></i>No appointments found</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = slice.map((a, i) => {
+        tbody.innerHTML = appts.map((a, i) => {
             const rowNum   = start + i + 1;
             const apptNo   = escHtml(a.appointment_number || `#${a.id}`);
             const patient  = escHtml(a.patient_name || '—');
             const date     = formatDateStr(a.appointment_date);
             const time     = formatTime(a.appointment_time);
             const badge    = statusBadge(a.status);
-            const canCancel = ['scheduled', 'checked_in'].includes(a.status);
+            const canCancel = ['scheduled', 'confirmed', 'checked_in'].includes(a.status);
 
             return `<tr class="hover:bg-gray-50 transition">
                 <td class="px-4 py-3 text-gray-500">${rowNum}</td>
@@ -418,7 +417,7 @@ function renderPatientsTable(patients) {
                 </span>
             </td>
             <td class="px-4 py-3">
-                <button onclick="togglePatientStatus(${p.id}, '${escHtml(p.full_name || '')}', '${newStatus}')"
+                <button onclick="togglePatientStatus(${p.patient_id}, '${escHtml(p.full_name || '')}', '${newStatus}')"
                         class="${toggleCls} px-3 py-1 rounded-lg text-xs font-semibold transition">
                     ${toggleLabel}
                 </button>

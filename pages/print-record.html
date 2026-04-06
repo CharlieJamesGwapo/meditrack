@@ -4,163 +4,324 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical Record — MediTrack</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6.4 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1, h2, h3, h4, h5 { font-family: 'Poppins', 'Inter', sans-serif; }
+
+        /* ── Print styles ── */
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .print-page { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; border-radius: 0 !important; }
+            .print-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+            }
+            .print-page .section-card { break-inside: avoid; }
         }
-        @page { margin: 1.5cm; size: A4; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        @page { margin: 1.2cm 1.5cm; size: A4 portrait; }
+
+        /* ── Screen wrapper ── */
+        .page-bg { background: #e5e7eb; min-height: 100vh; }
+
+        /* ── Action bar ── */
+        .action-bar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        /* ── Print card ── */
+        .print-page {
+            background: #fff;
+            max-width: 860px;
+            margin: 24px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        /* ── Clinic header gradient ── */
+        .clinic-header {
+            background: linear-gradient(135deg, #0d4f6e 0%, #0891b2 60%, #22d3ee 100%);
+            padding: 28px 36px;
+            color: white;
+        }
+
+        /* ── Section cards ── */
+        .section-card { padding: 20px 36px; border-bottom: 1px solid #f1f5f9; }
+        .section-card:last-child { border-bottom: none; }
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-label i { font-size: 11px; }
+
+        /* ── Vital chips ── */
+        .vital-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 12px 10px;
+            border-radius: 10px;
+            border: 1px solid;
+            min-width: 100px;
+        }
+
+        /* ── Table rows ── */
+        .info-row td { padding: 3px 0; font-size: 13px; vertical-align: top; }
+        .info-row td:first-child { color: #94a3b8; width: 120px; padding-right: 12px; white-space: nowrap; }
+        .info-row td:last-child { color: #1f2937; font-weight: 500; }
+
+        /* ── Doctor signature line ── */
+        .sig-line { border-top: 1.5px solid #cbd5e1; margin-top: 8px; padding-top: 6px; font-size: 11px; color: #64748b; }
+
+        /* ── Loading / Error states ── */
+        .state-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; }
+
+        @media (max-width: 640px) {
+            .clinic-header { padding: 20px 20px; }
+            .section-card { padding: 16px 20px; }
+            .info-row td:first-child { width: 100px; font-size: 12px; }
+            .info-row td:last-child { font-size: 12px; }
+            .vital-chip { min-width: 80px; padding: 10px 6px; }
+        }
     </style>
 </head>
-<body class="bg-gray-200 min-h-screen">
+<body class="page-bg">
 
-    <!-- Action Bar -->
-    <div class="no-print bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-heartbeat text-teal-600 text-xl"></i>
-                <span class="font-bold text-gray-800">MediTrack — Print Medical Record</span>
+    <!-- ── Action Bar ── -->
+    <div class="action-bar no-print">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <i class="fas fa-heart-pulse text-xl" style="color:#0891b2;"></i>
+                <div>
+                    <span class="font-bold text-gray-800 text-sm" style="font-family:'Poppins',sans-serif;">MediTrack</span>
+                    <span class="hidden sm:inline text-gray-400 text-sm ml-1">— Medical Record</span>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="window.print()" class="px-5 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition flex items-center gap-2 text-sm font-semibold">
-                    <i class="fas fa-print"></i> Print
+            <div class="flex items-center gap-2">
+                <button onclick="window.print()"
+                        class="flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl min-h-[40px] transition-all"
+                        style="background:#0891b2;"
+                        onmouseover="this.style.background='#0e7490'" onmouseout="this.style.background='#0891b2'">
+                    <i class="fas fa-print"></i>
+                    <span>Print</span>
                 </button>
-                <button onclick="history.back()" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2 text-sm font-semibold">
-                    <i class="fas fa-arrow-left"></i> Back
+                <button onclick="history.back()"
+                        class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl min-h-[40px] transition-all">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="hidden sm:inline">Back</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Loading -->
-    <div id="loading" class="flex items-center justify-center py-32">
-        <i class="fas fa-spinner fa-spin text-teal-600 text-3xl mr-3"></i>
-        <span class="text-gray-500">Loading medical record...</span>
+    <!-- ── Loading State ── -->
+    <div id="loading" class="state-center no-print">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:#f0fdfa;">
+            <i class="fas fa-spinner fa-spin text-2xl" style="color:#0891b2;"></i>
+        </div>
+        <p class="text-gray-500 text-sm font-medium">Loading medical record&hellip;</p>
     </div>
 
-    <!-- Error -->
-    <div id="errorMsg" class="hidden max-w-md mx-auto mt-20 text-center">
-        <i class="fas fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
-        <p class="text-gray-600 text-lg" id="errorText">Record not found.</p>
-        <button onclick="history.back()" class="mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg text-sm">Go Back</button>
+    <!-- ── Error State ── -->
+    <div id="errorMsg" class="hidden state-center no-print">
+        <div class="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center border border-red-100">
+            <i class="fas fa-triangle-exclamation text-2xl text-red-400"></i>
+        </div>
+        <div class="text-center">
+            <p class="text-gray-700 font-semibold mb-1" id="errorText">Record not found.</p>
+            <p class="text-gray-400 text-sm mb-4">The requested medical record could not be loaded.</p>
+            <button onclick="history.back()"
+                    class="px-5 py-2.5 text-white text-sm font-semibold rounded-xl"
+                    style="background:#0891b2;">
+                <i class="fas fa-arrow-left mr-1.5"></i>Go Back
+            </button>
+        </div>
     </div>
 
-    <!-- Print Content -->
-    <div id="printContent" class="hidden print-page max-w-4xl mx-auto bg-white shadow-xl my-6 rounded-xl overflow-hidden">
+    <!-- ── Print Content ── -->
+    <div id="printContent" class="hidden print-page">
 
         <!-- Clinic Header -->
-        <div class="bg-gradient-to-r from-teal-700 to-blue-700 text-white px-8 py-5">
-            <div class="flex justify-between items-center">
+        <div class="clinic-header">
+            <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-wide">MediTrack</h1>
-                    <p class="text-teal-200 text-sm">Internal Medicine Clinic</p>
+                    <div class="flex items-center gap-2.5 mb-1">
+                        <i class="fas fa-heart-pulse text-2xl" style="color:#a5f3fc;"></i>
+                        <h1 class="text-2xl font-bold tracking-wide">MediTrack</h1>
+                    </div>
+                    <p class="text-sm" style="color:rgba(255,255,255,0.75);">Internal Medicine Clinic</p>
+                    <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.55);">Official Medical Record Document</p>
                 </div>
-                <div class="text-right text-sm">
-                    <p class="font-semibold text-lg" id="hdrApptNum"></p>
-                    <p class="text-teal-200" id="hdrDate"></p>
+                <div class="text-left sm:text-right text-sm">
+                    <p class="font-bold text-lg tracking-wide" id="hdrApptNum" style="color:#a5f3fc;"></p>
+                    <p id="hdrDate" style="color:rgba(255,255,255,0.8);"></p>
+                    <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                         style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);">
+                        <i class="fas fa-circle-check text-xs"></i> Official Record
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Patient & Doctor Info -->
-        <div class="px-8 py-5 border-b">
-            <div class="grid grid-cols-2 gap-6">
+        <div class="section-card">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Patient Information</h3>
-                    <table class="text-sm w-full">
-                        <tr><td class="text-gray-500 pr-3 py-0.5 w-28">Name</td><td class="font-semibold text-gray-800" id="pName">—</td></tr>
-                        <tr><td class="text-gray-500 pr-3 py-0.5">Date of Birth</td><td id="pDob">—</td></tr>
-                        <tr><td class="text-gray-500 pr-3 py-0.5">Gender</td><td id="pGender">—</td></tr>
-                        <tr><td class="text-gray-500 pr-3 py-0.5">Contact</td><td id="pContact">—</td></tr>
-                        <tr><td class="text-gray-500 pr-3 py-0.5">Blood Group</td><td class="font-semibold text-red-600" id="pBlood">—</td></tr>
-                        <tr id="pAllergiesRow"><td class="text-gray-500 pr-3 py-0.5">Allergies</td><td class="text-orange-600 font-semibold" id="pAllergies">—</td></tr>
+                    <div class="section-label"><i class="fas fa-id-card"></i> Patient Information</div>
+                    <table class="w-full">
+                        <tbody>
+                            <tr class="info-row"><td>Name</td><td class="font-semibold text-gray-900" id="pName">—</td></tr>
+                            <tr class="info-row"><td>Date of Birth</td><td id="pDob">—</td></tr>
+                            <tr class="info-row"><td>Gender</td><td id="pGender">—</td></tr>
+                            <tr class="info-row"><td>Contact</td><td id="pContact">—</td></tr>
+                            <tr class="info-row">
+                                <td>Blood Group</td>
+                                <td><span id="pBlood" class="font-bold" style="color:#dc2626;">—</span></td>
+                            </tr>
+                            <tr class="info-row" id="pAllergiesRow">
+                                <td>Allergies</td>
+                                <td><span id="pAllergies" class="font-semibold" style="color:#d97706;">—</span></td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Attending Physician</h3>
-                    <table class="text-sm w-full">
-                        <tr><td class="text-gray-500 pr-3 py-0.5 w-28">Doctor</td><td class="font-semibold text-teal-700" id="dName">—</td></tr>
-                        <tr><td class="text-gray-500 pr-3 py-0.5">Specialization</td><td id="dSpec">—</td></tr>
-                        <tr><td class="text-gray-500 pr-3 py-0.5">License No.</td><td id="dLicense">—</td></tr>
+                    <div class="section-label"><i class="fas fa-user-doctor"></i> Attending Physician</div>
+                    <table class="w-full">
+                        <tbody>
+                            <tr class="info-row"><td>Doctor</td><td class="font-semibold" style="color:#0891b2;" id="dName">—</td></tr>
+                            <tr class="info-row"><td>Specialization</td><td id="dSpec">—</td></tr>
+                            <tr class="info-row"><td>License No.</td><td id="dLicense">—</td></tr>
+                        </tbody>
                     </table>
+                    <!-- Signature area (print only) -->
+                    <div class="mt-6 hidden print:block">
+                        <div class="sig-line">Physician's Signature over Printed Name</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Vital Signs -->
-        <div class="px-8 py-4 border-b" id="vitalsSection">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Vital Signs</h3>
-            <div class="grid grid-cols-5 gap-3" id="vitalsGrid"></div>
+        <div class="section-card" id="vitalsSection">
+            <div class="section-label"><i class="fas fa-heart-pulse"></i> Vital Signs</div>
+            <div class="flex flex-wrap gap-3" id="vitalsGrid"></div>
         </div>
 
         <!-- Chief Complaint -->
-        <div class="px-8 py-4 border-b" id="complaintSec">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Chief Complaint</h3>
-            <p class="text-gray-800" id="complaint">—</p>
+        <div class="section-card" id="complaintSec">
+            <div class="section-label"><i class="fas fa-comment-medical"></i> Chief Complaint</div>
+            <p class="text-gray-800 text-sm leading-relaxed" id="complaint">—</p>
         </div>
 
         <!-- Symptoms -->
-        <div class="px-8 py-4 border-b" id="symptomsSec">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Symptoms</h3>
-            <p class="text-gray-800" id="symptoms">—</p>
+        <div class="section-card" id="symptomsSec">
+            <div class="section-label"><i class="fas fa-list-check"></i> Symptoms</div>
+            <p class="text-gray-800 text-sm leading-relaxed" id="symptoms">—</p>
         </div>
 
         <!-- Diagnosis -->
-        <div class="px-8 py-4 border-b bg-teal-50" id="diagnosisSec">
-            <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider mb-2"><i class="fas fa-stethoscope mr-1"></i> Diagnosis</h3>
-            <p class="text-gray-900 font-semibold text-lg" id="diagnosis">—</p>
+        <div class="section-card" id="diagnosisSec" style="background:#f0fdfa;">
+            <div class="section-label" style="color:#0891b2;"><i class="fas fa-stethoscope"></i> Diagnosis</div>
+            <p class="text-gray-900 font-semibold text-base leading-relaxed" id="diagnosis">—</p>
         </div>
 
         <!-- Prescription -->
-        <div class="px-8 py-4 border-b bg-blue-50" id="prescriptionSec">
-            <h3 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2"><i class="fas fa-prescription mr-1"></i> Prescription</h3>
-            <pre class="text-gray-800 whitespace-pre-wrap font-sans text-sm" id="prescription">—</pre>
+        <div class="section-card" id="prescriptionSec" style="background:#eff6ff;">
+            <div class="section-label" style="color:#2563eb;"><i class="fas fa-prescription"></i> Prescription</div>
+            <pre class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed font-sans" id="prescription">—</pre>
         </div>
 
         <!-- Lab Tests -->
-        <div class="px-8 py-4 border-b" id="labSec">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2"><i class="fas fa-flask mr-1"></i> Lab Tests Ordered</h3>
-            <pre class="text-gray-800 whitespace-pre-wrap font-sans text-sm" id="labTests">—</pre>
+        <div class="section-card" id="labSec">
+            <div class="section-label"><i class="fas fa-flask"></i> Lab Tests Ordered</div>
+            <pre class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed font-sans" id="labTests">—</pre>
         </div>
 
-        <!-- Notes -->
-        <div class="px-8 py-4 border-b" id="notesSec">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Doctor's Notes</h3>
-            <p class="text-gray-800 text-sm" id="notes">—</p>
+        <!-- Doctor's Notes -->
+        <div class="section-card" id="notesSec">
+            <div class="section-label"><i class="fas fa-pen-to-square"></i> Doctor's Notes</div>
+            <p class="text-gray-800 text-sm leading-relaxed" id="notes">—</p>
         </div>
 
         <!-- Follow-up -->
-        <div class="px-8 py-4 border-b" id="followupSec">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Follow-up Date</h3>
-            <p class="text-teal-700 font-semibold" id="followUp">—</p>
+        <div class="section-card" id="followupSec">
+            <div class="section-label"><i class="fas fa-calendar-check"></i> Follow-up</div>
+            <p class="font-semibold text-sm" style="color:#0891b2;" id="followUp">—</p>
         </div>
 
-        <!-- Footer -->
-        <div class="px-8 py-4 bg-gray-50 text-center text-xs text-gray-400">
-            <p>This is a computer-generated document from MediTrack Internal Medicine Clinic.</p>
-            <p class="mt-1">Printed on: <span id="printDate"></span></p>
+        <!-- Document Footer -->
+        <div class="section-card" style="background:#f8fafc;text-align:center;">
+            <p class="text-xs text-gray-400 mb-1">This is a computer-generated document from MediTrack Internal Medicine Clinic.</p>
+            <p class="text-xs text-gray-400">Printed on: <span id="printDate" class="font-medium text-gray-500"></span></p>
+            <div class="flex items-center justify-center gap-1.5 mt-3">
+                <i class="fas fa-shield-halved text-xs" style="color:#0891b2;"></i>
+                <span class="text-xs" style="color:#0891b2;">Confidential Medical Document — For Patient Use Only</span>
+            </div>
         </div>
+
     </div>
 
-    <script src="../js/auth.js"></script>
+    <!-- bottom spacer on screen -->
+    <div class="no-print h-8"></div>
+
     <script>
-        const user = checkAuth();
-        const params = new URLSearchParams(window.location.search);
+        // ── Auth guard (graceful: uses sessionStorage, no external dependency) ──
+        (function() {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+                if (!user) {
+                    window.location.replace('login.html');
+                }
+            } catch(e) { /* allow through if sessionStorage unavailable */ }
+        })();
+
+        // ── Load record ──
+        const params   = new URLSearchParams(window.location.search);
         const recordId = params.get('id');
 
         if (!recordId) {
-            showError('No record ID specified.');
+            showError('No record ID specified. Please go back and try again.');
         } else {
             loadRecord();
         }
 
         async function loadRecord() {
             try {
-                const data = await apiRequest(`/patient/get-record-detail.php?id=${recordId}`);
+                const res  = await fetch(`../api/patient/get-record-detail.php?id=${encodeURIComponent(recordId)}`, {
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+
                 if (data && data.success && data.record) {
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('printContent').classList.remove('hidden');
@@ -169,7 +330,8 @@
                     showError(data?.message || 'Record not found.');
                 }
             } catch (err) {
-                showError('Could not load medical record.');
+                console.error(err);
+                showError('Could not load medical record. Please check your connection and try again.');
             }
         }
 
@@ -181,44 +343,46 @@
 
         function render(r) {
             // Header
-            setText('hdrApptNum', r.appointment_number || '');
-            setText('hdrDate', fmtDate(r.appointment_date) + ' at ' + fmtTime(r.appointment_time));
+            setText('hdrApptNum', r.appointment_number ? 'Appt # ' + r.appointment_number : '');
+            setText('hdrDate', r.appointment_date
+                ? fmtDate(r.appointment_date) + (r.appointment_time ? ' at ' + fmtTime(r.appointment_time) : '')
+                : '');
 
             // Patient
-            setText('pName', r.patient_name || '—');
-            setText('pDob', r.date_of_birth ? fmtDate(r.date_of_birth) : '—');
-            setText('pGender', r.gender || '—');
-            setText('pContact', r.contact_number || '—');
-            setText('pBlood', r.blood_group || '—');
-            if (r.allergies) {
+            setText('pName',    r.patient_name    || '—');
+            setText('pDob',     r.date_of_birth   ? fmtDate(r.date_of_birth) : '—');
+            setText('pGender',  r.gender          || '—');
+            setText('pContact', r.contact_number  || '—');
+            setText('pBlood',   r.blood_group     || '—');
+            if (r.allergies && r.allergies.trim()) {
                 setText('pAllergies', r.allergies);
             } else {
-                document.getElementById('pAllergiesRow').style.display = 'none';
+                hideEl('pAllergiesRow');
             }
 
             // Doctor
-            setText('dName', r.doctor_name || '—');
-            setText('dSpec', r.specialization || 'Internal Medicine');
-            setText('dLicense', r.license_number || '—');
+            setText('dName',    r.doctor_name     || '—');
+            setText('dSpec',    r.specialization  || 'Internal Medicine');
+            setText('dLicense', r.license_number  || '—');
 
             // Vital Signs
             const vs = r.vital_signs || {};
             const vitals = [
-                { label: 'Blood Pressure', value: vs.bp, unit: 'mmHg', color: 'bg-red-50 text-red-700', icon: 'fa-heart-pulse' },
-                { label: 'Temperature', value: vs.temperature || vs.temp, unit: '°C', color: 'bg-orange-50 text-orange-700', icon: 'fa-temperature-half' },
-                { label: 'Heart Rate', value: vs.heart_rate, unit: 'bpm', color: 'bg-pink-50 text-pink-700', icon: 'fa-heartbeat' },
-                { label: 'Weight', value: vs.weight, unit: 'kg', color: 'bg-blue-50 text-blue-700', icon: 'fa-weight-scale' },
-                { label: 'Height', value: vs.height, unit: 'cm', color: 'bg-purple-50 text-purple-700', icon: 'fa-ruler-vertical' }
+                { label: 'Blood Pressure', value: vs.bp,                          unit: 'mmHg', bg: '#fef2f2', color: '#dc2626',  border: '#fecaca', icon: 'fa-heart-pulse'      },
+                { label: 'Temperature',    value: vs.temperature || vs.temp,       unit: '°C',   bg: '#fff7ed', color: '#ea580c',  border: '#fed7aa', icon: 'fa-temperature-half' },
+                { label: 'Heart Rate',     value: vs.heart_rate,                   unit: 'bpm',  bg: '#fdf2f8', color: '#db2777',  border: '#f9a8d4', icon: 'fa-heartbeat'        },
+                { label: 'Weight',         value: vs.weight,                       unit: 'kg',   bg: '#eff6ff', color: '#2563eb',  border: '#bfdbfe', icon: 'fa-weight-scale'     },
+                { label: 'Height',         value: vs.height,                       unit: 'cm',   bg: '#f5f3ff', color: '#7c3aed',  border: '#ddd6fe', icon: 'fa-ruler-vertical'   }
             ];
 
             const hasVitals = vitals.some(v => v.value);
             if (hasVitals) {
                 document.getElementById('vitalsGrid').innerHTML = vitals.map(v => `
-                    <div class="rounded-lg p-3 text-center ${v.color} border">
-                        <i class="fas ${v.icon} text-xs mb-1 block opacity-60"></i>
-                        <p class="text-xs opacity-75">${v.label}</p>
-                        <p class="font-bold text-lg">${v.value || '—'}</p>
-                        ${v.value ? `<p class="text-xs opacity-60">${v.unit}</p>` : ''}
+                    <div class="vital-chip" style="background:${v.bg};color:${v.color};border-color:${v.border};">
+                        <i class="fas ${v.icon} text-xs mb-1 opacity-70"></i>
+                        <p class="text-xs opacity-75 mb-0.5">${v.label}</p>
+                        <p class="font-bold text-lg leading-tight">${v.value || '—'}</p>
+                        ${v.value ? `<p class="text-xs opacity-60 mt-0.5">${v.unit}</p>` : ''}
                     </div>
                 `).join('');
             } else {
@@ -226,27 +390,33 @@
             }
 
             // Content sections
-            setOrHide('complaint', 'complaintSec', r.chief_complaint);
-            setOrHide('symptoms', 'symptomsSec', r.symptoms);
-            setOrHide('diagnosis', 'diagnosisSec', r.diagnosis);
+            setOrHide('complaint',    'complaintSec',    r.chief_complaint);
+            setOrHide('symptoms',     'symptomsSec',     r.symptoms);
+            setOrHide('diagnosis',    'diagnosisSec',    r.diagnosis);
             setOrHide('prescription', 'prescriptionSec', r.prescription);
-            setOrHide('labTests', 'labSec', r.lab_tests_ordered);
-            setOrHide('notes', 'notesSec', r.notes);
+            setOrHide('labTests',     'labSec',          r.lab_tests_ordered);
+            setOrHide('notes',        'notesSec',        r.notes);
 
-            if (r.follow_up_date) {
-                setText('followUp', fmtDate(r.follow_up_date));
-            } else {
-                setText('followUp', 'No follow-up scheduled');
-            }
+            setText('followUp', r.follow_up_date ? fmtDate(r.follow_up_date) : 'No follow-up scheduled');
 
-            document.getElementById('printDate').textContent = new Date().toLocaleString('en-US', {
+            setText('printDate', new Date().toLocaleString('en-US', {
                 year: 'numeric', month: 'long', day: 'numeric',
                 hour: '2-digit', minute: '2-digit'
-            });
+            }));
+
+            // Update page title
+            document.title = `Medical Record${r.appointment_number ? ' #' + r.appointment_number : ''} — MediTrack`;
         }
 
-        function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
-        function hideEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+        // ── Helpers ──
+        function setText(id, v) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = v;
+        }
+        function hideEl(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
         function setOrHide(contentId, sectionId, value) {
             if (value && value.trim()) {
                 setText(contentId, value);
@@ -256,7 +426,9 @@
         }
         function fmtDate(d) {
             if (!d) return '—';
-            return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
         }
         function fmtTime(t) {
             if (!t) return '';

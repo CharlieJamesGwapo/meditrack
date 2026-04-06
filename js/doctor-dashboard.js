@@ -172,9 +172,9 @@ async function loadStats() {
         const res = await apiRequest('/doctor/stats.php');
         if (res && res.success && res.stats) {
             const s = res.stats;
-            document.getElementById('stat-today').textContent     = s.today     ?? '0';
-            document.getElementById('stat-checkin').textContent   = s.checked_in ?? '0';
-            document.getElementById('stat-completed').textContent = s.completed  ?? '0';
+            document.getElementById('stat-today').textContent     = s.today_appointments ?? '0';
+            document.getElementById('stat-checkin').textContent   = s.today_checked_in   ?? '0';
+            document.getElementById('stat-completed').textContent = s.today_completed    ?? '0';
         }
     } catch (e) {
         console.error('loadStats error', e);
@@ -234,24 +234,26 @@ function renderAppointmentCard(a) {
     const priority    = a.priority === 'urgent' ? `<span class="ml-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">URGENT</span>` : '';
 
     // Action button based on status
+    // Encode appointment JSON safely for use inside a single-quote onclick attribute
+    const safeJson = JSON.stringify(a).replace(/'/g, '&#39;');
     let actionBtn = '';
     if (a.status === 'scheduled' || a.status === 'confirmed') {
         actionBtn = `
-            <button onclick='openQRScanner(${JSON.stringify(a)})'
+            <button onclick='openQRScanner(${safeJson})'
                 class="flex items-center space-x-1 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                 <i class="fas fa-qrcode"></i>
                 <span>Scan QR</span>
             </button>`;
     } else if (a.status === 'checked_in' || a.status === 'in_progress') {
         actionBtn = `
-            <button onclick='openRecordModal(${JSON.stringify(a)})'
+            <button onclick='openRecordModal(${safeJson})'
                 class="flex items-center space-x-1 bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                 <i class="fas fa-notes-medical"></i>
                 <span>Write Record</span>
             </button>`;
     } else if (a.status === 'completed') {
         actionBtn = `
-            <button onclick='viewRecord(${JSON.stringify(a)})'
+            <button onclick='viewRecord(${safeJson})'
                 class="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                 <i class="fas fa-eye"></i>
                 <span>View Record</span>
@@ -272,7 +274,7 @@ function renderAppointmentCard(a) {
                     <div class="flex items-center flex-wrap gap-1 mb-1">
                         <p class="font-semibold text-gray-800 text-sm">${name}${priority}</p>
                     </div>
-                    <p class="text-xs text-gray-500 mb-1">${age ? age.replace(', ', '') + age.includes('yrs') ? ' yrs' : '' : ''}${gender}</p>
+                    <p class="text-xs text-gray-500 mb-1">${age ? age.replace(', ', '') : ''}${gender}</p>
                     <p class="text-xs text-gray-500 line-clamp-1 mb-2">
                         <i class="fas fa-comment-medical text-teal-400 mr-1"></i>${reason}
                     </p>

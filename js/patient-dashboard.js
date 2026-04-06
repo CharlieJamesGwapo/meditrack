@@ -263,7 +263,7 @@ async function bookAppointment() {
             let htmlContent = `<p class="text-gray-600 mb-3">Your appointment has been confirmed!</p>
                 <div class="text-left bg-gray-50 rounded-lg p-3 text-sm space-y-1">
                     <p><span class="font-semibold">Number:</span> ${escHtml(appt.appointment_number || '')}</p>
-                    <p><span class="font-semibold">Doctor:</span> Dr. Maria Santos</p>
+                    <p><span class="font-semibold">Doctor:</span> ${escHtml(appt.doctor_name ? 'Dr. ' + appt.doctor_name : 'Doctor')}</p>
                     <p><span class="font-semibold">Date:</span> ${appt.appointment_date ? formatDate(appt.appointment_date) : ''}</p>
                     <p><span class="font-semibold">Time:</span> ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}</p>
                 </div>
@@ -509,7 +509,7 @@ function renderRecords(records) {
     show('recordsList');
 
     list.innerHTML = records.map((rec, idx) => {
-        const dateStr    = rec.formatted_date || (rec.created_at ? formatDate(rec.created_at) : 'N/A');
+        const dateStr    = rec.appointment_date ? formatDate(rec.appointment_date) : (rec.created_at ? formatDate(rec.created_at) : 'N/A');
         const doctor     = escHtml(rec.doctor_name || 'Unknown Doctor');
         const spec       = escHtml(rec.specialization || '');
         const complaint  = escHtml(rec.chief_complaint || '');
@@ -774,7 +774,7 @@ async function showQRModal(appointmentId) {
     // Populate modal header info
     setTextContent('qrApptNumber', appt ? `Appointment: ${appt.appointment_number || '#' + appointmentId}` : '');
     setTextContent('qrApptInfo', appt
-        ? `Dr. ${appt.doctor_name || ''} &bull; ${appt.appointment_date ? formatDate(appt.appointment_date) : ''} ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}`
+        ? `Dr. ${appt.doctor_name || ''} \u2022 ${appt.appointment_date ? formatDate(appt.appointment_date) : ''} ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}`
         : '');
 
     // Open modal
