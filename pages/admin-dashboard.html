@@ -7,19 +7,32 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        h1,h2,h3,h4,h5,h6,.font-poppins { font-family: 'Poppins', sans-serif; }
-        body { overflow-x: hidden; background: #f8fafc; }
+        /* ── Base ── */
+        *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #F0FDFA;
+            overflow-x: hidden;
+            color: #0f172a;
+        }
+        h1, h2, h3, h4, h5, h6, .font-outfit { font-family: 'Outfit', sans-serif; }
 
-        /* ── Sidebar ── */
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar        { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track  { background: #e2f4f8; }
+        ::-webkit-scrollbar-thumb  { background: #0891B2; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0e7490; }
+
+        /* ══════════ SIDEBAR ══════════ */
         .sidebar {
-            background: linear-gradient(160deg, #134e4a 0%, #0f3d39 55%, #0c2e2b 100%);
-            transition: transform 0.3s ease; z-index: 40;
-            box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+            background: linear-gradient(180deg, #083344 0%, #0891B2 100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+            z-index: 40;
+            box-shadow: 4px 0 32px rgba(8,51,68,0.22);
         }
         @media (max-width: 767px) {
             .sidebar { transform: translateX(-100%); }
@@ -27,32 +40,96 @@
         }
         .sidebar-overlay { transition: opacity 0.3s ease; }
 
-        /* Sidebar nav */
-        .nav-item { transition: background 0.2s, color 0.2s; border-left: 3px solid transparent; }
+        /* Sidebar logo pulse ring */
+        .logo-ring {
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            box-shadow: 0 0 0 0 rgba(8,145,178,0.5);
+            animation: logoRing 3s ease-in-out infinite;
+        }
+        @keyframes logoRing {
+            0%,100% { box-shadow: 0 0 0 0 rgba(8,145,178,0.4); }
+            50%      { box-shadow: 0 0 0 8px rgba(8,145,178,0); }
+        }
+
+        /* Nav items */
+        .nav-item {
+            transition: background 0.18s, border-color 0.18s;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
         .nav-item.active {
-            background: rgba(255,255,255,0.13);
-            border-left-color: #22d3ee;
+            background: rgba(255,255,255,0.16);
+            border-left-color: #67e8f9;
         }
-        .nav-item:hover { background: rgba(255,255,255,0.08); }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        .nav-item:not(.active):hover { background: rgba(255,255,255,0.08); }
+        .nav-item i { color: rgba(255,255,255,0.6); transition: color 0.18s; }
+        .nav-item span { color: rgba(255,255,255,0.82); font-weight: 500; transition: color 0.18s; }
         .nav-item.active i, .nav-item.active span { color: #ffffff; }
-        .nav-item i { color: rgba(255,255,255,0.65); }
-        .nav-item span { color: rgba(255,255,255,0.85); }
-
-        /* Sidebar section label */
         .nav-section-label {
-            font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
-            color: rgba(255,255,255,0.35); padding: 0 1rem; margin: 1rem 0 0.35rem;
-            text-transform: uppercase;
+            font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.3); padding: 0 1rem;
+            margin: 1rem 0 0.3rem; text-transform: uppercase;
+            font-family: 'DM Sans', sans-serif;
         }
 
-        /* ── Stat cards ── */
-        .stat-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.10); }
+        /* Sidebar admin avatar */
+        .sidebar-avatar {
+            width: 2.25rem; height: 2.25rem; border-radius: 999px;
+            background: rgba(103,232,249,0.2);
+            border: 1.5px solid rgba(103,232,249,0.35);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
 
-        @keyframes countUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        /* ══════════ HEADER ══════════ */
+        .header-admin-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: #F0FDFA;
+            border: 1px solid #a5f3fc;
+            padding: 5px 14px; border-radius: 999px;
+            font-size: 0.78rem; color: #0891B2; font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ══════════ TAB PANELS ══════════ */
+        .tab-panel { display: none; animation: fadeIn 0.22s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ══════════ STAT CARDS ══════════ */
+        .stat-card {
+            transition: transform 0.22s cubic-bezier(0.4,0,0.2,1), box-shadow 0.22s;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(8,51,68,0.12); }
+
+        @keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .counter { animation: countUp 0.45s ease-out; }
 
-        /* Colored left-border stat cards */
+        /* Card accent strips */
+        .stat-strip-teal    { border-top: 3px solid #0891B2; }
+        .stat-strip-blue    { border-top: 3px solid #3b82f6; }
+        .stat-strip-cyan    { border-top: 3px solid #22d3ee; }
+        .stat-strip-orange  { border-top: 3px solid #f97316; }
+        .stat-strip-green   { border-top: 3px solid #16a34a; }
+        .stat-strip-red     { border-top: 3px solid #dc2626; }
+
+        /* Colored left-border (kept for JS compatibility) */
         .stat-border-teal   { border-left: 4px solid #0891b2; }
         .stat-border-blue   { border-left: 4px solid #3b82f6; }
         .stat-border-cyan   { border-left: 4px solid #22d3ee; }
@@ -60,206 +137,368 @@
         .stat-border-green  { border-left: 4px solid #16a34a; }
         .stat-border-red    { border-left: 4px solid #dc2626; }
 
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar        { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track  { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb  { background: #0891b2; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #0e7490; }
+        /* ══════════ QUICK ACTION CARDS ══════════ */
+        .quick-action {
+            transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .quick-action::before {
+            content: '';
+            position: absolute; top: -30%; right: -10%;
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            pointer-events: none;
+        }
+        .quick-action:hover { transform: translateY(-3px) scale(1.01); }
+        .quick-action:active { transform: scale(0.98); }
 
-        /* ── Tab panels ── */
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        /* ══════════ TABLES ══════════ */
+        .data-table thead tr { background: #f8fafc; }
+        .data-table thead th {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: #64748b; padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table tbody tr { transition: background 0.15s; }
+        .data-table tbody tr:hover { background: #f0fdfa; }
+        .data-table tbody td { padding: 0.75rem 1.25rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; }
+        .data-table tbody tr:last-child td { border-bottom: none; }
 
-        /* ── Tables ── */
-        tbody tr { transition: background 0.15s; }
-        tbody tr:hover { background: #f0fdfa; }
+        /* ══════════ FILTER CARD ══════════ */
+        .filter-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.125rem 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 1px 6px rgba(8,51,68,0.05);
+        }
+        .filter-label {
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: #64748b; margin-bottom: 0.375rem; display: block;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .filter-input, .filter-select {
+            border: 1.5px solid #e2e8f0; border-radius: 0.625rem;
+            padding: 0.5rem 0.875rem; font-size: 0.875rem;
+            background: #f8fafc; transition: border-color 0.18s, box-shadow 0.18s;
+            font-family: 'DM Sans', sans-serif; color: #0f172a;
+        }
+        .filter-input:focus, .filter-select:focus {
+            outline: none; border-color: #0891B2;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
+            background: white;
+        }
 
-        /* ── Period buttons ── */
-        .period-btn { transition: all 0.2s; }
-        .period-btn.active-period { background: #0891b2 !important; color: #fff !important; border-color: #0891b2 !important; }
+        /* ══════════ BTN VARIANTS ══════════ */
+        .btn-primary {
+            background: linear-gradient(135deg, #0891B2 0%, #0e7490 100%);
+            color: white; border: none; border-radius: 0.625rem;
+            padding: 0.55rem 1.25rem; font-weight: 600; font-size: 0.875rem;
+            transition: box-shadow 0.18s, transform 0.18s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            min-height: 44px; font-family: 'DM Sans', sans-serif;
+        }
+        .btn-primary:hover { box-shadow: 0 6px 18px rgba(8,145,178,0.35); transform: translateY(-1px); }
+        .btn-primary:active { transform: scale(0.98); }
 
-        /* ── Mobile bottom nav ── */
+        .btn-ghost {
+            background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0;
+            border-radius: 0.625rem; padding: 0.55rem 1rem;
+            font-weight: 500; font-size: 0.875rem; cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            min-height: 44px; font-family: 'DM Sans', sans-serif;
+        }
+        .btn-ghost:hover { background: #e2e8f0; border-color: #cbd5e1; }
+
+        .btn-page {
+            background: white; color: #475569;
+            border: 1.5px solid #e2e8f0; border-radius: 0.625rem;
+            padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500;
+            transition: border-color 0.18s, color 0.18s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            min-height: 40px; font-family: 'DM Sans', sans-serif;
+        }
+        .btn-page:hover { border-color: #0891B2; color: #0891B2; }
+        .btn-page:disabled { opacity: 0.4; cursor: default; }
+
+        /* ══════════ PERIOD BUTTONS ══════════ */
+        .period-btn {
+            padding: 0.5rem 1.25rem; border-radius: 0.625rem;
+            font-size: 0.875rem; font-weight: 600; cursor: pointer;
+            border: 1.5px solid #e2e8f0; background: #f8fafc; color: #475569;
+            transition: all 0.18s; min-height: 44px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .period-btn:hover { border-color: #0891B2; color: #0891B2; background: #f0fdfa; }
+        .period-btn.active-period {
+            background: linear-gradient(135deg, #0891B2 0%, #0e7490 100%) !important;
+            color: #fff !important; border-color: transparent !important;
+            box-shadow: 0 4px 14px rgba(8,145,178,0.3);
+        }
+
+        /* ══════════ SCHEDULE ══════════ */
+        .schedule-row { border-bottom: 1px solid #f1f5f9; padding: 0.875rem 1.25rem; }
+        .schedule-row:last-child { border-bottom: none; }
+        .schedule-row input[type="time"],
+        .schedule-row select,
+        .schedule-row input[type="number"] {
+            border: 1.5px solid #e2e8f0; border-radius: 0.5rem;
+            padding: 0.4rem 0.75rem; font-size: 0.83rem; width: 100%;
+            transition: border-color 0.18s; background: #f8fafc;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .schedule-row input[type="time"]:focus,
+        .schedule-row select:focus,
+        .schedule-row input[type="number"]:focus {
+            border-color: #0891B2; outline: none;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.1);
+            background: white;
+        }
+        .schedule-row input:disabled, .schedule-row select:disabled {
+            background: #f1f5f9; color: #94a3b8;
+        }
+
+        /* ══════════ MOBILE BOTTOM NAV ══════════ */
         .mobile-bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-            background: white; border-top: 1px solid #e2e8f0;
-            box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 24px rgba(8,51,68,0.1);
             display: none; justify-content: space-around; align-items: center;
-            height: 68px; padding: 0 4px;
-            padding-bottom: env(safe-area-inset-bottom, 0);
+            height: 64px; padding-bottom: env(safe-area-inset-bottom, 0);
         }
         .mobile-bottom-nav .nav-btn {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            flex: 1; padding: 6px 2px; color: #94a3b8; background: none; border: none;
-            cursor: pointer; font-size: 0.6rem; font-weight: 600; transition: color 0.2s;
-            min-height: 44px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; flex: 1; padding: 4px 2px;
+            color: #94a3b8; background: none; border: none;
+            cursor: pointer; font-size: 0.58rem; font-weight: 700;
+            letter-spacing: 0.03em; transition: color 0.18s;
+            min-height: 44px; font-family: 'DM Sans', sans-serif;
         }
-        .mobile-bottom-nav .nav-btn.active, .mobile-bottom-nav .nav-btn:hover { color: #0891b2; }
-        .mobile-bottom-nav .nav-btn i { font-size: 1.15rem; margin-bottom: 3px; }
+        .mobile-bottom-nav .nav-btn.active { color: #0891B2; }
+        .mobile-bottom-nav .nav-btn i { font-size: 1.1rem; margin-bottom: 2px; }
+        .mobile-bottom-nav .nav-btn.active i {
+            filter: drop-shadow(0 2px 4px rgba(8,145,178,0.4));
+        }
 
         #moreDropdown {
-            position: fixed; bottom: 68px; right: 0; left: 0;
+            position: fixed; bottom: 64px; right: 0; left: 0;
             background: white; border-top: 1px solid #e2e8f0;
             padding: 6px 0; z-index: 49; display: none;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 -6px 24px rgba(8,51,68,0.1);
+            border-radius: 1rem 1rem 0 0;
         }
         #moreDropdown.open { display: block; }
         #moreDropdown button {
             display: flex; align-items: center; gap: 12px;
             width: 100%; padding: 13px 24px; color: #374151;
-            font-size: 0.875rem; font-weight: 500; border: none; background: none; cursor: pointer;
-            transition: background 0.15s;
+            font-size: 0.875rem; font-weight: 500;
+            border: none; background: none; cursor: pointer;
+            transition: background 0.15s; font-family: 'DM Sans', sans-serif;
         }
-        #moreDropdown button:hover, #moreDropdown button.active { color: #0891b2; background: #f0fdfa; }
+        #moreDropdown button:hover, #moreDropdown button.active {
+            color: #0891B2; background: #f0fdfa;
+        }
 
+        /* ══════════ RESPONSIVE ══════════ */
         @media (max-width: 767px) {
-            body { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+            body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
             .mobile-bottom-nav { display: flex !important; }
-            table { font-size: 0.74rem; }
-            table th, table td { padding: 0.45rem 0.5rem; }
+            .data-table { font-size: 0.72rem; }
+            .data-table th, .data-table td { padding: 0.4rem 0.5rem; }
             input, select { font-size: 16px !important; }
+            .filter-card { padding: 0.875rem 1rem; }
         }
         @media (min-width: 768px) {
             .mobile-bottom-nav { display: none !important; }
             #moreDropdown { display: none !important; }
         }
 
-        /* ── Print ── */
+        /* ══════════ PRINT ══════════ */
         @media print {
             .sidebar, .mobile-bottom-nav, #moreDropdown,
             header, nav, button, .no-print { display: none !important; }
             body { padding: 0 !important; background: white !important; }
         }
 
-        /* ── SweetAlert2 ── */
-        .swal2-popup   { border-radius: 1rem; font-family: 'Inter', sans-serif; }
-        .swal2-confirm { background-color: #0891b2 !important; }
-        .swal2-cancel  { background-color: #64748b !important; }
+        /* ══════════ SWEETALERT ══════════ */
+        .swal2-popup   { border-radius: 1.125rem !important; font-family: 'DM Sans', sans-serif !important; }
+        .swal2-title   { font-family: 'Outfit', sans-serif !important; }
+        .swal2-confirm { background: linear-gradient(135deg,#0891B2,#0e7490) !important; border-radius: 0.625rem !important; }
+        .swal2-cancel  { background-color: #64748b !important; border-radius: 0.625rem !important; }
 
-        /* ── Schedule ── */
-        .schedule-row { border-bottom: 1px solid #f1f5f9; }
-        .schedule-row:last-child { border-bottom: none; }
-        .schedule-row input[type="time"],
-        .schedule-row select,
-        .schedule-row input[type="number"] {
-            border: 1px solid #cbd5e1; border-radius: 7px;
-            padding: 6px 10px; font-size: 0.83rem; width: 100%;
-            transition: border-color 0.2s;
+        /* ══════════ SECTION HEADING ══════════ */
+        .section-eyebrow {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 0.325rem;
         }
-        .schedule-row input[type="time"]:focus,
-        .schedule-row select:focus { border-color: #0891b2; outline: none; }
-        .schedule-row input:disabled, .schedule-row select:disabled { background: #f8fafc; color: #94a3b8; }
+        .section-eyebrow-dot {
+            width: 4px; height: 18px; border-radius: 2px;
+            background: linear-gradient(180deg, #0891B2 0%, #0e7490 100%);
+        }
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem; font-weight: 700; color: #083344;
+        }
+        .section-sub { font-size: 0.875rem; color: #64748b; margin-top: 0.125rem; }
 
-        /* ── Header badge ── */
-        .admin-badge {
-            display: flex; align-items: center; gap: 6px;
-            background: #f0fdfa; border: 1px solid #ccfbf1;
-            padding: 5px 12px; border-radius: 999px;
-            font-size: 0.8rem; color: #0f766e; font-weight: 600;
+        /* ══════════ CARD BASE ══════════ */
+        .card {
+            background: white; border: 1px solid #e2e8f0;
+            border-radius: 1rem; overflow: hidden;
+            box-shadow: 0 1px 6px rgba(8,51,68,0.05);
+        }
+        .card-header {
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fafcfd;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .card-header-label {
+            font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.09em;
+            color: #64748b; font-family: 'DM Sans', sans-serif;
         }
 
-        /* ── Pulse ── */
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-        .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+        /* ══════════ MISC ══════════ */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fa-spin { animation: spin 1s linear infinite; }
+
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 2px 8px; border-radius: 999px;
+            font-size: 0.7rem; font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.04em;
+        }
+        .badge-teal   { background: #ccfbf1; color: #0f766e; }
+        .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+        .badge-orange { background: #ffedd5; color: #c2410c; }
+        .badge-red    { background: #fee2e2; color: #b91c1c; }
+        .badge-slate  { background: #f1f5f9; color: #475569; }
     </style>
 </head>
 <body>
 
-<!-- MOBILE SIDEBAR OVERLAY -->
-<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden sidebar-overlay"
+<!-- Mobile sidebar overlay -->
+<div id="sidebarOverlay"
+     class="fixed inset-0 bg-black/50 z-30 hidden md:hidden sidebar-overlay backdrop-blur-sm"
      onclick="closeSidebar()"></div>
 
-<!-- ══════════ SIDEBAR ══════════ -->
-<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 text-white flex flex-col" style="background:linear-gradient(160deg,#134e4a 0%,#0f3d39 55%,#0c2e2b 100%)">
+<!-- ══════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════ -->
+<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 text-white flex flex-col"
+       style="background:linear-gradient(180deg,#083344 0%,#0891B2 100%)">
 
     <!-- Logo -->
-    <div class="px-5 py-5 flex items-center gap-3 flex-shrink-0" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-        <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 shadow-inner">
+    <div class="px-5 py-5 flex items-center gap-3 flex-shrink-0"
+         style="border-bottom:1px solid rgba(255,255,255,0.09);">
+        <div class="logo-ring w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
             <i class="fas fa-heartbeat text-cyan-300 text-lg"></i>
         </div>
         <div>
-            <h1 class="text-base font-bold font-poppins text-white leading-tight tracking-wide">MediTrack</h1>
-            <p class="text-[0.68rem] text-teal-300/80 font-medium">Internal Medicine Clinic</p>
+            <h1 class="text-[1.05rem] font-bold font-outfit text-white leading-tight tracking-wide">MediTrack</h1>
+            <p class="text-[0.65rem] font-medium" style="color:rgba(103,232,249,0.75);">Admin Panel</p>
         </div>
     </div>
 
-    <!-- Nav -->
-    <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-0.5" style="scrollbar-width:none;">
         <p class="nav-section-label">Main Menu</p>
+
         <button onclick="switchTab('overview')" data-tab="overview"
                 class="nav-item active w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-chart-pie w-4 text-center text-sm"></i>
-            <span class="font-medium text-sm">Overview</span>
+            <span class="text-sm">Overview</span>
         </button>
         <button onclick="switchTab('appointments')" data-tab="appointments"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-calendar-check w-4 text-center text-sm"></i>
-            <span class="font-medium text-sm">Appointments</span>
+            <span class="text-sm">Appointments</span>
         </button>
         <button onclick="switchTab('patients')" data-tab="patients"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-users w-4 text-center text-sm"></i>
-            <span class="font-medium text-sm">Patients</span>
+            <span class="text-sm">Patients</span>
         </button>
 
         <p class="nav-section-label">Management</p>
+
         <button onclick="switchTab('schedule')" data-tab="schedule"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-clock w-4 text-center text-sm"></i>
-            <span class="font-medium text-sm">Doctor Schedule</span>
+            <span class="text-sm">Doctor Schedule</span>
         </button>
         <button onclick="switchTab('reports')" data-tab="reports"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-chart-bar w-4 text-center text-sm"></i>
-            <span class="font-medium text-sm">Reports</span>
+            <span class="text-sm">Reports</span>
         </button>
         <button onclick="switchTab('activity')" data-tab="activity"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-history w-4 text-center text-sm"></i>
-            <span class="font-medium text-sm">Activity Logs</span>
+            <span class="text-sm">Activity Logs</span>
         </button>
     </nav>
 
-    <!-- User + Logout -->
-    <div class="px-4 py-4 flex-shrink-0" style="border-top: 1px solid rgba(255,255,255,0.08);">
+    <!-- Admin info + logout -->
+    <div class="px-4 py-4 flex-shrink-0" style="border-top:1px solid rgba(255,255,255,0.09);">
         <div class="flex items-center gap-3 mb-3">
-            <div class="w-9 h-9 rounded-full bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center flex-shrink-0">
+            <div class="sidebar-avatar">
                 <i class="fas fa-user-shield text-cyan-300 text-sm"></i>
             </div>
             <div class="min-w-0">
-                <p id="sidebarAdminName" class="font-semibold text-sm text-white truncate">Admin</p>
-                <p class="text-[0.68rem] text-teal-300/70">Administrator</p>
+                <p id="sidebarAdminName" class="font-semibold text-sm text-white truncate font-outfit">Admin</p>
+                <p class="text-[0.65rem] font-medium" style="color:rgba(103,232,249,0.7);">Administrator</p>
             </div>
         </div>
         <button onclick="logout()"
-                class="w-full bg-red-500/20 hover:bg-red-500 border border-red-400/30 hover:border-red-500 text-red-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2">
+                class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.25);color:rgb(252,165,165);"
+                onmouseenter="this.style.background='rgba(239,68,68,0.75)';this.style.color='white';"
+                onmouseleave="this.style.background='rgba(239,68,68,0.15)';this.style.color='rgb(252,165,165)';">
             <i class="fas fa-sign-out-alt text-xs"></i>
             <span>Sign Out</span>
         </button>
     </div>
 </aside>
 
-<!-- ══════════ MAIN CONTENT ══════════ -->
+<!-- ══════════════════════════════════════
+     MAIN CONTENT AREA
+══════════════════════════════════════ -->
 <div class="md:ml-64 min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 flex-shrink-0" style="box-shadow: 0 1px 12px rgba(0,0,0,0.06);">
+    <!-- ── HEADER ── -->
+    <header class="bg-white sticky top-0 z-20 flex-shrink-0"
+            style="border-bottom:1px solid #e2e8f0;box-shadow:0 1px 16px rgba(8,51,68,0.07);">
         <div class="flex items-center justify-between h-16 px-4 sm:px-6">
-            <!-- Hamburger -->
-            <button onclick="openSidebar()" class="md:hidden text-slate-400 hover:text-teal-600 p-2 rounded-lg hover:bg-teal-50 transition min-h-[44px] min-w-[44px] flex items-center justify-center">
+
+            <!-- Hamburger (mobile) -->
+            <button onclick="openSidebar()"
+                    class="md:hidden text-slate-400 hover:text-[#0891B2] p-2 rounded-lg hover:bg-[#f0fdfa] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <i class="fas fa-bars text-lg"></i>
             </button>
 
-            <!-- Title -->
-            <h2 id="headerTitle" class="text-base sm:text-lg font-bold text-slate-800 font-poppins">Admin Dashboard</h2>
+            <!-- Page title -->
+            <h2 id="headerTitle"
+                class="text-base sm:text-[1.05rem] font-bold text-[#083344] font-outfit tracking-tight">
+                Admin Dashboard
+            </h2>
 
-            <!-- Right -->
-            <div class="flex items-center gap-3">
-                <span class="hidden sm:flex admin-badge">
-                    <i class="fas fa-user-shield text-xs"></i>
+            <!-- Right: admin badge + logout -->
+            <div class="flex items-center gap-2.5">
+                <span class="hidden sm:flex header-admin-badge">
+                    <i class="fas fa-user-shield text-[0.65rem]"></i>
                     <span id="headerAdminName">Admin</span>
                 </span>
                 <button onclick="logout()"
-                        class="hidden sm:flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm font-medium transition min-h-[44px]">
+                        class="hidden sm:flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm font-semibold transition-colors min-h-[44px]">
                     <i class="fas fa-sign-out-alt text-xs"></i>
                     <span>Logout</span>
                 </button>
@@ -267,72 +506,93 @@
         </div>
     </header>
 
-    <!-- Content -->
+    <!-- ── MAIN ── -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8">
 
-        <!-- ════ OVERVIEW ════ -->
+        <!-- ════════════════════════════════
+             TAB: OVERVIEW
+        ════════════════════════════════ -->
         <div id="tab-overview" class="tab-panel active">
+
+            <!-- Heading -->
             <div class="mb-7">
-                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Overview</h3>
-                <p class="text-slate-400 text-sm mt-1">Clinic performance at a glance</p>
+                <div class="section-eyebrow">
+                    <div class="section-eyebrow-dot"></div>
+                    <h3 class="section-title">Overview</h3>
+                </div>
+                <p class="section-sub ml-3">Clinic performance at a glance</p>
             </div>
 
-            <!-- Stat cards grid -->
+            <!-- Stat cards (2 cols mobile → 3 desktop) -->
             <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                <div class="col-span-2 md:col-span-3 flex items-center justify-center py-14 text-slate-400">
-                    <i class="fas fa-spinner fa-spin text-xl mr-3 text-teal-500"></i>
-                    <span class="text-sm">Loading statistics…</span>
+                <div class="col-span-2 md:col-span-3 flex items-center justify-center py-16 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-xl mr-3" style="color:#0891B2;"></i>
+                    <span class="text-sm font-medium">Loading statistics…</span>
                 </div>
             </div>
 
-            <!-- Quick actions -->
-            <div class="mb-3 flex items-center gap-2">
-                <div class="w-1 h-5 rounded-full bg-cyan-500"></div>
-                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Quick Actions</h4>
+            <!-- Quick actions label -->
+            <div class="flex items-center gap-2.5 mb-4">
+                <div style="width:3px;height:16px;border-radius:2px;background:linear-gradient(180deg,#0891B2,#0e7490);"></div>
+                <p class="text-[0.68rem] font-bold text-slate-500 uppercase tracking-widest font-outfit">Quick Actions</p>
             </div>
+
+            <!-- Quick action grid (2 cols mobile → 4 desktop) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <!-- Appointments -->
                 <button onclick="switchTab('appointments')"
-                        class="bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-teal-500/20 flex flex-col items-center gap-2 min-h-[90px]">
-                    <i class="fas fa-calendar-check text-2xl opacity-90"></i>
+                        class="quick-action rounded-2xl p-5 text-white text-sm font-semibold flex flex-col items-center gap-2.5 min-h-[96px] shadow-lg"
+                        style="background:linear-gradient(135deg,#0891B2 0%,#0e7490 100%);box-shadow:0 8px 24px rgba(8,145,178,0.28);">
+                    <i class="fas fa-calendar-check text-[1.6rem] opacity-95"></i>
                     <span>Appointments</span>
                 </button>
+                <!-- Patients -->
                 <button onclick="switchTab('patients')"
-                        class="bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-blue-500/20 flex flex-col items-center gap-2 min-h-[90px]">
-                    <i class="fas fa-users text-2xl opacity-90"></i>
+                        class="quick-action rounded-2xl p-5 text-white text-sm font-semibold flex flex-col items-center gap-2.5 min-h-[96px] shadow-lg"
+                        style="background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);box-shadow:0 8px 24px rgba(59,130,246,0.28);">
+                    <i class="fas fa-users text-[1.6rem] opacity-95"></i>
                     <span>Patients</span>
                 </button>
+                <!-- Schedule -->
                 <button onclick="switchTab('schedule')"
-                        class="bg-gradient-to-br from-violet-500 to-purple-700 hover:from-violet-600 hover:to-purple-800 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-purple-500/20 flex flex-col items-center gap-2 min-h-[90px]">
-                    <i class="fas fa-clock text-2xl opacity-90"></i>
+                        class="quick-action rounded-2xl p-5 text-white text-sm font-semibold flex flex-col items-center gap-2.5 min-h-[96px] shadow-lg"
+                        style="background:linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%);box-shadow:0 8px 24px rgba(139,92,246,0.28);">
+                    <i class="fas fa-clock text-[1.6rem] opacity-95"></i>
                     <span>Schedule</span>
                 </button>
+                <!-- Reports -->
                 <button onclick="switchTab('reports')"
-                        class="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-2xl p-5 text-sm font-semibold transition shadow-lg shadow-orange-400/20 flex flex-col items-center gap-2 min-h-[90px]">
-                    <i class="fas fa-chart-bar text-2xl opacity-90"></i>
+                        class="quick-action rounded-2xl p-5 text-white text-sm font-semibold flex flex-col items-center gap-2.5 min-h-[96px] shadow-lg"
+                        style="background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);box-shadow:0 8px 24px rgba(249,115,22,0.28);">
+                    <i class="fas fa-chart-bar text-[1.6rem] opacity-95"></i>
                     <span>Reports</span>
                 </button>
             </div>
         </div>
 
-        <!-- ════ APPOINTMENTS ════ -->
+        <!-- ════════════════════════════════
+             TAB: APPOINTMENTS
+        ════════════════════════════════ -->
         <div id="tab-appointments" class="tab-panel">
+
             <div class="mb-6">
-                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Appointments</h3>
-                <p class="text-slate-400 text-sm mt-1">View and manage all clinic appointments</p>
+                <div class="section-eyebrow">
+                    <div class="section-eyebrow-dot"></div>
+                    <h3 class="section-title">Appointments</h3>
+                </div>
+                <p class="section-sub ml-3">View and manage all clinic appointments</p>
             </div>
 
-            <!-- Filters card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
+            <!-- Filters -->
+            <div class="filter-card">
                 <div class="flex flex-wrap gap-3 items-end">
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</label>
-                        <input type="date" id="apptFilterDate"
-                               class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                    <div>
+                        <label class="filter-label">Date</label>
+                        <input type="date" id="apptFilterDate" class="filter-input">
                     </div>
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</label>
-                        <select id="apptFilterStatus"
-                                class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                    <div>
+                        <label class="filter-label">Status</label>
+                        <select id="apptFilterStatus" class="filter-select">
                             <option value="">All Statuses</option>
                             <option value="scheduled">Scheduled</option>
                             <option value="checked_in">Checked In</option>
@@ -340,130 +600,149 @@
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
-                    <button onclick="applyAppointmentFilters()"
-                            class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 min-h-[44px]">
+                    <button onclick="applyAppointmentFilters()" class="btn-primary">
                         <i class="fas fa-filter text-xs"></i> Filter
                     </button>
-                    <button onclick="clearAppointmentFilters()"
-                            class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition min-h-[44px]">
+                    <button onclick="clearAppointmentFilters()" class="btn-ghost">
                         Clear
                     </button>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <!-- Table card -->
+            <div class="card">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="data-table w-full">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">#</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Appt No.</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Patient</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Date</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Time</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+                            <tr>
+                                <th>#</th>
+                                <th>Appt No.</th>
+                                <th>Patient</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="apptTableBody" class="divide-y divide-slate-100">
-                            <tr><td colspan="7" class="text-center py-12 text-slate-400">
-                                <i class="fas fa-spinner fa-spin mr-2 text-teal-400"></i>Loading…
-                            </td></tr>
+                        <tbody id="apptTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-14 text-slate-400">
+                                    <i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>
+                                    Loading appointments…
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
-                    <button id="apptPrevBtn" onclick="appointmentPrevPage()"
-                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                <!-- Pagination -->
+                <div class="flex items-center justify-between px-5 py-3.5"
+                     style="border-top:1px solid #f1f5f9;background:#fafcfd;">
+                    <button id="apptPrevBtn" onclick="appointmentPrevPage()" class="btn-page">
                         <i class="fas fa-chevron-left text-xs"></i> Previous
                     </button>
                     <span id="apptPageInfo" class="text-sm text-slate-500 font-medium">Page 1 of 1</span>
-                    <button id="apptNextBtn" onclick="appointmentNextPage()"
-                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                    <button id="apptNextBtn" onclick="appointmentNextPage()" class="btn-page">
                         Next <i class="fas fa-chevron-right text-xs"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- ════ PATIENTS ════ -->
+        <!-- ════════════════════════════════
+             TAB: PATIENTS
+        ════════════════════════════════ -->
         <div id="tab-patients" class="tab-panel">
+
             <div class="mb-6">
-                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Patients</h3>
-                <p class="text-slate-400 text-sm mt-1">Manage registered clinic patients</p>
+                <div class="section-eyebrow">
+                    <div class="section-eyebrow-dot"></div>
+                    <h3 class="section-title">Patients</h3>
+                </div>
+                <p class="section-sub ml-3">Manage registered clinic patients</p>
             </div>
 
             <!-- Search -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
+            <div class="filter-card">
                 <div class="relative max-w-sm">
                     <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="patientSearch" placeholder="Search by name or email…"
+                    <input type="text" id="patientSearch"
+                           placeholder="Search by name or email…"
                            oninput="filterPatientsTable()"
-                           class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                           class="filter-input w-full pl-10 pr-4 py-2.5">
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <!-- Table card -->
+            <div class="card">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="data-table w-full">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">#</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Name</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Contact</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Blood Group</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Actions</th>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Contact</th>
+                                <th>Blood Group</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="patientsTableBody" class="divide-y divide-slate-100">
-                            <tr><td colspan="7" class="text-center py-12 text-slate-400">
-                                <i class="fas fa-spinner fa-spin mr-2 text-teal-400"></i>Loading…
-                            </td></tr>
+                        <tbody id="patientsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-14 text-slate-400">
+                                    <i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>
+                                    Loading patients…
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ════ DOCTOR SCHEDULE ════ -->
+        <!-- ════════════════════════════════
+             TAB: DOCTOR SCHEDULE
+        ════════════════════════════════ -->
         <div id="tab-schedule" class="tab-panel">
+
             <div class="mb-6">
-                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Doctor Schedule</h3>
-                <p class="text-slate-400 text-sm mt-1">Set weekly availability for the clinic doctor</p>
+                <div class="section-eyebrow">
+                    <div class="section-eyebrow-dot"></div>
+                    <h3 class="section-title">Doctor Schedule</h3>
+                </div>
+                <p class="section-sub ml-3">Set weekly availability for the clinic doctor</p>
             </div>
 
             <!-- Doctor info card -->
-            <div id="doctorInfoCard" class="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-2xl p-5 mb-6 flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-teal-600 flex items-center justify-center flex-shrink-0 shadow-md">
+            <div id="doctorInfoCard"
+                 class="rounded-2xl p-5 mb-6 flex items-center gap-4"
+                 style="background:linear-gradient(135deg,#f0fdfa 0%,#ecfeff 100%);border:1.5px solid #a5f3fc;">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
+                     style="background:linear-gradient(135deg,#0891B2,#0e7490);">
                     <i class="fas fa-user-md text-white text-xl"></i>
                 </div>
                 <div>
-                    <p id="schedDocName" class="font-bold text-slate-800 text-base">Loading…</p>
-                    <p id="schedDocSpec" class="text-sm text-teal-700 font-medium"></p>
+                    <p id="schedDocName" class="font-bold text-[#083344] text-base font-outfit">Loading…</p>
+                    <p id="schedDocSpec" class="text-sm font-semibold" style="color:#0891B2;"></p>
                     <p id="schedDocEmail" class="text-xs text-slate-500 mt-0.5"></p>
                 </div>
             </div>
 
-            <!-- Schedule form -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 flex items-center gap-2">
-                    <i class="fas fa-calendar-week text-teal-500 text-sm"></i>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Weekly Availability — check days and set hours
-                    </p>
+            <!-- Schedule form card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-week text-sm" style="color:#0891B2;"></i>
+                    <span class="card-header-label">Weekly Availability — check days and set hours</span>
                 </div>
                 <form id="scheduleForm" onsubmit="saveSchedule(event)" class="divide-y divide-slate-100">
                     <div class="p-10 text-center text-slate-400">
-                        <i class="fas fa-spinner fa-spin text-2xl mr-2 text-teal-400"></i> Loading schedule…
+                        <i class="fas fa-spinner fa-spin text-2xl mr-2" style="color:#0891B2;"></i>
+                        Loading schedule…
                     </div>
                 </form>
-                <div class="px-5 py-4 bg-slate-50/80 border-t border-slate-100 flex justify-end">
-                    <button type="button" onclick="saveSchedule(event)"
-                            class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition shadow flex items-center gap-2 min-h-[44px]">
+                <div class="px-5 py-4 flex justify-end"
+                     style="border-top:1px solid #f1f5f9;background:#fafcfd;">
+                    <button type="button" onclick="saveSchedule(event)" class="btn-primary">
                         <i class="fas fa-save text-xs"></i>
                         <span>Save Schedule</span>
                     </button>
@@ -471,55 +750,64 @@
             </div>
         </div>
 
-        <!-- ════ REPORTS ════ -->
+        <!-- ════════════════════════════════
+             TAB: REPORTS
+        ════════════════════════════════ -->
         <div id="tab-reports" class="tab-panel">
+
             <div class="mb-6 flex flex-wrap items-start justify-between gap-3 no-print">
                 <div>
-                    <h3 class="text-2xl font-bold text-slate-800 font-poppins">Reports</h3>
-                    <p class="text-slate-400 text-sm mt-1">Appointment and patient analytics</p>
+                    <div class="section-eyebrow">
+                        <div class="section-eyebrow-dot"></div>
+                        <h3 class="section-title">Reports</h3>
+                    </div>
+                    <p class="section-sub ml-3">Appointment and patient analytics</p>
                 </div>
                 <button onclick="window.print()"
-                        class="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition min-h-[44px]">
+                        class="flex items-center gap-2 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition min-h-[44px]"
+                        style="background:linear-gradient(135deg,#334155,#1e293b);box-shadow:0 4px 12px rgba(30,41,59,0.25);">
                     <i class="fas fa-print text-xs"></i> Print Report
                 </button>
             </div>
 
             <!-- Period selector -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5 no-print">
+            <div class="filter-card no-print">
                 <div class="flex gap-2 flex-wrap">
-                    <button data-period="today" onclick="selectReportPeriod('today')"
-                            class="period-btn px-5 py-2 rounded-xl text-sm font-semibold transition border border-teal-500 text-teal-600 hover:bg-teal-50 min-h-[44px]">Today</button>
-                    <button data-period="week" onclick="selectReportPeriod('week')"
-                            class="period-btn active-period px-5 py-2 rounded-xl text-sm font-semibold transition min-h-[44px]">Weekly</button>
-                    <button data-period="month" onclick="selectReportPeriod('month')"
-                            class="period-btn px-5 py-2 rounded-xl text-sm font-semibold transition border border-teal-500 text-teal-600 hover:bg-teal-50 min-h-[44px]">Monthly</button>
-                    <button data-period="year" onclick="selectReportPeriod('year')"
-                            class="period-btn px-5 py-2 rounded-xl text-sm font-semibold transition border border-teal-500 text-teal-600 hover:bg-teal-50 min-h-[44px]">Yearly</button>
+                    <button data-period="today"  onclick="selectReportPeriod('today')"  class="period-btn">Today</button>
+                    <button data-period="week"   onclick="selectReportPeriod('week')"   class="period-btn active-period">Weekly</button>
+                    <button data-period="month"  onclick="selectReportPeriod('month')"  class="period-btn">Monthly</button>
+                    <button data-period="year"   onclick="selectReportPeriod('year')"   class="period-btn">Yearly</button>
                 </div>
             </div>
 
+            <!-- Reports dynamic content -->
             <div id="reportsContent">
                 <div class="flex items-center justify-center py-16 text-slate-400">
-                    <i class="fas fa-spinner fa-spin text-2xl mr-3 text-teal-400"></i>
-                    <span>Loading reports…</span>
+                    <i class="fas fa-spinner fa-spin text-2xl mr-3" style="color:#0891B2;"></i>
+                    <span class="font-medium">Loading reports…</span>
                 </div>
             </div>
         </div>
 
-        <!-- ════ ACTIVITY LOGS ════ -->
+        <!-- ════════════════════════════════
+             TAB: ACTIVITY LOGS
+        ════════════════════════════════ -->
         <div id="tab-activity" class="tab-panel">
+
             <div class="mb-6">
-                <h3 class="text-2xl font-bold text-slate-800 font-poppins">Activity Logs</h3>
-                <p class="text-slate-400 text-sm mt-1">Audit trail of all system actions</p>
+                <div class="section-eyebrow">
+                    <div class="section-eyebrow-dot"></div>
+                    <h3 class="section-title">Activity Logs</h3>
+                </div>
+                <p class="section-sub ml-3">Audit trail of all system actions</p>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
+            <div class="filter-card">
                 <div class="flex flex-wrap gap-3 items-end">
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Action Type</label>
-                        <select id="logFilterAction"
-                                class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                    <div>
+                        <label class="filter-label">Action Type</label>
+                        <select id="logFilterAction" class="filter-select">
                             <option value="">All Actions</option>
                             <option value="CREATE">CREATE</option>
                             <option value="UPDATE">UPDATE</option>
@@ -529,10 +817,9 @@
                             <option value="CHECKIN">CHECKIN</option>
                         </select>
                     </div>
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Module</label>
-                        <select id="logFilterModule"
-                                class="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent bg-slate-50">
+                    <div>
+                        <label class="filter-label">Module</label>
+                        <select id="logFilterModule" class="filter-select">
                             <option value="">All Modules</option>
                             <option value="auth">auth</option>
                             <option value="appointments">appointments</option>
@@ -542,46 +829,47 @@
                             <option value="doctor_schedules">doctor_schedules</option>
                         </select>
                     </div>
-                    <button onclick="applyActivityFilters()"
-                            class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 min-h-[44px]">
+                    <button onclick="applyActivityFilters()" class="btn-primary">
                         <i class="fas fa-filter text-xs"></i> Filter
                     </button>
-                    <button onclick="clearActivityFilters()"
-                            class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition min-h-[44px]">
+                    <button onclick="clearActivityFilters()" class="btn-ghost">
                         Clear
                     </button>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <!-- Table card -->
+            <div class="card">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="data-table w-full">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Timestamp</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">User</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Role</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Action</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Module</th>
-                                <th class="text-left px-5 py-3.5 font-semibold text-slate-500 text-xs uppercase tracking-wider">Description</th>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Action</th>
+                                <th>Module</th>
+                                <th>Description</th>
                             </tr>
                         </thead>
-                        <tbody id="activityTableBody" class="divide-y divide-slate-100">
-                            <tr><td colspan="6" class="text-center py-12 text-slate-400">
-                                <i class="fas fa-spinner fa-spin mr-2 text-teal-400"></i>Loading…
-                            </td></tr>
+                        <tbody id="activityTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-14 text-slate-400">
+                                    <i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>
+                                    Loading logs…
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
-                    <button id="actPrevBtn" onclick="activityPrevPage()"
-                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                <!-- Pagination -->
+                <div class="flex items-center justify-between px-5 py-3.5"
+                     style="border-top:1px solid #f1f5f9;background:#fafcfd;">
+                    <button id="actPrevBtn" onclick="activityPrevPage()" class="btn-page">
                         <i class="fas fa-chevron-left text-xs"></i> Previous
                     </button>
                     <span id="actPageInfo" class="text-sm text-slate-500 font-medium">Page 1 of 1</span>
-                    <button id="actNextBtn" onclick="activityNextPage()"
-                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:text-teal-600 text-slate-600 text-sm font-medium disabled:opacity-40 transition flex items-center gap-1.5">
+                    <button id="actNextBtn" onclick="activityNextPage()" class="btn-page">
                         Next <i class="fas fa-chevron-right text-xs"></i>
                     </button>
                 </div>
@@ -591,32 +879,41 @@
     </main>
 </div>
 
-<!-- ══════════ MOBILE BOTTOM NAV ══════════ -->
+<!-- ══════════════════════════════════════
+     MOBILE BOTTOM NAV
+══════════════════════════════════════ -->
 <nav class="mobile-bottom-nav">
     <button class="nav-btn active" data-tab="overview" onclick="switchTab('overview')">
-        <i class="fas fa-chart-pie"></i><span>Overview</span>
+        <i class="fas fa-chart-pie"></i>
+        <span>Overview</span>
     </button>
     <button class="nav-btn" data-tab="appointments" onclick="switchTab('appointments')">
-        <i class="fas fa-calendar-check"></i><span>Appts</span>
+        <i class="fas fa-calendar-check"></i>
+        <span>Appts</span>
     </button>
     <button class="nav-btn" data-tab="patients" onclick="switchTab('patients')">
-        <i class="fas fa-users"></i><span>Patients</span>
+        <i class="fas fa-users"></i>
+        <span>Patients</span>
     </button>
     <button class="nav-btn" data-tab="schedule" onclick="switchTab('schedule')">
-        <i class="fas fa-clock"></i><span>Schedule</span>
+        <i class="fas fa-clock"></i>
+        <span>Schedule</span>
     </button>
     <button class="nav-btn" id="moreBtn" onclick="toggleMoreMenu()">
-        <i class="fas fa-ellipsis-h"></i><span>More</span>
+        <i class="fas fa-ellipsis-h"></i>
+        <span>More</span>
     </button>
 </nav>
 
-<!-- More dropdown -->
+<!-- More dropdown (mobile) -->
 <div id="moreDropdown">
     <button data-tab="reports" onclick="switchTab('reports');closeMoreMenu()">
-        <i class="fas fa-chart-bar text-orange-500 w-5"></i> Reports
+        <i class="fas fa-chart-bar w-5" style="color:#f97316;"></i>
+        Reports
     </button>
     <button data-tab="activity" onclick="switchTab('activity');closeMoreMenu()">
-        <i class="fas fa-history text-purple-500 w-5"></i> Activity Logs
+        <i class="fas fa-history w-5" style="color:#8b5cf6;"></i>
+        Activity Logs
     </button>
 </div>
 

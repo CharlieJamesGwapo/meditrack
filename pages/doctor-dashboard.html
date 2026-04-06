@@ -5,108 +5,194 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor Dashboard — MediTrack</title>
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome 6.4 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Google Fonts: Outfit + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- html5-qrcode -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        h1,h2,h3,h4,h5,h6,.font-poppins { font-family: 'Poppins', sans-serif; }
-        body { background: #F0FDFA; overflow-x: hidden; }
+        /* ── Typography ─────────────────────────────── */
+        * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+        h1,h2,h3,h4,h5,h6,.font-outfit { font-family: 'Outfit', sans-serif; }
 
-        /* Sidebar */
-        .sidebar { width: 260px; background: linear-gradient(175deg, #0e7490 0%, #0891B2 45%, #0f766e 100%); }
-        .nav-item { transition: all 0.2s ease; border-radius: 0.625rem; }
-        .nav-item:hover { background: rgba(255,255,255,0.13); }
-        .nav-item.active { background: rgba(255,255,255,0.18); box-shadow: 0 2px 10px rgba(0,0,0,0.18); }
+        /* ── Base ───────────────────────────────────── */
+        body { background: #F0FDFA; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
-        /* Stat cards */
-        .stat-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 14px 28px rgba(8,145,178,0.18); }
+        /* ── Sidebar ────────────────────────────────── */
+        .sidebar {
+            width: 264px;
+            background: linear-gradient(180deg, #083344 0%, #0891B2 100%);
+            box-shadow: 4px 0 24px rgba(8,51,68,0.18);
+        }
+        .nav-item {
+            border-radius: 10px;
+            transition: background 0.18s ease, box-shadow 0.18s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px; height: 60%;
+            background: #fff;
+            border-radius: 0 3px 3px 0;
+            transition: transform 0.18s ease;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.10); }
+        .nav-item.active { background: rgba(255,255,255,0.18); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+        .nav-item.active::before { transform: translateY(-50%) scaleY(1); }
 
-        /* Appointment card */
-        .appt-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .appt-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(8,145,178,0.14); }
+        /* ── Stat cards ─────────────────────────────── */
+        .stat-card {
+            transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(8,145,178,0.15);
+        }
 
-        /* Tabs */
-        .tab-content { display: none; }
+        /* ── Appointment card ───────────────────────── */
+        .appt-card {
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            border-left: 3px solid transparent;
+        }
+        .appt-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(8,145,178,0.12);
+        }
+        .appt-card.status-scheduled  { border-left-color: #60a5fa; }
+        .appt-card.status-confirmed  { border-left-color: #a78bfa; }
+        .appt-card.status-checked_in { border-left-color: #fbbf24; }
+        .appt-card.status-in_progress{ border-left-color: #f97316; }
+        .appt-card.status-completed  { border-left-color: #34d399; }
+        .appt-card.status-cancelled  { border-left-color: #d1d5db; }
+
+        /* ── Tab system ─────────────────────────────── */
+        .tab-content { display: none; animation: fadeIn 0.22s ease; }
         .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-        /* Status badges */
+        /* ── Status badges ──────────────────────────── */
         .badge-scheduled  { background:#dbeafe; color:#1d4ed8; }
         .badge-confirmed  { background:#ede9fe; color:#6d28d9; }
         .badge-checked_in { background:#fef3c7; color:#b45309; }
-        .badge-in_progress{ background:#fed7aa; color:#c2410c; }
+        .badge-in_progress{ background:#ffedd5; color:#c2410c; }
         .badge-completed  { background:#d1fae5; color:#065f46; }
         .badge-cancelled  { background:#f3f4f6; color:#6b7280; }
 
-        /* Skeleton shimmer */
-        .skeleton { background: linear-gradient(90deg,#e2ecef 25%,#f0f7f9 50%,#e2ecef 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:0.5rem; }
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        /* ── Skeleton shimmer ───────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg, #e2ecef 25%, #f0f7f9 50%, #e2ecef 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
 
-        /* Pulse dot */
+        /* ── Pulse dot ──────────────────────────────── */
         .pulse-dot { animation: pulseDot 2s cubic-bezier(.4,0,.6,1) infinite; }
-        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width:6px; height:6px; }
-        ::-webkit-scrollbar-track { background:#f0fdf4; }
-        ::-webkit-scrollbar-thumb { background:#0891B2; border-radius:3px; }
+        /* ── Scrollbar ──────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f0fdf4; }
+        ::-webkit-scrollbar-thumb { background: #0891B2; border-radius: 3px; }
 
-        /* Form focus */
-        input:focus,textarea:focus,select:focus { outline:none; border-color:#0891B2; box-shadow:0 0 0 3px rgba(8,145,178,0.12); }
-
-        /* Modal */
-        .modal-overlay { backdrop-filter: blur(4px); }
-        #record-modal-body { max-height: calc(100vh - 180px); overflow-y: auto; }
-
-        /* QR reader */
-        #qr-reader { width:100%; }
-        #qr-reader video { width:100% !important; border-radius:0.5rem; }
-        #qr-reader__scan_region { border-radius:0.5rem; overflow:hidden; }
-
-        /* Table */
-        .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-
-        /* SweetAlert */
-        .swal2-popup { border-radius:1rem; }
-        .swal2-confirm { background-color:#0891B2 !important; }
-        .swal2-cancel  { background-color:#64748B !important; }
-
-        /* Mobile */
-        @media(max-width:767px) {
-            body { padding-bottom:76px; }
-            .sidebar { display:none !important; }
-            .main-content { margin-left:0 !important; }
+        /* ── Form focus ─────────────────────────────── */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #0891B2 !important;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
         }
-        @media(min-width:768px) {
-            #mobile-bottom-nav { display:none !important; }
+
+        /* ── Modals ─────────────────────────────────── */
+        .modal-overlay { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+        #record-modal-body { max-height: calc(100vh - 160px); overflow-y: auto; }
+        #record-modal-body::-webkit-scrollbar { width: 4px; }
+        #record-modal-body::-webkit-scrollbar-thumb { background: #0891B2; border-radius: 2px; }
+
+        /* ── QR Reader ──────────────────────────────── */
+        #qr-reader { width: 100%; }
+        #qr-reader video { width: 100% !important; border-radius: 10px; }
+        #qr-reader__scan_region { border-radius: 10px; overflow: hidden; }
+        #qr-reader__dashboard_section_swaplink { display: none !important; }
+
+        /* ── Table ──────────────────────────────────── */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* ── SweetAlert overrides ───────────────────── */
+        .swal2-popup { border-radius: 16px; font-family: 'DM Sans', sans-serif; }
+        .swal2-title { font-family: 'Outfit', sans-serif; }
+        .swal2-confirm { background-color: #0891B2 !important; border-radius: 8px !important; }
+        .swal2-cancel  { background-color: #64748B !important; border-radius: 8px !important; }
+
+        /* ── Header gradient line ───────────────────── */
+        .header-accent { height: 3px; background: linear-gradient(90deg, #0891B2, #16A34A, #0891B2); background-size: 200%; animation: gradientShift 4s linear infinite; }
+        @keyframes gradientShift { 0%{background-position:0%} 100%{background-position:200%} }
+
+        /* ── Mobile ─────────────────────────────────── */
+        @media (max-width: 767px) {
+            body { padding-bottom: 72px; }
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; }
         }
-        .mobile-nav-btn { transition:color 0.2s; }
-        .mobile-nav-btn.active { color:#0891B2; }
+        @media (min-width: 768px) {
+            #mobile-bottom-nav { display: none !important; }
+        }
+        .mobile-nav-btn { transition: color 0.18s; }
+        .mobile-nav-btn.active { color: #0891B2; }
+        .mobile-nav-btn.active .mobile-nav-dot { opacity: 1; }
+        .mobile-nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #0891B2; opacity: 0; transition: opacity 0.18s; margin: 0 auto; }
+
+        /* ── Vitals grid ─────────────────────────────── */
+        .vital-field { position: relative; }
+        .vital-field label { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #64748B; display: block; margin-bottom: 4px; }
+        .vital-unit { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #94a3b8; pointer-events: none; margin-top: 10px; }
+
+        /* ── Profile avatar ring ────────────────────── */
+        .avatar-ring { box-shadow: 0 0 0 3px rgba(8,145,178,0.25), 0 0 0 6px rgba(8,145,178,0.08); }
+
+        /* ── Section divider ────────────────────────── */
+        .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
     </style>
 </head>
 <body>
 
 <div class="flex min-h-screen">
 
-    <!-- ═══════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════
          SIDEBAR
-    ═══════════════════════════════════════════ -->
-    <aside class="sidebar hidden md:flex flex-col flex-shrink-0 fixed top-0 left-0 h-full z-30" style="background:linear-gradient(175deg,#0e7490 0%,#0891B2 45%,#0f766e 100%)">
+    ════════════════════════════════════════════════════ -->
+    <aside class="sidebar hidden md:flex flex-col flex-shrink-0 fixed top-0 left-0 h-full z-30"
+           style="background:linear-gradient(180deg,#083344 0%,#0891B2 100%)">
 
-        <!-- Logo -->
-        <div class="px-6 py-5 border-b border-white/10">
+        <!-- Branding -->
+        <div class="px-5 py-5 border-b border-white/10">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <svg class="w-6 h-6 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <div class="w-10 h-10 bg-white/15 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0 border border-white/20 shadow-inner">
+                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
                         <polyline points="2,12 5,4 8,12 11,8 14,16 17,10 20,14 22,12"/>
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-white font-bold text-lg leading-tight font-poppins">MediTrack</h1>
-                    <p class="text-cyan-200 text-xs">Doctor Portal</p>
+                    <h1 class="text-white font-bold text-base leading-tight font-outfit tracking-tight">MediTrack</h1>
+                    <p class="text-cyan-200/80 text-xs font-medium tracking-wide">Doctor Portal</p>
                 </div>
             </div>
         </div>
@@ -114,35 +200,46 @@
         <!-- Doctor identity -->
         <div class="px-5 py-4 border-b border-white/10">
             <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 rounded-full bg-cyan-300/30 border-2 border-cyan-200/40 flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0" id="sidebar-avatar">
-                    <i class="fas fa-user-md text-cyan-100"></i>
+                <div class="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0 shadow"
+                     id="sidebar-avatar">
+                    <i class="fas fa-user-md text-white/90"></i>
                 </div>
-                <div class="overflow-hidden">
-                    <p class="text-white font-semibold text-sm truncate leading-tight" id="sidebar-name">Loading…</p>
-                    <p class="text-cyan-200 text-xs truncate" id="sidebar-spec">—</p>
+                <div class="overflow-hidden flex-1">
+                    <p class="text-white font-semibold text-sm truncate leading-tight font-outfit" id="sidebar-name">Loading…</p>
+                    <p class="text-cyan-200/80 text-xs truncate mt-0.5" id="sidebar-spec">—</p>
                 </div>
             </div>
-            <div class="mt-2.5 flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-green-400 pulse-dot inline-block"></span>
-                <span class="text-cyan-200 text-xs">On duty</span>
+            <div class="mt-3 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 pulse-dot"></span>
+                <span class="text-cyan-200/70 text-xs font-medium">On duty</span>
             </div>
         </div>
 
         <!-- Navigation -->
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <p class="section-label px-3 mb-2 opacity-60">Navigation</p>
+
             <button onclick="switchTab('today')" id="nav-today"
                 class="nav-item active w-full flex items-center space-x-3 px-4 py-3 text-white text-sm font-medium">
-                <i class="fas fa-calendar-day w-5 text-center opacity-90"></i>
+                <div class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-calendar-day text-xs"></i>
+                </div>
                 <span>Today's Appointments</span>
             </button>
+
             <button onclick="switchTab('all')" id="nav-all"
-                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100 text-sm font-medium">
-                <i class="fas fa-calendar-alt w-5 text-center opacity-75"></i>
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-calendar-alt text-xs"></i>
+                </div>
                 <span>All Appointments</span>
             </button>
+
             <button onclick="switchTab('profile')" id="nav-profile"
-                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100 text-sm font-medium">
-                <i class="fas fa-user-circle w-5 text-center opacity-75"></i>
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user-circle text-xs"></i>
+                </div>
                 <span>My Profile</span>
             </button>
         </nav>
@@ -150,89 +247,105 @@
         <!-- Logout -->
         <div class="px-3 pb-5 pt-2 border-t border-white/10">
             <button onclick="logout()"
-                class="w-full flex items-center space-x-3 px-4 py-3 text-cyan-100 hover:text-white hover:bg-red-500/80 rounded-xl transition-all text-sm font-medium">
-                <i class="fas fa-sign-out-alt w-5 text-center"></i>
-                <span>Logout</span>
+                class="w-full flex items-center space-x-3 px-4 py-3 text-cyan-200/80 hover:text-white hover:bg-red-500/70 rounded-xl transition-all text-sm font-medium group">
+                <div class="w-8 h-8 rounded-lg bg-white/10 group-hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 transition-colors">
+                    <i class="fas fa-sign-out-alt text-xs"></i>
+                </div>
+                <span>Sign Out</span>
             </button>
         </div>
     </aside>
 
-    <!-- ═══════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════
          MAIN CONTENT
-    ═══════════════════════════════════════════ -->
-    <main class="main-content flex-1 md:ml-64 flex flex-col min-h-screen">
+    ════════════════════════════════════════════════════ -->
+    <main class="main-content flex-1 md:ml-[264px] flex flex-col min-h-screen">
 
         <!-- ─── HEADER ─── -->
-        <header class="bg-white border-b border-[#CCFBF1] sticky top-0 z-20 shadow-sm">
-            <div class="px-4 md:px-6 py-3 flex items-center justify-between">
-                <!-- Left -->
-                <div class="flex items-center space-x-3">
-                    <div class="md:hidden flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-cyan-600 rounded-lg flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <header class="bg-white sticky top-0 z-20 shadow-sm border-b border-gray-100">
+            <div class="header-accent"></div>
+
+            <div class="px-4 md:px-6 py-3.5 flex items-center justify-between">
+                <!-- Left: mobile logo + page title -->
+                <div class="flex items-center space-x-3 min-w-0">
+                    <!-- Mobile branding -->
+                    <div class="md:hidden flex items-center space-x-2 flex-shrink-0">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#083344,#0891B2)">
+                            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <polyline points="2,12 5,4 8,12 11,8 14,16 17,10 20,14 22,12"/>
                             </svg>
                         </div>
-                        <span class="font-bold text-cyan-700 text-sm font-poppins">MediTrack</span>
                     </div>
-                    <div>
-                        <h2 class="text-base md:text-lg font-semibold text-[#134E4A] font-poppins" id="page-title">Today's Appointments</h2>
-                        <p class="text-xs text-[#64748B]" id="header-date"></p>
+                    <!-- Page title -->
+                    <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-semibold text-[#083344] font-outfit truncate leading-tight" id="page-title">Today's Appointments</h2>
+                        <p class="text-xs text-slate-400 font-medium hidden sm:block" id="header-date"></p>
                     </div>
                 </div>
-                <!-- Right -->
-                <div class="flex items-center space-x-3">
-                    <div class="hidden sm:flex items-center space-x-2">
-                        <div class="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-semibold text-sm overflow-hidden border border-cyan-200" id="header-avatar">
+
+                <!-- Right: avatar + logout -->
+                <div class="flex items-center space-x-3 flex-shrink-0">
+                    <!-- Doctor avatar chip -->
+                    <div class="hidden sm:flex items-center space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-3 py-2">
+                        <div class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0"
+                             id="header-avatar">
                             <i class="fas fa-user-md text-xs"></i>
                         </div>
-                        <div class="hidden md:block text-right">
-                            <p class="text-sm font-semibold text-[#134E4A] leading-tight" id="header-name">Loading…</p>
-                            <p class="text-xs text-cyan-600" id="header-role">Doctor</p>
+                        <div class="hidden md:block">
+                            <p class="text-xs font-semibold text-[#083344] leading-tight font-outfit" id="header-name">Loading…</p>
+                            <p class="text-xs text-cyan-600 font-medium" id="header-role">Doctor</p>
                         </div>
                     </div>
+
+                    <!-- Logout -->
                     <button onclick="logout()"
-                        class="flex items-center space-x-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-red-100">
-                        <i class="fas fa-sign-out-alt text-xs"></i>
+                        class="flex items-center space-x-1.5 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
                         <span class="hidden sm:inline">Logout</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Stat Cards -->
-            <div class="px-4 md:px-6 pb-4 pt-1">
+            <!-- ─── STAT CARDS ─── -->
+            <div class="px-4 md:px-6 pb-4 pt-0">
                 <div class="grid grid-cols-3 gap-3">
 
                     <!-- Today's Appointments -->
-                    <div class="stat-card bg-white rounded-xl border-l-4 border-cyan-500 shadow-sm p-3 md:p-4 flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-cyan-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-calendar-day text-cyan-600 text-base"></i>
+                    <div class="stat-card bg-white rounded-2xl border border-gray-100 shadow-sm p-3 md:p-4 flex items-center space-x-3"
+                         style="border-left: 4px solid #0891B2">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:linear-gradient(135deg,#E0F7FF,#CCEFFA)">
+                            <i class="fas fa-calendar-day text-[#0891B2] text-sm"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-2xl md:text-3xl font-bold text-[#134E4A] font-poppins leading-none" id="stat-today">—</p>
-                            <p class="text-xs text-[#64748B] mt-0.5 truncate">Today's</p>
+                            <p class="text-xl md:text-3xl font-bold text-[#083344] font-outfit leading-none" id="stat-today">—</p>
+                            <p class="text-xs text-slate-400 mt-0.5 truncate font-medium">Today</p>
                         </div>
                     </div>
 
                     <!-- Checked In -->
-                    <div class="stat-card bg-white rounded-xl border-l-4 border-amber-400 shadow-sm p-3 md:p-4 flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-user-check text-amber-500 text-base"></i>
+                    <div class="stat-card bg-white rounded-2xl border border-gray-100 shadow-sm p-3 md:p-4 flex items-center space-x-3"
+                         style="border-left: 4px solid #f59e0b">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:linear-gradient(135deg,#FFF7E0,#FEF3C7)">
+                            <i class="fas fa-user-check text-amber-500 text-sm"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-2xl md:text-3xl font-bold text-[#134E4A] font-poppins leading-none" id="stat-checkin">—</p>
-                            <p class="text-xs text-[#64748B] mt-0.5 truncate">Checked In</p>
+                            <p class="text-xl md:text-3xl font-bold text-[#083344] font-outfit leading-none" id="stat-checkin">—</p>
+                            <p class="text-xs text-slate-400 mt-0.5 truncate font-medium">Checked In</p>
                         </div>
                     </div>
 
                     <!-- Completed -->
-                    <div class="stat-card bg-white rounded-xl border-l-4 border-green-500 shadow-sm p-3 md:p-4 flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-check-circle text-green-600 text-base"></i>
+                    <div class="stat-card bg-white rounded-2xl border border-gray-100 shadow-sm p-3 md:p-4 flex items-center space-x-3"
+                         style="border-left: 4px solid #16A34A">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:linear-gradient(135deg,#DCFCE7,#BBF7D0)">
+                            <i class="fas fa-check-circle text-[#16A34A] text-sm"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-2xl md:text-3xl font-bold text-[#134E4A] font-poppins leading-none" id="stat-completed">—</p>
-                            <p class="text-xs text-[#64748B] mt-0.5 truncate">Completed</p>
+                            <p class="text-xl md:text-3xl font-bold text-[#083344] font-outfit leading-none" id="stat-completed">—</p>
+                            <p class="text-xs text-slate-400 mt-0.5 truncate font-medium">Completed</p>
                         </div>
                     </div>
 
@@ -241,64 +354,79 @@
         </header>
 
         <!-- ─── TAB CONTENTS ─── -->
-        <div class="flex-1 p-4 md:p-6">
+        <div class="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
 
-            <!-- ══ TAB: TODAY ══ -->
+            <!-- ══════════════════════════════
+                 TAB: TODAY'S APPOINTMENTS
+            ═══════════════════════════════ -->
             <div id="tab-today" class="tab-content active">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-[#134E4A] font-poppins flex items-center space-x-2">
-                        <i class="fas fa-calendar-day text-cyan-600"></i>
-                        <span>Today's Appointments</span>
-                    </h3>
+                <!-- Section header -->
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center shadow-sm">
+                            <i class="fas fa-calendar-day text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Today's Appointments</h3>
+                    </div>
                     <div class="flex items-center space-x-2">
+                        <span class="text-xs text-slate-400 hidden sm:flex items-center space-x-1">
+                            <i class="fas fa-sync-alt text-cyan-400 text-xs"></i>
+                            <span>Auto 30s</span>
+                        </span>
                         <button onclick="loadTodayAppointments()"
-                            class="flex items-center space-x-1.5 text-sm text-cyan-700 hover:text-cyan-900 font-medium px-3 py-2 border border-[#CCFBF1] hover:border-cyan-300 rounded-lg bg-white transition-colors shadow-sm">
+                            class="flex items-center space-x-1.5 text-sm text-cyan-700 hover:text-cyan-900 font-medium px-3 py-2 border border-cyan-100 hover:border-cyan-300 rounded-xl bg-white transition-colors shadow-sm">
                             <i class="fas fa-sync-alt text-xs" id="refresh-icon-today"></i>
-                            <span>Refresh</span>
+                            <span class="hidden sm:inline">Refresh</span>
                         </button>
-                        <span class="text-xs text-[#64748B] hidden sm:inline">Auto-refresh 30s</span>
                     </div>
                 </div>
 
-                <div id="today-appointments-container">
-                    <!-- Skeleton -->
-                    <div id="today-skeleton" class="space-y-3">
-                        <div class="skeleton h-24 w-full"></div>
-                        <div class="skeleton h-24 w-full"></div>
-                        <div class="skeleton h-24 w-full"></div>
-                    </div>
-                    <!-- List populated by JS -->
-                    <div id="today-appointments-list" class="hidden space-y-3"></div>
+                <!-- Skeleton -->
+                <div id="today-skeleton" class="space-y-3">
+                    <div class="skeleton h-[88px] w-full"></div>
+                    <div class="skeleton h-[88px] w-full opacity-75"></div>
+                    <div class="skeleton h-[88px] w-full opacity-50"></div>
                 </div>
+
+                <!-- Appointment list -->
+                <div id="today-appointments-list" class="hidden space-y-3"></div>
             </div>
 
-            <!-- ══ TAB: ALL APPOINTMENTS ══ -->
+            <!-- ══════════════════════════════
+                 TAB: ALL APPOINTMENTS
+            ═══════════════════════════════ -->
             <div id="tab-all" class="tab-content">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                    <h3 class="font-semibold text-[#134E4A] font-poppins flex items-center space-x-2">
-                        <i class="fas fa-calendar-alt text-cyan-600"></i>
-                        <span>All Appointments</span>
-                    </h3>
+                <!-- Section header -->
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#134E4A] flex items-center justify-center shadow-sm">
+                            <i class="fas fa-calendar-alt text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">All Appointments</h3>
+                    </div>
                     <button onclick="loadAllAppointments()"
-                        class="self-start sm:self-auto flex items-center space-x-1.5 text-sm text-cyan-700 hover:text-cyan-900 font-medium px-3 py-2 border border-[#CCFBF1] hover:border-cyan-300 rounded-lg bg-white transition-colors shadow-sm">
+                        class="flex items-center space-x-1.5 text-sm text-cyan-700 hover:text-cyan-900 font-medium px-3 py-2 border border-cyan-100 hover:border-cyan-300 rounded-xl bg-white transition-colors shadow-sm">
                         <i class="fas fa-sync-alt text-xs"></i>
-                        <span>Refresh</span>
+                        <span class="hidden sm:inline">Refresh</span>
                     </button>
                 </div>
 
-                <!-- Filters -->
-                <div class="bg-white rounded-xl border border-[#CCFBF1] shadow-sm p-4 mb-4">
+                <!-- Filters card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-filter text-[#0891B2] text-xs"></i>
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Filter</span>
+                    </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
-                            <label class="block text-xs font-semibold text-[#64748B] mb-1.5 uppercase tracking-wide">Date</label>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Date</label>
                             <input type="date" id="filter-date"
-                                class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm text-[#134E4A] bg-[#F0FDFA] transition-colors"
-                                placeholder="All dates">
+                                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-[#083344] bg-[#F8FFFE] transition-colors focus:bg-white">
                         </div>
                         <div class="flex-1">
-                            <label class="block text-xs font-semibold text-[#64748B] mb-1.5 uppercase tracking-wide">Status</label>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Status</label>
                             <select id="filter-status"
-                                class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm text-[#134E4A] bg-[#F0FDFA] transition-colors">
+                                class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-[#083344] bg-[#F8FFFE] transition-colors focus:bg-white">
                                 <option value="">All Statuses</option>
                                 <option value="scheduled">Scheduled</option>
                                 <option value="confirmed">Confirmed</option>
@@ -310,30 +438,33 @@
                         </div>
                         <div class="flex items-end">
                             <button onclick="applyFilters()"
-                                class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                                <i class="fas fa-filter mr-1.5"></i>Apply
+                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm text-white flex items-center justify-center space-x-1.5"
+                                style="background:linear-gradient(135deg,#083344,#0891B2)">
+                                <i class="fas fa-search text-xs"></i>
+                                <span>Apply</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="bg-white rounded-xl border border-[#CCFBF1] shadow-sm overflow-hidden">
+                <!-- Table card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="table-wrap">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="bg-[#F0FDFA] border-b border-[#CCFBF1]">
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Date</th>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Time</th>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Patient</th>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-[#64748B] uppercase tracking-wide hidden sm:table-cell">Reason</th>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Status</th>
+                                <tr class="bg-[#F8FFFE] border-b border-gray-100">
+                                    <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Date</th>
+                                    <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Time</th>
+                                    <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Patient</th>
+                                    <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Reason</th>
+                                    <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="all-appointments-tbody">
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-[#64748B]">
-                                        <i class="fas fa-spinner fa-spin text-cyan-500 text-xl mr-2"></i>Loading…
+                                    <td colspan="5" class="px-4 py-12 text-center text-slate-400">
+                                        <i class="fas fa-spinner fa-spin text-cyan-400 text-xl mr-2"></i>
+                                        <span class="text-sm">Loading appointments…</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -342,122 +473,181 @@
                 </div>
             </div>
 
-            <!-- ══ TAB: PROFILE ══ -->
+            <!-- ══════════════════════════════
+                 TAB: PROFILE
+            ═══════════════════════════════ -->
             <div id="tab-profile" class="tab-content">
-                <h3 class="font-semibold text-[#134E4A] font-poppins flex items-center space-x-2 mb-4">
-                    <i class="fas fa-user-circle text-cyan-600"></i>
-                    <span>My Profile</span>
-                </h3>
+                <!-- Section header -->
+                <div class="flex items-center space-x-2.5 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-sm">
+                        <i class="fas fa-user-circle text-white text-xs"></i>
+                    </div>
+                    <h3 class="font-semibold text-[#083344] text-base font-outfit">My Profile</h3>
+                </div>
 
-                <!-- Skeleton -->
+                <!-- Profile skeleton -->
                 <div id="profile-skeleton" class="space-y-4">
-                    <div class="skeleton h-36 w-full rounded-xl"></div>
-                    <div class="skeleton h-52 w-full rounded-xl"></div>
+                    <div class="skeleton h-40 w-full"></div>
+                    <div class="skeleton h-56 w-full opacity-75"></div>
+                    <div class="skeleton h-36 w-full opacity-50"></div>
                 </div>
 
                 <!-- Profile content -->
                 <div id="profile-content" class="hidden space-y-4">
 
-                    <!-- Doctor card -->
-                    <div class="bg-white rounded-xl border border-[#CCFBF1] shadow-sm p-6">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-6">
-                            <div class="w-20 h-20 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600 overflow-hidden border-4 border-[#CCFBF1] flex-shrink-0" id="profile-avatar">
-                                <i class="fas fa-user-md text-3xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-bold text-[#134E4A] font-poppins" id="profile-name">—</h4>
-                                <p class="text-cyan-600 font-semibold text-sm" id="profile-spec">—</p>
-                                <p class="text-[#64748B] text-sm" id="profile-dept">—</p>
-                            </div>
+                    <!-- Doctor identity card -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <!-- Top gradient banner -->
+                        <div class="h-20 relative" style="background:linear-gradient(135deg,#083344 0%,#0891B2 60%,#134E4A 100%)">
+                            <div class="absolute inset-0 opacity-20"
+                                 style="background-image:radial-gradient(circle at 20% 50%, white 1px, transparent 1px); background-size:20px 20px;"></div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div class="bg-[#F0FDFA] rounded-lg p-3 border border-[#CCFBF1]">
-                                <p class="text-xs text-[#64748B] mb-1"><i class="fas fa-id-badge text-cyan-500 mr-1"></i>License Number</p>
-                                <p class="font-semibold text-[#134E4A] text-sm" id="profile-license">—</p>
+                        <div class="px-6 pb-6">
+                            <!-- Avatar overlapping banner -->
+                            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-10 mb-5">
+                                <div class="flex items-end space-x-4">
+                                    <div class="w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0 avatar-ring"
+                                         id="profile-avatar">
+                                        <i class="fas fa-user-md text-3xl text-[#0891B2]"></i>
+                                    </div>
+                                    <div class="pb-1">
+                                        <h4 class="text-lg font-bold text-[#083344] font-outfit leading-tight" id="profile-name">—</h4>
+                                        <p class="text-sm text-[#0891B2] font-semibold" id="profile-spec">—</p>
+                                        <p class="text-xs text-slate-400 font-medium" id="profile-dept">—</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 sm:mt-0">
+                                    <span class="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
+                                        <span>Active</span>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="bg-[#F0FDFA] rounded-lg p-3 border border-[#CCFBF1]">
-                                <p class="text-xs text-[#64748B] mb-1"><i class="fas fa-envelope text-cyan-500 mr-1"></i>Email</p>
-                                <p class="font-semibold text-[#134E4A] text-sm truncate" id="profile-email">—</p>
-                            </div>
-                            <div class="bg-[#F0FDFA] rounded-lg p-3 border border-[#CCFBF1]">
-                                <p class="text-xs text-[#64748B] mb-1"><i class="fas fa-phone text-cyan-500 mr-1"></i>Contact</p>
-                                <p class="font-semibold text-[#134E4A] text-sm" id="profile-contact">—</p>
-                            </div>
-                            <div class="bg-[#F0FDFA] rounded-lg p-3 border border-[#CCFBF1]">
-                                <p class="text-xs text-[#64748B] mb-1"><i class="fas fa-briefcase-medical text-cyan-500 mr-1"></i>Experience</p>
-                                <p class="font-semibold text-[#134E4A] text-sm" id="profile-experience">—</p>
-                            </div>
-                            <div class="bg-[#F0FDFA] rounded-lg p-3 border border-[#CCFBF1]">
-                                <p class="text-xs text-[#64748B] mb-1"><i class="fas fa-peso-sign text-cyan-500 mr-1"></i>Consultation Fee</p>
-                                <p class="font-semibold text-[#134E4A] text-sm" id="profile-fee">—</p>
-                            </div>
-                            <div class="bg-[#F0FDFA] rounded-lg p-3 border border-[#CCFBF1]">
-                                <p class="text-xs text-[#64748B] mb-1"><i class="fas fa-graduation-cap text-cyan-500 mr-1"></i>Qualification</p>
-                                <p class="font-semibold text-[#134E4A] text-sm" id="profile-qual">—</p>
-                            </div>
-                        </div>
 
-                        <div class="mt-4 bg-[#F0FDFA] rounded-xl p-4 border border-[#CCFBF1]">
-                            <p class="text-xs font-semibold text-cyan-700 mb-1.5"><i class="fas fa-info-circle mr-1"></i>Bio</p>
-                            <p class="text-[#134E4A] text-sm leading-relaxed" id="profile-bio">—</p>
+                            <!-- Info grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                                <div class="rounded-xl p-3 border border-gray-100 bg-[#F8FFFE]">
+                                    <p class="text-xs text-slate-400 mb-1 flex items-center space-x-1">
+                                        <i class="fas fa-id-badge text-cyan-400"></i>
+                                        <span>License Number</span>
+                                    </p>
+                                    <p class="font-semibold text-[#083344] text-sm font-outfit" id="profile-license">—</p>
+                                </div>
+                                <div class="rounded-xl p-3 border border-gray-100 bg-[#F8FFFE]">
+                                    <p class="text-xs text-slate-400 mb-1 flex items-center space-x-1">
+                                        <i class="fas fa-envelope text-cyan-400"></i>
+                                        <span>Email</span>
+                                    </p>
+                                    <p class="font-semibold text-[#083344] text-sm truncate" id="profile-email">—</p>
+                                </div>
+                                <div class="rounded-xl p-3 border border-gray-100 bg-[#F8FFFE]">
+                                    <p class="text-xs text-slate-400 mb-1 flex items-center space-x-1">
+                                        <i class="fas fa-phone text-cyan-400"></i>
+                                        <span>Contact</span>
+                                    </p>
+                                    <p class="font-semibold text-[#083344] text-sm" id="profile-contact">—</p>
+                                </div>
+                                <div class="rounded-xl p-3 border border-gray-100 bg-[#F8FFFE]">
+                                    <p class="text-xs text-slate-400 mb-1 flex items-center space-x-1">
+                                        <i class="fas fa-briefcase-medical text-cyan-400"></i>
+                                        <span>Experience</span>
+                                    </p>
+                                    <p class="font-semibold text-[#083344] text-sm" id="profile-experience">—</p>
+                                </div>
+                                <div class="rounded-xl p-3 border border-gray-100 bg-[#F8FFFE]">
+                                    <p class="text-xs text-slate-400 mb-1 flex items-center space-x-1">
+                                        <i class="fas fa-coins text-cyan-400"></i>
+                                        <span>Consultation Fee</span>
+                                    </p>
+                                    <p class="font-semibold text-[#083344] text-sm" id="profile-fee">—</p>
+                                </div>
+                                <div class="rounded-xl p-3 border border-gray-100 bg-[#F8FFFE]">
+                                    <p class="text-xs text-slate-400 mb-1 flex items-center space-x-1">
+                                        <i class="fas fa-graduation-cap text-cyan-400"></i>
+                                        <span>Qualification</span>
+                                    </p>
+                                    <p class="font-semibold text-[#083344] text-sm" id="profile-qual">—</p>
+                                </div>
+                            </div>
+
+                            <!-- Bio -->
+                            <div class="rounded-xl p-4 border border-gray-100 bg-gradient-to-r from-[#F0FDFA] to-[#F8FFFE]">
+                                <p class="text-xs font-semibold text-cyan-700 mb-2 flex items-center space-x-1">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Bio</span>
+                                </p>
+                                <p class="text-[#134E4A] text-sm leading-relaxed" id="profile-bio">—</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Schedule -->
-                    <div class="bg-white rounded-xl border border-[#CCFBF1] shadow-sm p-6">
-                        <h5 class="font-semibold text-[#134E4A] font-poppins mb-4 flex items-center space-x-2">
-                            <i class="fas fa-clock text-cyan-600"></i>
-                            <span>Weekly Schedule</span>
-                        </h5>
+                    <!-- Weekly Schedule -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100 flex items-center space-x-2">
+                            <div class="w-7 h-7 rounded-lg bg-[#F0FDFA] border border-cyan-100 flex items-center justify-center">
+                                <i class="fas fa-clock text-[#0891B2] text-xs"></i>
+                            </div>
+                            <h5 class="font-semibold text-[#083344] font-outfit text-sm">Weekly Schedule</h5>
+                        </div>
                         <div class="table-wrap">
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="bg-[#F0FDFA] border-b border-[#CCFBF1]">
-                                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Day</th>
-                                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Start</th>
-                                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-[#64748B] uppercase tracking-wide">End</th>
-                                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-[#64748B] uppercase tracking-wide hidden sm:table-cell">Slot</th>
-                                        <th class="text-left px-3 py-2.5 text-xs font-semibold text-[#64748B] uppercase tracking-wide hidden sm:table-cell">Max Patients</th>
+                                    <tr class="bg-[#F8FFFE] border-b border-gray-100">
+                                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Day</th>
+                                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Start</th>
+                                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">End</th>
+                                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Slot (min)</th>
+                                        <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Max Patients</th>
                                     </tr>
                                 </thead>
                                 <tbody id="schedule-tbody">
-                                    <tr><td colspan="5" class="px-3 py-5 text-center text-[#64748B] text-sm">No schedule found.</td></tr>
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-slate-400 text-sm">
+                                            No schedule found.
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Change Password -->
-                    <div class="bg-white rounded-xl border border-[#CCFBF1] shadow-sm p-6">
-                        <h5 class="font-semibold text-[#134E4A] font-poppins mb-4 flex items-center space-x-2">
-                            <i class="fas fa-lock text-cyan-600"></i>
-                            <span>Change Password</span>
-                        </h5>
-                        <form id="change-password-form" onsubmit="submitChangePassword(event)" class="space-y-4 max-w-md">
-                            <div>
-                                <label class="block text-sm font-medium text-[#134E4A] mb-1.5">Current Password</label>
-                                <input type="password" id="cp-current" required
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2.5 text-sm bg-[#F0FDFA] transition-colors"
-                                    placeholder="Enter current password">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100 flex items-center space-x-2">
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                                <i class="fas fa-lock text-amber-500 text-xs"></i>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#134E4A] mb-1.5">New Password</label>
-                                <input type="password" id="cp-new" required minlength="8"
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2.5 text-sm bg-[#F0FDFA] transition-colors"
-                                    placeholder="At least 8 characters">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-[#134E4A] mb-1.5">Confirm New Password</label>
-                                <input type="password" id="cp-confirm" required
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2.5 text-sm bg-[#F0FDFA] transition-colors"
-                                    placeholder="Repeat new password">
-                            </div>
-                            <button type="submit"
-                                class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                                <i class="fas fa-save mr-1.5"></i>Update Password
-                            </button>
-                        </form>
+                            <h5 class="font-semibold text-[#083344] font-outfit text-sm">Change Password</h5>
+                        </div>
+                        <div class="px-5 py-5">
+                            <form id="change-password-form" onsubmit="submitChangePassword(event)" class="space-y-4 max-w-sm">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Current Password</label>
+                                    <input type="password" id="cp-current" required
+                                        class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
+                                        placeholder="Enter current password">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">New Password</label>
+                                    <input type="password" id="cp-new" required minlength="8"
+                                        class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
+                                        placeholder="At least 8 characters">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Confirm New Password</label>
+                                    <input type="password" id="cp-confirm" required
+                                        class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
+                                        placeholder="Repeat new password">
+                                </div>
+                                <button type="submit"
+                                    class="flex items-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm hover:shadow-md active:scale-95"
+                                    style="background:linear-gradient(135deg,#083344,#0891B2)">
+                                    <i class="fas fa-shield-halved text-xs"></i>
+                                    <span>Update Password</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                 </div><!-- /profile-content -->
@@ -467,243 +657,301 @@
     </main>
 </div>
 
-<!-- ═══════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════
      MOBILE BOTTOM NAV
-═══════════════════════════════════════════ -->
-<nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#CCFBF1] z-30 md:hidden">
-    <div class="grid grid-cols-3">
+════════════════════════════════════════════════════ -->
+<nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <div class="grid grid-cols-3 h-[68px]">
+
         <button onclick="switchTab('today')" id="mobile-nav-today"
-            class="mobile-nav-btn active flex flex-col items-center py-3 text-cyan-600 text-xs font-medium gap-1">
-            <i class="fas fa-calendar-day text-lg"></i>
-            <span>Today</span>
+            class="mobile-nav-btn active flex flex-col items-center justify-center py-2 text-[#0891B2] text-xs font-medium gap-1 transition-colors">
+            <i class="fas fa-calendar-day text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Today</span>
         </button>
+
         <button onclick="switchTab('all')" id="mobile-nav-all"
-            class="mobile-nav-btn flex flex-col items-center py-3 text-gray-400 text-xs font-medium gap-1">
-            <i class="fas fa-calendar-alt text-lg"></i>
-            <span>All</span>
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fas fa-calendar-alt text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">All</span>
         </button>
+
         <button onclick="switchTab('profile')" id="mobile-nav-profile"
-            class="mobile-nav-btn flex flex-col items-center py-3 text-gray-400 text-xs font-medium gap-1">
-            <i class="fas fa-user-circle text-lg"></i>
-            <span>Profile</span>
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fas fa-user-circle text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Profile</span>
         </button>
+
     </div>
 </nav>
 
-<!-- ═══════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════
      QR SCANNER MODAL
-═══════════════════════════════════════════ -->
+     IDs: qrScannerModal (alias), qr-modal (JS uses), qr-reader, manual-token, qr-status-text
+════════════════════════════════════════════════════ -->
 <div id="qr-modal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-overlay absolute inset-0 bg-black/60" onclick="closeQRScanner()"></div>
-    <div class="relative flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
+    <div class="modal-overlay absolute inset-0 bg-[#083344]/70" onclick="closeQRScanner()"></div>
+
+    <div class="relative flex items-end sm:items-center justify-center min-h-screen p-0 sm:p-4">
+        <div class="bg-white w-full sm:max-w-sm sm:rounded-2xl shadow-2xl z-10 overflow-hidden sm:max-h-[90vh] rounded-t-2xl">
 
             <!-- Modal header -->
-            <div class="bg-gradient-to-r from-cyan-700 to-cyan-500 px-6 py-4 flex items-center justify-between">
-                <div>
-                    <h3 class="text-white font-bold text-base font-poppins">Scan Patient QR</h3>
-                    <p class="text-cyan-100 text-xs mt-0.5">Point camera at patient's QR code</p>
+            <div class="px-5 py-4 flex items-center justify-between" style="background:linear-gradient(135deg,#083344,#0891B2)">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
+                        <i class="fas fa-qrcode text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm font-outfit">Scan Patient QR</h3>
+                        <p class="text-cyan-100/80 text-xs mt-0.5">Check in via QR code</p>
+                    </div>
                 </div>
-                <button onclick="closeQRScanner()" class="text-white/80 hover:text-white text-xl transition-colors">
-                    <i class="fas fa-times"></i>
+                <button onclick="closeQRScanner()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-colors">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
 
             <div class="p-5">
-                <!-- Camera feed -->
-                <div class="mb-4">
-                    <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-[#F0FDFA] border-2 border-[#CCFBF1] min-h-48 flex items-center justify-center">
-                        <div id="qr-reader-placeholder" class="text-center text-[#64748B] py-10">
-                            <i class="fas fa-camera text-4xl mb-3 block text-cyan-400"></i>
-                            <p class="text-sm font-medium">Camera initializing…</p>
+                <!-- QR camera area -->
+                <div class="relative mb-4">
+                    <div id="qr-reader"
+                        class="w-full rounded-xl overflow-hidden bg-[#F0FDFA] border-2 border-dashed border-cyan-200 min-h-[200px] flex items-center justify-center">
+                        <div id="qr-reader-placeholder" class="text-center py-10 px-4">
+                            <div class="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-camera text-2xl text-cyan-400"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-500">Camera initializing…</p>
+                            <p class="text-xs text-slate-400 mt-1">Allow camera access when prompted</p>
                         </div>
                     </div>
-                    <p class="text-xs text-[#64748B] text-center mt-2 font-medium" id="qr-status-text">Allow camera access to scan</p>
                 </div>
+
+                <!-- Status text -->
+                <p class="text-xs text-center font-medium text-slate-500 mb-4 flex items-center justify-center space-x-1.5">
+                    <i class="fas fa-circle-info text-cyan-400"></i>
+                    <span id="qr-status-text">Allow camera access to scan</span>
+                </p>
 
                 <!-- Divider -->
                 <div class="flex items-center mb-4">
-                    <div class="flex-1 border-t border-[#E8F1F6]"></div>
-                    <span class="px-3 text-xs text-[#64748B] font-medium">or enter manually</span>
-                    <div class="flex-1 border-t border-[#E8F1F6]"></div>
+                    <div class="flex-1 border-t border-gray-100"></div>
+                    <span class="px-3 text-xs text-slate-400 font-medium bg-white">or enter manually</span>
+                    <div class="flex-1 border-t border-gray-100"></div>
                 </div>
 
-                <!-- Manual input -->
+                <!-- Manual token input -->
                 <div class="flex space-x-2">
-                    <input type="text" id="manual-token" placeholder="Paste QR token here…"
-                        class="flex-1 border border-[#E8F1F6] rounded-lg px-3 py-2.5 text-sm bg-[#F0FDFA] transition-colors"
+                    <input type="text" id="manual-token"
+                        placeholder="Paste QR token here…"
+                        class="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
                         onkeypress="if(event.key==='Enter') checkInManual()">
                     <button onclick="checkInManual()"
-                        class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shadow-sm">
-                        <i class="fas fa-sign-in-alt mr-1"></i>Check In
+                        class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-md active:scale-95 flex items-center space-x-1.5 whitespace-nowrap"
+                        style="background:linear-gradient(135deg,#083344,#0891B2)">
+                        <i class="fas fa-sign-in-alt text-xs"></i>
+                        <span>Check In</span>
                     </button>
                 </div>
-                <p class="text-xs text-[#64748B] mt-2">Token is the part of the QR URL after <code class="bg-gray-100 px-1 rounded">?token=</code></p>
+                <p class="text-xs text-slate-400 mt-2.5">
+                    Token is the part after <code class="bg-gray-100 text-slate-600 px-1.5 py-0.5 rounded-md">?token=</code> in the QR URL
+                </p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════
      MEDICAL RECORD MODAL
-═══════════════════════════════════════════ -->
+     IDs: record-modal, medical-record-form (JS uses)
+     Brief IDs also present: recordModal, recordForm
+════════════════════════════════════════════════════ -->
 <div id="record-modal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-overlay absolute inset-0 bg-black/60" onclick="closeRecordModal()"></div>
-    <div class="relative flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden">
+    <div class="modal-overlay absolute inset-0 bg-[#083344]/70" onclick="closeRecordModal()"></div>
+
+    <div class="relative flex items-end sm:items-center justify-center min-h-screen p-0 sm:p-4">
+        <div class="bg-white w-full sm:max-w-2xl sm:rounded-2xl shadow-2xl z-10 overflow-hidden rounded-t-2xl flex flex-col" style="max-height:96vh">
 
             <!-- Modal header -->
-            <div class="bg-gradient-to-r from-cyan-700 to-cyan-500 px-6 py-4 flex items-center justify-between">
-                <div>
-                    <h3 class="text-white font-bold text-base font-poppins" id="record-modal-title">Medical Record</h3>
-                    <p class="text-cyan-100 text-xs mt-0.5" id="record-modal-subtitle">Fill in consultation details</p>
+            <div class="px-5 py-4 flex items-center justify-between flex-shrink-0"
+                 style="background:linear-gradient(135deg,#083344,#0891B2)">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
+                        <i class="fas fa-notes-medical text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm font-outfit" id="record-modal-title">Medical Record</h3>
+                        <p class="text-cyan-100/80 text-xs mt-0.5" id="record-modal-subtitle">Fill in consultation details</p>
+                    </div>
                 </div>
-                <button onclick="closeRecordModal()" class="text-white/80 hover:text-white text-xl transition-colors">
-                    <i class="fas fa-times"></i>
+                <button onclick="closeRecordModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-colors">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
 
             <!-- Scrollable body -->
-            <div id="record-modal-body" class="p-5">
+            <div id="record-modal-body" class="flex-1 overflow-y-auto p-5">
 
                 <!-- Read-only banner -->
-                <div id="record-readonly-banner" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-sm text-blue-700 flex items-center space-x-2">
-                    <i class="fas fa-eye"></i>
-                    <span>This record is completed — view only.</span>
+                <div id="record-readonly-banner" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 flex items-center space-x-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-eye text-blue-500 text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-blue-700">View Only</p>
+                        <p class="text-xs text-blue-500">This record is completed — no edits allowed.</p>
+                    </div>
                 </div>
 
-                <!-- Patient banner -->
-                <div class="bg-[#F0FDFA] border border-[#CCFBF1] rounded-xl p-3 mb-5 flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-cyan-200 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-user text-cyan-700 text-sm"></i>
+                <!-- Patient info banner -->
+                <div class="rounded-2xl p-4 mb-5 flex items-center space-x-3 border"
+                     style="background:linear-gradient(135deg,#F0FDFA,#E8F8F5); border-color:#CCFBF1">
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                         style="background:linear-gradient(135deg,#083344,#0891B2)">
+                        <i class="fas fa-user text-white text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-[#134E4A] text-sm" id="record-patient-name">—</p>
-                        <p class="text-xs text-cyan-600" id="record-patient-meta">—</p>
+                        <p class="font-bold text-[#083344] text-sm font-outfit" id="record-patient-name">—</p>
+                        <p class="text-xs text-[#0891B2] font-medium mt-0.5" id="record-patient-meta">—</p>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-xs font-semibold text-[#134E4A]" id="record-appt-time">—</p>
-                        <p class="text-xs text-[#64748B]" id="record-appt-reason">—</p>
+                        <p class="text-xs font-bold text-[#083344]" id="record-appt-time">—</p>
+                        <p class="text-xs text-slate-400 mt-0.5 max-w-[140px] truncate" id="record-appt-reason">—</p>
                     </div>
                 </div>
 
-                <form id="medical-record-form" onsubmit="submitMedicalRecord(event)" class="space-y-4">
-                    <!-- Hidden fields -->
+                <form id="medical-record-form" onsubmit="submitMedicalRecord(event)" class="space-y-5">
+                    <!-- Hidden fields (brief IDs) -->
                     <input type="hidden" id="record-appointment-id">
                     <input type="hidden" id="record-patient-id">
 
-                    <!-- Chief Complaint + Symptoms -->
+                    <!-- ─ Chief Complaint + Symptoms ─ -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                                <i class="fas fa-comment-medical text-cyan-500 mr-1"></i>Chief Complaint
+                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                                <i class="fas fa-comment-medical text-[#0891B2]"></i>
+                                <span>Chief Complaint</span>
                             </label>
                             <textarea id="rec-chief-complaint" rows="3"
-                                class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm resize-none bg-[#F0FDFA] transition-colors"
+                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
                                 placeholder="Primary reason for visit…"></textarea>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                                <i class="fas fa-thermometer-half text-cyan-500 mr-1"></i>Symptoms
+                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                                <i class="fas fa-thermometer-half text-[#0891B2]"></i>
+                                <span>Symptoms</span>
                             </label>
                             <textarea id="rec-symptoms" rows="3"
-                                class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm resize-none bg-[#F0FDFA] transition-colors"
+                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
                                 placeholder="List symptoms…"></textarea>
                         </div>
                     </div>
 
-                    <!-- Vital Signs -->
-                    <div class="bg-[#F0FDFA] rounded-xl border border-[#CCFBF1] p-3">
-                        <p class="text-xs font-semibold text-[#134E4A] mb-3 flex items-center">
-                            <i class="fas fa-heartbeat text-red-500 mr-1.5"></i>Vital Signs
-                        </p>
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                            <div>
-                                <label class="block text-xs text-[#64748B] mb-1">Blood Pressure</label>
-                                <input type="text" id="rec-bp" placeholder="120/80"
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-2.5 py-2 text-sm bg-white transition-colors">
+                    <!-- ─ Vital Signs ─ -->
+                    <div class="rounded-2xl border border-gray-100 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center space-x-2"
+                             style="background:linear-gradient(135deg,#FFF1F2,#FFF8F8)">
+                            <div class="w-6 h-6 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center">
+                                <i class="fas fa-heartbeat text-red-500 text-xs"></i>
                             </div>
-                            <div>
-                                <label class="block text-xs text-[#64748B] mb-1">Temp (°C)</label>
-                                <input type="text" id="rec-temp" placeholder="36.5"
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-2.5 py-2 text-sm bg-white transition-colors">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-[#64748B] mb-1">Heart Rate</label>
-                                <input type="text" id="rec-hr" placeholder="72 bpm"
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-2.5 py-2 text-sm bg-white transition-colors">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-[#64748B] mb-1">Weight (kg)</label>
-                                <input type="text" id="rec-weight" placeholder="kg"
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-2.5 py-2 text-sm bg-white transition-colors">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-[#64748B] mb-1">Height (cm)</label>
-                                <input type="text" id="rec-height" placeholder="cm"
-                                    class="w-full border border-[#E8F1F6] rounded-lg px-2.5 py-2 text-sm bg-white transition-colors">
+                            <span class="text-xs font-bold text-[#083344] uppercase tracking-wide">Vital Signs</span>
+                        </div>
+                        <div class="p-4 bg-white">
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                <div class="vital-field">
+                                    <label>Blood Pressure</label>
+                                    <input type="text" id="rec-bp" placeholder="120/80"
+                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
+                                </div>
+                                <div class="vital-field">
+                                    <label>Temp °C</label>
+                                    <input type="text" id="rec-temp" placeholder="36.5"
+                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
+                                </div>
+                                <div class="vital-field">
+                                    <label>Heart Rate</label>
+                                    <input type="text" id="rec-hr" placeholder="72 bpm"
+                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
+                                </div>
+                                <div class="vital-field">
+                                    <label>Weight kg</label>
+                                    <input type="text" id="rec-weight" placeholder="kg"
+                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
+                                </div>
+                                <div class="vital-field">
+                                    <label>Height cm</label>
+                                    <input type="text" id="rec-height" placeholder="cm"
+                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Diagnosis -->
+                    <!-- ─ Diagnosis ─ -->
                     <div>
-                        <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                            <i class="fas fa-stethoscope text-cyan-500 mr-1"></i>Diagnosis
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-stethoscope text-[#0891B2]"></i>
+                            <span>Diagnosis</span>
                         </label>
                         <textarea id="rec-diagnosis" rows="3"
-                            class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm resize-none bg-[#F0FDFA] transition-colors"
+                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
                             placeholder="Clinical diagnosis…"></textarea>
                     </div>
 
-                    <!-- Prescription -->
+                    <!-- ─ Prescription ─ -->
                     <div>
-                        <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                            <i class="fas fa-pills text-cyan-500 mr-1"></i>Prescription
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-pills text-[#0891B2]"></i>
+                            <span>Prescription</span>
                         </label>
                         <textarea id="rec-prescription" rows="3"
-                            class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm resize-none bg-[#F0FDFA] transition-colors"
+                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
                             placeholder="Medications, dosages, instructions…"></textarea>
                     </div>
 
-                    <!-- Lab + Notes -->
+                    <!-- ─ Lab Tests + Notes ─ -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                                <i class="fas fa-flask text-cyan-500 mr-1"></i>Lab Tests Ordered
+                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                                <i class="fas fa-flask text-[#0891B2]"></i>
+                                <span>Lab Tests Ordered</span>
                             </label>
                             <textarea id="rec-lab-tests" rows="3"
-                                class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm resize-none bg-[#F0FDFA] transition-colors"
+                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
                                 placeholder="Tests requested…"></textarea>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                                <i class="fas fa-sticky-note text-cyan-500 mr-1"></i>Notes
+                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                                <i class="fas fa-clipboard text-[#0891B2]"></i>
+                                <span>Additional Notes</span>
                             </label>
                             <textarea id="rec-notes" rows="3"
-                                class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm resize-none bg-[#F0FDFA] transition-colors"
+                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
                                 placeholder="Additional clinical notes…"></textarea>
                         </div>
                     </div>
 
-                    <!-- Follow-up -->
+                    <!-- ─ Follow-up Date ─ -->
                     <div class="max-w-xs">
-                        <label class="block text-xs font-semibold text-[#134E4A] mb-1.5 uppercase tracking-wide">
-                            <i class="fas fa-calendar-plus text-cyan-500 mr-1"></i>Follow-up Date
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-calendar-plus text-[#0891B2]"></i>
+                            <span>Follow-up Date</span>
                         </label>
                         <input type="date" id="rec-followup"
-                            class="w-full border border-[#E8F1F6] rounded-lg px-3 py-2 text-sm bg-[#F0FDFA] transition-colors">
+                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
                     </div>
 
-                    <!-- Actions -->
-                    <div class="flex justify-end space-x-3 pt-3 border-t border-[#CCFBF1]">
+                    <!-- ─ Actions ─ -->
+                    <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100">
                         <button type="button" onclick="closeRecordModal()"
-                            class="px-5 py-2.5 border border-[#E8F1F6] text-[#64748B] hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors">
+                            class="px-5 py-2.5 border border-gray-200 text-slate-500 hover:bg-gray-50 rounded-xl text-sm font-semibold transition-colors">
                             Cancel
                         </button>
                         <button type="submit" id="record-submit-btn"
-                            class="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm flex items-center space-x-2">
-                            <i class="fas fa-save"></i>
+                            class="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center space-x-2"
+                            style="background:linear-gradient(135deg,#16A34A,#15803d)">
+                            <i class="fas fa-floppy-disk text-xs"></i>
                             <span>Save &amp; Complete</span>
                         </button>
                     </div>
@@ -717,6 +965,5 @@
 <!-- Scripts -->
 <script src="../js/auth.js"></script>
 <script src="../js/doctor-dashboard.js"></script>
-
 </body>
 </html>

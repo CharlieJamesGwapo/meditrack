@@ -6,36 +6,28 @@
   <meta name="description" content="MediTrack — Internal Medicine Clinic. Book appointments online, check in with your QR code, and access your medical records anytime." />
   <title>MediTrack — Internal Medicine Clinic</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome 6.4 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            brand: {
-              50:  '#f0fdfa',
-              100: '#ccfbf1',
-              200: '#a7f3d0',
-              400: '#22D3EE',
-              500: '#0891B2',
-              600: '#0e7490',
-              700: '#0d4f6e',
-              800: '#083344',
-              900: '#042f2e',
-            },
+            primary: '#0891B2',
+            'primary-dark': '#0e7490',
+            dark: '#134E4A',
+            'dark-hero': '#083344',
+            light: '#F0FDFA',
             accent: '#16A34A',
+            cyan: { 400: '#22D3EE', 300: '#67E8F9' }
           },
           fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-            heading: ['Poppins', 'Inter', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
           }
         }
       }
@@ -43,71 +35,222 @@
   </script>
 
   <style>
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    h1, h2, h3, h4, h5 { font-family: 'Poppins', 'Inter', sans-serif; }
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; }
 
+    /* ── Grain texture ── */
+    .grain {
+      position: relative;
+    }
+    .grain::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+    .grain > * { position: relative; z-index: 2; }
+
+    /* ── Hero gradient ── */
     .hero-gradient {
-      background: linear-gradient(135deg, #0d4f6e 0%, #0891B2 60%, #22D3EE 100%);
+      background: linear-gradient(135deg, #083344 0%, #0891B2 55%, #22D3EE 100%);
     }
-    .card-hover {
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    /* ── Stagger fade-in animations ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .card-hover:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 32px rgba(8, 145, 178, 0.15);
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
-    .nav-link-btn {
-      transition: all 0.2s ease;
+    .anim-0 { animation: fadeInUp 0.65s ease both; animation-delay: 0ms; }
+    .anim-1 { animation: fadeInUp 0.65s ease both; animation-delay: 100ms; }
+    .anim-2 { animation: fadeInUp 0.65s ease both; animation-delay: 200ms; }
+    .anim-3 { animation: fadeInUp 0.65s ease both; animation-delay: 300ms; }
+    .anim-4 { animation: fadeInUp 0.65s ease both; animation-delay: 400ms; }
+    .anim-5 { animation: fadeInUp 0.65s ease both; animation-delay: 500ms; }
+
+    /* ── Floating medical icons ── */
+    @keyframes floatA {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.12; }
+      50% { transform: translateY(-18px) rotate(6deg); opacity: 0.2; }
     }
-    .btn-primary-hero {
+    @keyframes floatB {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.08; }
+      50% { transform: translateY(-24px) rotate(-8deg); opacity: 0.15; }
+    }
+    @keyframes floatC {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.1; }
+      50% { transform: translateY(-14px) rotate(10deg); opacity: 0.18; }
+    }
+    .float-icon-a { animation: floatA 6s ease-in-out infinite; }
+    .float-icon-b { animation: floatB 8s ease-in-out infinite 1s; }
+    .float-icon-c { animation: floatC 7s ease-in-out infinite 2s; }
+    .float-icon-d { animation: floatA 9s ease-in-out infinite 0.5s; }
+    .float-icon-e { animation: floatB 6.5s ease-in-out infinite 3s; }
+
+    /* ── Navbar ── */
+    .nav-glass {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* ── Buttons ── */
+    .btn-hero-primary {
       background: #fff;
       color: #0891B2;
+      font-family: 'Outfit', sans-serif;
       font-weight: 700;
-      transition: all 0.2s ease;
-    }
-    .btn-primary-hero:hover {
-      background: #f0fdfa;
+      border-radius: 12px;
+      min-height: 52px;
+      padding: 0 32px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 16px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      transform: translateY(-1px);
+      transition: all 0.2s ease;
+      text-decoration: none;
     }
-    .btn-outline-hero {
+    .btn-hero-primary:hover {
+      background: #f0fdfa;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+    }
+    .btn-hero-outline {
       border: 2px solid rgba(255,255,255,0.65);
       color: #fff;
+      font-family: 'Outfit', sans-serif;
       font-weight: 600;
+      border-radius: 12px;
+      min-height: 52px;
+      padding: 0 32px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 16px;
       transition: all 0.2s ease;
+      text-decoration: none;
     }
-    .btn-outline-hero:hover {
+    .btn-hero-outline:hover {
       background: rgba(255,255,255,0.15);
       border-color: #fff;
+      transform: translateY(-2px);
+    }
+    .btn-primary-sm {
+      background: #0891B2;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      border-radius: 10px;
+      min-height: 44px;
+      padding: 0 20px;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(8,145,178,0.3);
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-primary-sm:hover {
+      background: #0e7490;
+      box-shadow: 0 6px 16px rgba(8,145,178,0.4);
       transform: translateY(-1px);
     }
-    /* Smooth scroll already on html tag */
+    .btn-ghost-sm {
+      color: #374151;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      border-radius: 10px;
+      min-height: 44px;
+      padding: 0 16px;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-ghost-sm:hover {
+      color: #0891B2;
+      background: #f0fdfa;
+    }
+
+    /* ── Step connector ── */
+    .step-connector {
+      position: absolute;
+      top: 36px;
+      right: -50%;
+      width: 100%;
+      border-top: 2px dashed #BAE6FD;
+      z-index: 0;
+    }
+
+    /* ── Glass card ── */
+    .glass-card {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 8px 32px rgba(8,145,178,0.1);
+    }
+
+    /* ── Card hover ── */
+    .card-lift {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-lift:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(8,145,178,0.13);
+    }
+
+    /* ── Section badge ── */
+    .section-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      padding: 5px 14px;
+      border-radius: 999px;
+    }
+
+    /* ── Scroll-triggered fade ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      .step-connector { display: none; }
+    }
   </style>
 </head>
 <body class="bg-[#F0FDFA] text-gray-800 antialiased">
 
-  <!-- ═══════════════════════════════════════════
-       NAVBAR
-  ════════════════════════════════════════════ -->
-  <nav class="bg-white shadow-sm sticky top-0 z-50">
+  <!-- ═══════════════════ NAVBAR ═══════════════════ -->
+  <nav class="nav-glass sticky top-0 z-50 border-b border-white/40 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
 
-        <!-- Logo -->
-        <a href="index.html" class="flex items-center gap-2 font-bold text-xl tracking-tight" style="color:#0891B2;">
-          <i class="fa-solid fa-heart-pulse text-2xl" style="color:#22D3EE;"></i>
-          <span style="font-family:'Poppins',sans-serif;">MediTrack</span>
+        <a href="index.html" class="flex items-center gap-2.5 no-underline" style="text-decoration:none;">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#0891B2,#22D3EE);">
+            <i class="fa-solid fa-heart-pulse text-white text-base"></i>
+          </div>
+          <span style="font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:#083344;letter-spacing:-0.3px;">MediTrack</span>
         </a>
 
-        <!-- Nav links -->
-        <div class="flex items-center gap-3">
-          <a href="pages/login.html"
-             class="nav-link-btn text-sm font-medium text-gray-600 hover:text-[#0891B2] px-3 py-2 rounded-xl hover:bg-[#f0fdfa] min-h-[44px] flex items-center">
-            <i class="fa-solid fa-right-to-bracket mr-1.5"></i>Login
+        <div class="flex items-center gap-2">
+          <a href="pages/login.html" class="btn-ghost-sm">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Login</span>
           </a>
-          <a href="pages/register.html"
-             class="nav-link-btn text-sm font-semibold text-white px-5 py-2 rounded-xl shadow-sm min-h-[44px] flex items-center" style="background:#0891B2;" onmouseover="this.style.background='#0e7490'" onmouseout="this.style.background='#0891B2'">
-            <i class="fa-solid fa-user-plus mr-1.5"></i>Register
+          <a href="pages/register.html" class="btn-primary-sm">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Register</span>
           </a>
         </div>
 
@@ -115,109 +258,128 @@
     </div>
   </nav>
 
-  <!-- ═══════════════════════════════════════════
-       HERO
-  ════════════════════════════════════════════ -->
-  <section class="hero-gradient text-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36 text-center">
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero-gradient grain text-white overflow-hidden" style="min-height:92vh;display:flex;align-items:center;position:relative;">
 
-      <span class="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 border border-white/20">
-        <i class="fa-solid fa-stethoscope"></i> Internal Medicine Clinic
-      </span>
+    <!-- Floating background icons -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none" style="z-index:1;">
+      <i class="fa-solid fa-stethoscope float-icon-a absolute text-white" style="font-size:6rem;top:8%;left:5%;"></i>
+      <i class="fa-solid fa-heart-pulse float-icon-b absolute text-white" style="font-size:4rem;top:15%;right:8%;"></i>
+      <i class="fa-solid fa-pills float-icon-c absolute text-white" style="font-size:5rem;bottom:20%;left:3%;"></i>
+      <i class="fa-solid fa-syringe float-icon-d absolute text-white" style="font-size:3.5rem;bottom:10%;right:12%;"></i>
+      <i class="fa-solid fa-dna float-icon-e absolute text-white" style="font-size:4.5rem;top:50%;right:4%;"></i>
+      <!-- Large circle accents -->
+      <div class="absolute rounded-full" style="width:500px;height:500px;background:rgba(255,255,255,0.03);top:-100px;right:-150px;"></div>
+      <div class="absolute rounded-full" style="width:350px;height:350px;background:rgba(255,255,255,0.04);bottom:-80px;left:-60px;"></div>
+    </div>
 
-      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5" style="font-family:'Poppins',sans-serif;">
-        Your Health,<br class="hidden sm:block" />
-        <span style="color:#a5f3fc;">Managed Smarter</span>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-36 text-center w-full" style="position:relative;z-index:2;">
+
+      <div class="anim-0">
+        <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-5 py-2 rounded-full border border-white/25 mb-7" style="background:rgba(255,255,255,0.12);font-family:'DM Sans',sans-serif;">
+          <i class="fa-solid fa-stethoscope" style="color:#22D3EE;"></i>
+          Internal Medicine Clinic
+        </span>
+      </div>
+
+      <h1 class="anim-1 font-heading font-extrabold leading-[1.08] mb-6" style="font-size:clamp(2.6rem,7vw,5.2rem);font-weight:800;">
+        Internal Medicine<br />
+        <span style="color:#22D3EE;">Clinic</span>
       </h1>
 
-      <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+      <p class="anim-2 text-white/80 mx-auto mb-10 leading-relaxed" style="font-size:clamp(1rem,2.5vw,1.25rem);max-width:560px;font-family:'DM Sans',sans-serif;">
         Book appointments online, check in instantly with your personal QR code,
-        and access your medical records anytime &mdash; all in one place.
+        and access your medical records &mdash; all in one place.
       </p>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="pages/register.html"
-           class="btn-primary-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl shadow-lg text-base min-h-[52px]">
+      <div class="anim-3 flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="pages/register.html" class="btn-hero-primary">
           <i class="fa-solid fa-user-plus"></i> Register Now
         </a>
-        <a href="pages/login.html"
-           class="btn-outline-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base min-h-[52px]">
+        <a href="pages/login.html" class="btn-hero-outline">
           <i class="fa-solid fa-right-to-bracket"></i> Log In
         </a>
       </div>
 
       <!-- Trust badges -->
-      <div class="mt-14 flex flex-wrap justify-center gap-6 text-sm text-white/75">
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved" style="color:#a5f3fc;"></i> Secure &amp; Private</span>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-qrcode" style="color:#a5f3fc;"></i> QR Check-In</span>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock" style="color:#a5f3fc;"></i> Real-Time Scheduling</span>
-        <span class="flex items-center gap-1.5"><i class="fa-solid fa-mobile-screen" style="color:#a5f3fc;"></i> Mobile-Friendly</span>
+      <div class="anim-4 mt-14 flex flex-wrap justify-center gap-5 text-sm" style="color:rgba(255,255,255,0.72);font-family:'DM Sans',sans-serif;">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-shield-halved" style="color:#22D3EE;"></i> Secure &amp; Private</span>
+        <span class="flex items-center gap-2"><i class="fa-solid fa-qrcode" style="color:#22D3EE;"></i> QR Check-In</span>
+        <span class="flex items-center gap-2"><i class="fa-solid fa-clock" style="color:#22D3EE;"></i> Real-Time Scheduling</span>
+        <span class="flex items-center gap-2"><i class="fa-solid fa-mobile-screen" style="color:#22D3EE;"></i> Mobile-Friendly</span>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="anim-5 mt-16 flex flex-col items-center gap-2 opacity-60">
+        <span class="text-xs uppercase tracking-widest" style="font-family:'DM Sans',sans-serif;">Scroll to explore</span>
+        <i class="fa-solid fa-chevron-down text-sm animate-bounce"></i>
       </div>
 
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       HOW IT WORKS
-  ════════════════════════════════════════════ -->
-  <section class="py-20 bg-white" id="how-it-works">
+  <!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
+  <section class="py-24 bg-white" id="how-it-works">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      <div class="text-center mb-14">
-        <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3" style="background:#f0fdfa;color:#0891B2;">Simple Process</span>
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3" style="font-family:'Poppins',sans-serif;">How It Works</h2>
-        <p class="text-gray-500 max-w-xl mx-auto">
-          Getting started with MediTrack takes less than a minute. Follow these four simple steps.
+      <div class="text-center mb-16 reveal">
+        <span class="section-badge mb-4" style="background:#f0fdfa;color:#0891B2;">
+          <i class="fa-solid fa-list-check"></i> Simple Process
+        </span>
+        <h2 class="font-heading font-bold text-gray-900 mb-3" style="font-size:clamp(1.8rem,4vw,2.75rem);">How It Works</h2>
+        <p class="text-gray-500 max-w-lg mx-auto" style="font-family:'DM Sans',sans-serif;">
+          Getting started with MediTrack takes less than a minute.
         </p>
       </div>
 
+      <!-- Desktop: flex row with dashed connectors. Mobile: single column -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
         <!-- Step 1 -->
-        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#f0fdfa;color:#0891B2;">
-            <i class="fa-solid fa-qrcode"></i>
+        <div class="reveal card-lift flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm relative" style="animation-delay:0ms;">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-sm" style="background:linear-gradient(135deg,#f0fdfa,#e0f2fe);">
+            <i class="fa-solid fa-qrcode text-2xl" style="color:#0891B2;"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#0891B2;">Step 1</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Scan QR Code</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white mb-3" style="background:#0891B2;font-family:'Outfit',sans-serif;">1</div>
+          <h3 class="font-heading font-bold text-gray-900 text-lg mb-2">Scan QR Code</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
             Scan the clinic QR code or use your personal patient QR to begin your visit or booking.
           </p>
         </div>
 
         <!-- Step 2 -->
-        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#eff6ff;color:#2563eb;">
-            <i class="fa-solid fa-calendar-check"></i>
+        <div class="reveal card-lift flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm" style="animation-delay:100ms;">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-sm" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+            <i class="fa-solid fa-calendar-check text-2xl" style="color:#2563eb;"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#2563eb;">Step 2</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Book Appointment</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white mb-3" style="background:#2563eb;font-family:'Outfit',sans-serif;">2</div>
+          <h3 class="font-heading font-bold text-gray-900 text-lg mb-2">Book Appointment</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
             Choose your preferred doctor, date, and time slot. Instant confirmation sent to your account.
           </p>
         </div>
 
         <!-- Step 3 -->
-        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#f0fdf4;color:#16A34A;">
-            <i class="fa-solid fa-hospital-user"></i>
+        <div class="reveal card-lift flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm" style="animation-delay:200ms;">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-sm" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+            <i class="fa-solid fa-hospital-user text-2xl" style="color:#16A34A;"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#16A34A;">Step 3</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Visit Clinic</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white mb-3" style="background:#16A34A;font-family:'Outfit',sans-serif;">3</div>
+          <h3 class="font-heading font-bold text-gray-900 text-lg mb-2">Visit Clinic</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
             Arrive at the clinic and check in using your QR code &mdash; no paperwork, no long queues.
           </p>
         </div>
 
         <!-- Step 4 -->
-        <div class="card-hover flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-5" style="background:#fdf4ff;color:#9333ea;">
-            <i class="fa-solid fa-file-medical"></i>
+        <div class="reveal card-lift flex flex-col items-center text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm" style="animation-delay:300ms;">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-sm" style="background:linear-gradient(135deg,#fdf4ff,#f3e8ff);">
+            <i class="fa-solid fa-file-medical text-2xl" style="color:#9333ea;"></i>
           </div>
-          <span class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#9333ea;">Step 4</span>
-          <h3 class="text-lg font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Get Records</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
-            Access your medical records, prescriptions, and visit history online or print them anytime.
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white mb-3" style="background:#9333ea;font-family:'Outfit',sans-serif;">4</div>
+          <h3 class="font-heading font-bold text-gray-900 text-lg mb-2">Get Records</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
+            Access your medical records, prescriptions, and visit history online or print anytime.
           </p>
         </div>
 
@@ -225,42 +387,59 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       QR CODE SECTION
-  ════════════════════════════════════════════ -->
-  <section class="py-20" style="background:linear-gradient(135deg,#f0fdfa 0%,#eff6ff 100%);" id="qr-code">
+  <!-- ═══════════════════ QR SECTION ═══════════════════ -->
+  <section class="py-24" style="background:linear-gradient(135deg,#f0fdfa 0%,#e0f2fe 100%);" id="qr-code">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="reveal flex flex-col md:flex-row items-center gap-12 lg:gap-20 bg-white rounded-3xl shadow-lg border border-white/60 p-8 md:p-12 lg:p-16">
 
-      <div class="flex flex-col md:flex-row items-center gap-10 lg:gap-16 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 lg:p-14">
-
-        <!-- QR Image — centered on mobile, left on desktop -->
+        <!-- QR -->
         <div class="flex-shrink-0 text-center w-full md:w-auto">
-          <div class="inline-block p-4 rounded-2xl border-2 mx-auto" style="background:#f0fdfa;border-color:#a5f3fc;">
+          <div class="inline-block p-5 rounded-2xl shadow-inner" style="background:#f0fdfa;border:2px solid #a5f3fc;">
             <img id="clinic-qr"
                  src=""
-                 alt="Clinic QR Code for booking"
+                 alt="Clinic QR Code"
                  width="200" height="200"
                  class="rounded-xl block"
-                 style="min-width:160px;min-height:160px;" />
+                 style="min-width:180px;min-height:180px;" />
           </div>
-          <p class="mt-3 text-xs font-semibold uppercase tracking-widest" style="color:#0891B2;">Scan to Book Online</p>
+          <p class="mt-3 text-xs font-bold uppercase tracking-widest" style="color:#0891B2;font-family:'DM Sans',sans-serif;">Scan to Book Online</p>
         </div>
 
         <!-- Text -->
         <div>
-          <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4" style="background:#f0fdfa;color:#0891B2;">
-            Quick Access
+          <span class="section-badge mb-5" style="background:#f0fdfa;color:#0891B2;">
+            <i class="fa-solid fa-qrcode"></i> Quick Access
           </span>
-          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4" style="font-family:'Poppins',sans-serif;">Book in Seconds</h2>
-          <p class="text-gray-500 leading-relaxed mb-6">
+          <h2 class="font-heading font-bold text-gray-900 mb-4" style="font-size:clamp(1.6rem,3.5vw,2.2rem);">Book in Seconds</h2>
+          <p class="text-gray-500 leading-relaxed mb-7" style="font-family:'DM Sans',sans-serif;">
             Point your phone camera at the QR code to instantly open the MediTrack booking page.
             No app download required &mdash; just scan and book your appointment from anywhere.
           </p>
-          <ul class="space-y-3 text-sm text-gray-600">
-            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> Works on any smartphone camera</li>
-            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> No login required to scan</li>
-            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> Opens directly to the booking form</li>
-            <li class="flex items-center gap-2.5"><i class="fa-solid fa-circle-check" style="color:#0891B2;"></i> Available 24/7 from anywhere</li>
+          <ul class="space-y-3" style="font-family:'DM Sans',sans-serif;">
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0fdfa;">
+                <i class="fa-solid fa-check text-xs" style="color:#0891B2;"></i>
+              </span>
+              Works on any smartphone camera
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0fdfa;">
+                <i class="fa-solid fa-check text-xs" style="color:#0891B2;"></i>
+              </span>
+              No login required to scan
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0fdfa;">
+                <i class="fa-solid fa-check text-xs" style="color:#0891B2;"></i>
+              </span>
+              Opens directly to the booking form
+            </li>
+            <li class="flex items-center gap-3 text-sm text-gray-600">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0fdfa;">
+                <i class="fa-solid fa-check text-xs" style="color:#0891B2;"></i>
+              </span>
+              Available 24/7 from anywhere
+            </li>
           </ul>
         </div>
 
@@ -268,16 +447,16 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       WHY MEDITRACK?
-  ════════════════════════════════════════════ -->
-  <section class="py-20 bg-white" id="features">
+  <!-- ═══════════════════ FEATURES ═══════════════════ -->
+  <section class="py-24 bg-white" id="features">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      <div class="text-center mb-14">
-        <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3" style="background:#f0fdf4;color:#16A34A;">Why Choose Us</span>
-        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3" style="font-family:'Poppins',sans-serif;">Why MediTrack?</h2>
-        <p class="text-gray-500 max-w-xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <span class="section-badge mb-4" style="background:#f0fdf4;color:#16A34A;">
+          <i class="fa-solid fa-star"></i> Why Choose Us
+        </span>
+        <h2 class="font-heading font-bold text-gray-900 mb-3" style="font-size:clamp(1.8rem,4vw,2.75rem);">Why MediTrack?</h2>
+        <p class="text-gray-500 max-w-lg mx-auto" style="font-family:'DM Sans',sans-serif;">
           Built for patients and clinic staff alike &mdash; simple, fast, and secure.
         </p>
       </div>
@@ -285,133 +464,141 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         <!-- Card 1 -->
-        <div class="card-hover rounded-2xl border border-gray-100 p-8 shadow-sm" style="background:linear-gradient(135deg,#f0fdfa 0%,#fff 60%);">
-          <div class="w-12 h-12 rounded-xl text-white flex items-center justify-center text-xl mb-5" style="background:#0891B2;">
+        <div class="reveal card-lift glass-card p-8" style="background:linear-gradient(135deg,rgba(240,253,250,0.9),rgba(255,255,255,0.95));animation-delay:0ms;">
+          <div class="w-14 h-14 rounded-2xl text-white flex items-center justify-center text-xl mb-6 shadow-md" style="background:linear-gradient(135deg,#0891B2,#22D3EE);">
             <i class="fa-solid fa-bolt"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Fast Check-In</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
-            Skip the front-desk queue. Scan your personal QR code upon arrival and you&rsquo;re checked in instantly &mdash;
+          <h3 class="font-heading font-bold text-gray-900 text-xl mb-3">Fast Check-In</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
+            Skip the front-desk queue. Scan your personal QR code upon arrival and you're checked in instantly —
             letting staff focus on your care.
           </p>
         </div>
 
         <!-- Card 2 -->
-        <div class="card-hover rounded-2xl border border-gray-100 p-8 shadow-sm" style="background:linear-gradient(135deg,#eff6ff 0%,#fff 60%);">
-          <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl mb-5">
+        <div class="reveal card-lift glass-card p-8" style="background:linear-gradient(135deg,rgba(239,246,255,0.9),rgba(255,255,255,0.95));animation-delay:100ms;">
+          <div class="w-14 h-14 rounded-2xl text-white flex items-center justify-center text-xl mb-6 shadow-md" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);">
             <i class="fa-solid fa-lock"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Secure Records</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
+          <h3 class="font-heading font-bold text-gray-900 text-xl mb-3">Secure Records</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
             Your medical history is accessible only to you and your authorized care team.
             Privacy and compliance are built in from the ground up.
           </p>
         </div>
 
         <!-- Card 3 -->
-        <div class="card-hover rounded-2xl border border-gray-100 p-8 shadow-sm" style="background:linear-gradient(135deg,#f0fdf4 0%,#fff 60%);">
-          <div class="w-12 h-12 rounded-xl text-white flex items-center justify-center text-xl mb-5" style="background:#16A34A;">
+        <div class="reveal card-lift glass-card p-8" style="background:linear-gradient(135deg,rgba(240,253,244,0.9),rgba(255,255,255,0.95));animation-delay:200ms;">
+          <div class="w-14 h-14 rounded-2xl text-white flex items-center justify-center text-xl mb-6 shadow-md" style="background:linear-gradient(135deg,#16A34A,#22c55e);">
             <i class="fa-solid fa-print"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2" style="font-family:'Poppins',sans-serif;">Print Anytime</h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
+          <h3 class="font-heading font-bold text-gray-900 text-xl mb-3">Print Anytime</h3>
+          <p class="text-sm text-gray-500 leading-relaxed" style="font-family:'DM Sans',sans-serif;">
             Generate printable summaries of your visits, prescriptions, and lab results directly from
-            your patient dashboard &mdash; ready whenever you need them.
+            your patient dashboard — ready whenever you need them.
           </p>
         </div>
 
       </div>
-
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       CTA STRIP
-  ════════════════════════════════════════════ -->
-  <section class="py-16" style="background:linear-gradient(135deg,#0d4f6e 0%,#0891B2 100%);">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-      <h2 class="text-2xl sm:text-3xl font-bold mb-3" style="font-family:'Poppins',sans-serif;">Ready to get started?</h2>
-      <p class="text-white/75 mb-8 text-base">Create your free patient account today and take control of your health journey.</p>
+  <!-- ═══════════════════ CTA STRIP ═══════════════════ -->
+  <section class="py-20 grain" style="background:linear-gradient(135deg,#083344 0%,#0891B2 100%);">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white reveal">
+      <h2 class="font-heading font-bold mb-3" style="font-size:clamp(1.6rem,4vw,2.2rem);">Ready to get started?</h2>
+      <p class="mb-9 text-white/75" style="font-family:'DM Sans',sans-serif;">Create your free patient account today and take control of your health journey.</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="pages/register.html"
-           class="btn-primary-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-bold min-h-[52px] shadow-lg">
+        <a href="pages/register.html" class="btn-hero-primary">
           <i class="fa-solid fa-user-plus"></i> Create Free Account
         </a>
-        <a href="pages/login.html"
-           class="btn-outline-hero inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base min-h-[52px]">
+        <a href="pages/login.html" class="btn-hero-outline">
           <i class="fa-solid fa-right-to-bracket"></i> Sign In
         </a>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       FOOTER
-  ════════════════════════════════════════════ -->
-  <footer class="bg-gray-900 text-gray-300">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+  <!-- ═══════════════════ FOOTER ═══════════════════ -->
+  <footer style="background:#083344;color:#94a3b8;">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12">
 
         <!-- Brand -->
         <div>
-          <div class="flex items-center gap-2 text-white font-bold text-xl mb-3" style="font-family:'Poppins',sans-serif;">
-            <i class="fa-solid fa-heart-pulse text-2xl" style="color:#22D3EE;"></i>
-            <span>MediTrack</span>
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#0891B2,#22D3EE);">
+              <i class="fa-solid fa-heart-pulse text-white text-base"></i>
+            </div>
+            <span style="font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:#fff;">MediTrack</span>
           </div>
-          <p class="text-sm text-gray-400 max-w-xs leading-relaxed">
+          <p class="text-sm leading-relaxed max-w-xs" style="color:#94a3b8;font-family:'DM Sans',sans-serif;">
             Internal Medicine Clinic &mdash; delivering compassionate care with modern, secure tools.
           </p>
         </div>
 
         <!-- Quick Links -->
         <div>
-          <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-widest">Quick Links</h4>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="#how-it-works" class="text-gray-400 hover:text-[#22D3EE] transition-colors">How It Works</a></li>
-            <li><a href="#qr-code" class="text-gray-400 hover:text-[#22D3EE] transition-colors">QR Booking</a></li>
-            <li><a href="#features" class="text-gray-400 hover:text-[#22D3EE] transition-colors">Features</a></li>
-            <li><a href="pages/register.html" class="text-gray-400 hover:text-[#22D3EE] transition-colors">Register</a></li>
-            <li><a href="pages/login.html" class="text-gray-400 hover:text-[#22D3EE] transition-colors">Login</a></li>
+          <h4 class="font-semibold mb-5 text-xs uppercase tracking-widest" style="color:#fff;font-family:'DM Sans',sans-serif;">Quick Links</h4>
+          <ul class="space-y-3 text-sm" style="font-family:'DM Sans',sans-serif;">
+            <li><a href="#how-it-works" class="transition-colors hover:text-cyan-400" style="color:#94a3b8;text-decoration:none;">How It Works</a></li>
+            <li><a href="#qr-code" class="transition-colors hover:text-cyan-400" style="color:#94a3b8;text-decoration:none;">QR Booking</a></li>
+            <li><a href="#features" class="transition-colors hover:text-cyan-400" style="color:#94a3b8;text-decoration:none;">Features</a></li>
+            <li><a href="pages/register.html" class="transition-colors hover:text-cyan-400" style="color:#94a3b8;text-decoration:none;">Register</a></li>
+            <li><a href="pages/login.html" class="transition-colors hover:text-cyan-400" style="color:#94a3b8;text-decoration:none;">Login</a></li>
           </ul>
         </div>
 
         <!-- Clinic Info -->
         <div>
-          <h4 class="text-white font-semibold mb-4 text-xs uppercase tracking-widest">Clinic Hours</h4>
-          <ul class="space-y-2.5 text-sm text-gray-400">
-            <li class="flex items-center gap-2">
+          <h4 class="font-semibold mb-5 text-xs uppercase tracking-widest" style="color:#fff;font-family:'DM Sans',sans-serif;">Clinic Hours</h4>
+          <ul class="space-y-3 text-sm" style="font-family:'DM Sans',sans-serif;">
+            <li class="flex items-center gap-3">
               <i class="fa-solid fa-calendar-days w-4" style="color:#22D3EE;"></i>
-              Monday &ndash; Friday
+              <span style="color:#94a3b8;">Monday &ndash; Friday</span>
             </li>
-            <li class="flex items-center gap-2">
+            <li class="flex items-center gap-3">
               <i class="fa-solid fa-clock w-4" style="color:#22D3EE;"></i>
-              8:00 AM &ndash; 5:00 PM
+              <span style="color:#94a3b8;">8:00 AM &ndash; 5:00 PM</span>
             </li>
-            <li class="flex items-center gap-2 mt-2">
-              <i class="fa-solid fa-calendar-xmark text-gray-600 w-4"></i>
-              <span class="text-gray-500">Closed on weekends &amp; holidays</span>
+            <li class="flex items-center gap-3 mt-2">
+              <i class="fa-solid fa-calendar-xmark w-4" style="color:#475569;"></i>
+              <span style="color:#64748b;">Closed on weekends &amp; holidays</span>
             </li>
           </ul>
         </div>
 
       </div>
 
-      <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-600">
+      <div class="border-t mt-12 pt-7 text-center text-xs" style="border-color:#1e3a4a;color:#475569;font-family:'DM Sans',sans-serif;">
         &copy; 2026 MediTrack &mdash; Internal Medicine Clinic. All rights reserved.
       </div>
 
     </div>
   </footer>
 
-  <!-- QR Code generation -->
   <script>
+    // ── QR Code ──
     (function () {
       var bookingUrl = window.location.origin + '/meditrack/pages/qr-booking.html';
-      var encoded   = encodeURIComponent(bookingUrl);
-      var qrSrc     = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encoded;
-      var img       = document.getElementById('clinic-qr');
+      var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(bookingUrl);
+      var img = document.getElementById('clinic-qr');
       if (img) img.src = qrSrc;
+    })();
+
+    // ── Scroll reveal ──
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      els.forEach(function (el) { observer.observe(el); });
     })();
   </script>
 

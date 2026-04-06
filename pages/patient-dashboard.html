@@ -2,174 +2,332 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Dashboard - MediTrack</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Patient Dashboard — MediTrack</title>
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome 6.4 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Google Fonts: Outfit + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        h1,h2,h3,h4,h5,h6 { font-family: 'Poppins', sans-serif; }
-        body { background: #F0FDFA; overflow-x: hidden; }
+        /* ── Base Typography ─────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'DM Sans', sans-serif; background: #F0FDFA; overflow-x: hidden; }
+        h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Outfit', sans-serif; }
 
-        /* Sidebar */
-        .sidebar-gradient { background: linear-gradient(180deg, #0f4c5c 0%, #0891B2 60%, #22D3EE 100%); }
-        .nav-item {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.7rem 1rem; border-radius: 0.75rem;
-            color: rgba(255,255,255,0.75); transition: all 0.2s;
-            cursor: pointer; font-weight: 500; width: 100%; text-align: left;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.12); color: #fff; }
-        .nav-item.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 600; }
-        .nav-item i { width: 1.1rem; text-align: center; font-size: 0.9rem; }
-
-        /* Pulse */
-        .pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
-
-        /* Slot buttons */
-        .slot-btn { transition: all 0.18s; border-radius: 0.5rem; padding: 0.45rem 0.5rem; font-size: 0.8rem; font-weight: 500; text-align: center; border-width: 2px; }
-        .slot-btn.available { background: #CCFBF1; color: #134E4A; border-color: #99F6E4; }
-        .slot-btn.available:hover { background: #99F6E4; border-color: #2DD4BF; }
-        .slot-btn.booked { background: #F1F5F9; color: #94A3B8; border-color: #E2E8F0; cursor: not-allowed; }
-        .slot-btn.selected { background: #0891B2; color: #fff; border-color: #0E7490; }
-        .slot-btn.past { background: #FEF9C3; color: #92400E; border-color: #FDE68A; cursor: not-allowed; }
-
-        /* Record expand */
-        .record-detail { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
-        .record-detail.expanded { max-height: 2000px; }
-
-        /* Appointment card */
-        .appointment-card { transition: all 0.2s; }
-        .appointment-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(8,145,178,0.13); }
-
-        /* Scrollbar */
+        /* ── Scrollbar ───────────────────────────────────── */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: #F0FDFA; }
         ::-webkit-scrollbar-thumb { background: #0891B2; border-radius: 4px; }
 
-        /* SweetAlert2 */
-        .swal2-popup { border-radius: 1rem; font-family: 'Inter', sans-serif; }
-        .swal2-confirm { background-color: #0891B2 !important; }
-        .swal2-cancel { background-color: #64748B !important; }
+        /* ── Sidebar Nav Items ───────────────────────────── */
+        .nav-item {
+            display: flex; align-items: center; gap: 0.8rem;
+            padding: 0.7rem 1rem; border-radius: 0.75rem;
+            color: rgba(255,255,255,0.7); transition: all 0.2s ease;
+            cursor: pointer; font-weight: 500; width: 100%;
+            text-align: left; border: none; background: transparent;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+            position: relative;
+        }
+        .nav-item i { width: 1.1rem; text-align: center; font-size: 0.875rem; flex-shrink: 0; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-weight: 600;
+            border-left: 3px solid #22D3EE;
+            padding-left: calc(1rem - 3px);
+        }
 
-        /* QR Modal */
+        /* ── Pulse animation ─────────────────────────────── */
+        .pulse-dot { animation: pulseDot 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        /* ── Slot Buttons ────────────────────────────────── */
+        .slot-btn {
+            transition: all 0.18s ease;
+            border-radius: 0.625rem;
+            padding: 0.5rem 0.4rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+            border-width: 2px;
+            border-style: solid;
+            min-height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .slot-btn.available { background: #CCFBF1; color: #134E4A; border-color: #5EEAD4; }
+        .slot-btn.available:hover { background: #99F6E4; border-color: #2DD4BF; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(20,184,166,0.2); }
+        .slot-btn.booked { background: #F8FAFC; color: #CBD5E1; border-color: #E2E8F0; cursor: not-allowed; text-decoration: line-through; }
+        .slot-btn.selected { background: #0891B2; color: #fff; border-color: #0E7490; box-shadow: 0 4px 14px rgba(8,145,178,0.35); }
+        .slot-btn.past { background: #FFFBEB; color: #D97706; border-color: #FDE68A; cursor: not-allowed; opacity: 0.7; }
+
+        /* ── Record expand ───────────────────────────────── */
+        .record-detail { max-height: 0; overflow: hidden; transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1); }
+        .record-detail.expanded { max-height: 2400px; }
+
+        /* ── Appointment card hover ──────────────────────── */
+        .appointment-card { transition: all 0.22s ease; }
+        .appointment-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(8,145,178,0.12); }
+
+        /* ── QR Modal ────────────────────────────────────── */
         #qrModal { display: none; }
         #qrModal.active { display: flex; }
 
-        /* Mobile */
+        /* ── Mobile layout ───────────────────────────────── */
         @media (max-width: 767px) {
-            body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+            body { padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
             #sidebar { display: none !important; }
             .main-content { margin-left: 0 !important; }
             input, select, textarea { font-size: 16px !important; }
         }
         @media (min-width: 768px) { #mobileBottomNav { display: none !important; } }
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            @media (max-width: 767px) { #mobileBottomNav { padding-bottom: env(safe-area-inset-bottom); } }
-        }
-        * { -webkit-tap-highlight-color: transparent; }
 
-        /* Form fields */
-        .field { @apply w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white; }
-        .label { @apply block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide; }
-        .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100; }
+        /* ── Mobile bottom nav safe area ────────────────── */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            @media (max-width: 767px) {
+                #mobileBottomNav { padding-bottom: env(safe-area-inset-bottom); }
+            }
+        }
+
+        /* ── Mobile bottom nav item active state ─────────── */
+        .mobile-nav-btn { transition: all 0.2s ease; }
+        .mobile-nav-btn.mobile-active { color: #0891B2; }
+        .mobile-nav-btn:not(.mobile-active) { color: #94A3B8; }
+
+        /* ── Form fields ─────────────────────────────────── */
+        .field {
+            width: 100%;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 0.75rem;
+            padding: 0.65rem 1rem;
+            color: #1E293B;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+        }
+        .field:focus { border-color: #0891B2; box-shadow: 0 0 0 3px rgba(8,145,178,0.12); }
+        .field[readonly], .field[disabled] { background: #F8FAFC; color: #94A3B8; cursor: not-allowed; border-color: #F1F5F9; }
+        .label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748B;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── Card utility ────────────────────────────────── */
+        .card { background: #fff; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #F1F5F9; }
+
+        /* ── SweetAlert2 overrides ───────────────────────── */
+        .swal2-popup { border-radius: 1.25rem !important; font-family: 'DM Sans', sans-serif !important; }
+        .swal2-title { font-family: 'Outfit', sans-serif !important; }
+        .swal2-confirm { background-color: #0891B2 !important; border-radius: 0.75rem !important; }
+        .swal2-cancel { background-color: #64748B !important; border-radius: 0.75rem !important; }
+
+        /* ── Welcome banner decorative elements ─────────── */
+        .banner-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* ── Tab section transitions ─────────────────────── */
+        .tab-content { animation: fadeIn 0.22s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ── Filter button active ────────────────────────── */
+        .appt-filter-btn {
+            flex-shrink: 0;
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: all 0.18s ease;
+            border: 1.5px solid transparent;
+            font-family: 'DM Sans', sans-serif;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .appt-filter-btn.active-filter { background: #0891B2; color: #fff; border-color: #0891B2; box-shadow: 0 2px 8px rgba(8,145,178,0.25); }
+        .appt-filter-btn:not(.active-filter) { background: #fff; color: #64748B; border-color: #E2E8F0; }
+        .appt-filter-btn:not(.active-filter):hover { background: #F0FDFA; color: #0891B2; border-color: #BAE6FD; }
+
+        /* ── Doctor info card ────────────────────────────── */
+        #doctorCard { display: none; }
+        #doctorCard.visible { display: block; }
+
+        /* ── Gradient text ───────────────────────────────── */
+        .gradient-text {
+            background: linear-gradient(135deg, #0891B2, #16A34A);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Stat pill ───────────────────────────────────── */
+        .stat-pill {
+            display: flex; align-items: center; gap: 0.5rem;
+            background: rgba(255,255,255,0.12);
+            border-radius: 9999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* ── Section title ───────────────────────────────── */
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0F172A;
+        }
+
+        /* ── Print hidden ────────────────────────────────── */
+        @media print { #sidebar, #mobileBottomNav, header { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="flex min-h-screen">
 
-    <!-- ===== SIDEBAR ===== -->
-    <aside id="sidebar" class="hidden md:flex flex-col w-64 min-h-screen fixed left-0 top-0 z-40 sidebar-gradient shadow-2xl" style="background:linear-gradient(180deg,#0f4c5c 0%,#0891B2 60%,#22D3EE 100%)">
+    <!-- ═══════════════════════════════════════════════
+         SIDEBAR (Desktop only)
+    ══════════════════════════════════════════════════ -->
+    <aside id="sidebar"
+        class="hidden md:flex flex-col w-64 min-h-screen fixed left-0 top-0 z-40 shadow-2xl"
+        style="background:linear-gradient(180deg,#083344 0%,#0891B2 100%)">
+
         <!-- Brand -->
-        <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-            <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+        <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+            <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0 shadow-inner">
                 <i class="fas fa-heartbeat text-white text-lg"></i>
             </div>
             <div>
-                <span class="text-white font-bold text-lg block leading-tight" style="font-family:'Poppins',sans-serif">MediTrack</span>
-                <span class="text-cyan-200 text-xs font-medium">Patient Portal</span>
+                <span class="text-white font-heading font-bold text-lg block leading-tight" style="font-family:'Outfit',sans-serif">MediTrack</span>
+                <span class="text-cyan-200 text-xs font-medium tracking-wide">Patient Portal</span>
             </div>
         </div>
 
-        <!-- User -->
-        <div class="px-5 py-4 border-b border-white/10">
+        <!-- User Card -->
+        <div class="mx-4 my-4 rounded-xl p-4" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1)">
             <div class="flex items-center gap-3">
-                <div id="sidebarAvatar" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                <div id="sidebarAvatar"
+                    class="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden border-2 border-white/25 shadow-md">
                     <i class="fas fa-user"></i>
                 </div>
-                <div class="min-w-0">
-                    <p id="sidebarName" class="text-white font-semibold text-sm truncate">Patient</p>
+                <div class="min-w-0 flex-1">
+                    <p id="sidebarName" class="text-white font-semibold text-sm truncate leading-tight">Patient</p>
                     <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="w-1.5 h-1.5 bg-green-400 rounded-full pulse"></span>
-                        <span class="text-cyan-200 text-xs">Online</span>
+                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-dot flex-shrink-0"></span>
+                        <span class="text-cyan-200 text-xs">Active session</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Nav -->
-        <nav class="flex-1 px-4 py-5 space-y-1">
+        <!-- Navigation -->
+        <nav class="flex-1 px-3 py-2 space-y-0.5">
+            <p class="text-white/40 text-xs font-semibold uppercase tracking-widest px-3 mb-2 mt-1">Navigation</p>
             <button class="nav-item active" data-tab="booking" onclick="switchTab('booking')">
-                <i class="fas fa-calendar-plus"></i><span>Book Appointment</span>
+                <i class="fas fa-calendar-plus"></i>
+                <span>Book Appointment</span>
             </button>
             <button class="nav-item" data-tab="appointments" onclick="switchTab('appointments')">
-                <i class="fas fa-calendar-check"></i><span>My Appointments</span>
+                <i class="fas fa-calendar-check"></i>
+                <span>My Appointments</span>
             </button>
             <button class="nav-item" data-tab="records" onclick="switchTab('records')">
-                <i class="fas fa-file-medical"></i><span>Medical Records</span>
+                <i class="fas fa-file-medical"></i>
+                <span>Medical Records</span>
             </button>
             <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
-                <i class="fas fa-user-circle"></i><span>Profile</span>
+                <i class="fas fa-user-circle"></i>
+                <span>My Profile</span>
             </button>
         </nav>
 
-        <!-- Logout -->
-        <div class="px-4 pb-6 border-t border-white/10 pt-4">
-            <button onclick="confirmLogout()" class="nav-item text-red-200 hover:bg-red-500/20 hover:text-red-100">
-                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        <!-- Sidebar Footer -->
+        <div class="px-3 pb-6 border-t border-white/10 pt-3">
+            <button onclick="confirmLogout()"
+                class="nav-item w-full" style="color:rgba(252,165,165,0.85)"
+                onmouseover="this.style.background='rgba(239,68,68,0.15)'; this.style.color='#FCA5A5';"
+                onmouseout="this.style.background=''; this.style.color='rgba(252,165,165,0.85)';">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sign Out</span>
             </button>
         </div>
     </aside>
 
-    <!-- ===== MAIN AREA ===== -->
+    <!-- ═══════════════════════════════════════════════
+         MAIN CONTENT AREA
+    ══════════════════════════════════════════════════ -->
     <div class="main-content flex-1 flex flex-col md:ml-64">
 
-        <!-- ===== HEADER ===== -->
-        <header class="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
+        <!-- ── STICKY HEADER ──────────────────────────── -->
+        <header class="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30"
+            style="box-shadow:0 1px 0 rgba(0,0,0,0.05), 0 4px 20px rgba(8,145,178,0.04)">
             <div class="px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
+
+                <!-- Left: Brand (mobile) or greeting (desktop) -->
+                <div class="flex items-center gap-3 min-w-0">
                     <!-- Mobile brand -->
-                    <div class="md:hidden flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center">
-                            <i class="fas fa-heartbeat text-cyan-600 text-sm"></i>
+                    <div class="md:hidden flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#083344,#0891B2)">
+                            <i class="fas fa-heartbeat text-white text-xs"></i>
                         </div>
-                        <span class="font-bold text-gray-800 text-sm" style="font-family:'Poppins',sans-serif">MediTrack</span>
+                        <span class="font-bold text-gray-900 text-sm" style="font-family:'Outfit',sans-serif">MediTrack</span>
                     </div>
-                    <div class="hidden md:block">
-                        <h2 id="headerGreeting" class="text-gray-800 font-semibold text-sm">Welcome, Patient</h2>
-                        <p class="text-xs text-gray-400" id="headerDate"></p>
+                    <!-- Desktop greeting -->
+                    <div class="hidden md:block min-w-0">
+                        <h2 id="headerGreeting" class="text-gray-800 font-semibold text-sm truncate" style="font-family:'Outfit',sans-serif">Welcome back</h2>
+                        <p class="text-xs text-gray-400 mt-0.5" id="headerDate"></p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="hidden sm:flex items-center gap-1.5 text-gray-400 text-xs">
+
+                <!-- Right: Clock, status, avatar, logout -->
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <!-- Clock -->
+                    <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-500 text-xs">
                         <i class="fas fa-clock text-cyan-500 text-xs"></i>
-                        <span id="headerClock">--:--</span>
+                        <span id="headerClock" class="font-medium tabular-nums">--:--</span>
                     </div>
-                    <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 text-xs font-semibold rounded-full border border-green-100">
-                        <i class="fas fa-circle text-xs pulse"></i> Online
+                    <!-- Online badge -->
+                    <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-600 text-xs font-semibold rounded-full border border-emerald-100">
+                        <i class="fas fa-circle text-xs pulse-dot"></i> Online
                     </span>
+                    <!-- Avatar + name -->
                     <div class="flex items-center gap-2">
-                        <div id="headerAvatar" class="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-xs overflow-hidden flex-shrink-0">
+                        <div id="headerAvatar"
+                            class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs overflow-hidden flex-shrink-0 shadow-md"
+                            style="background:linear-gradient(135deg,#0891B2,#0E7490)">
                             <i class="fas fa-user"></i>
                         </div>
-                        <span id="headerName" class="hidden sm:block text-gray-700 font-medium text-sm truncate max-w-28"></span>
+                        <span id="headerName" class="hidden sm:block text-gray-700 font-medium text-sm max-w-28 truncate"></span>
                     </div>
-                    <button onclick="confirmLogout()" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg text-xs font-semibold transition border border-red-100">
+                    <!-- Logout -->
+                    <button onclick="confirmLogout()"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border"
+                        style="background:#FEF2F2; color:#EF4444; border-color:#FECACA;"
+                        onmouseover="this.style.background='#FEE2E2'"
+                        onmouseout="this.style.background='#FEF2F2'">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="hidden sm:inline">Logout</span>
                     </button>
@@ -177,236 +335,368 @@
             </div>
         </header>
 
-        <!-- ===== CONTENT ===== -->
+        <!-- ── PAGE CONTENT ────────────────────────────── -->
         <main class="flex-1 p-4 sm:p-6 max-w-5xl mx-auto w-full">
 
             <!-- Welcome Banner -->
-            <div class="rounded-2xl p-5 text-white mb-6 shadow-lg overflow-hidden relative" style="background: linear-gradient(135deg, #0891B2 0%, #0e7490 50%, #134E4A 100%);">
-                <div class="absolute right-0 top-0 w-40 h-full opacity-10">
-                    <i class="fas fa-heartbeat text-9xl absolute -right-4 -top-4"></i>
+            <div class="rounded-2xl p-5 sm:p-6 text-white mb-6 overflow-hidden relative"
+                style="background:linear-gradient(135deg,#083344 0%,#0891B2 60%,#0E7490 100%); box-shadow:0 8px 32px rgba(8,145,178,0.25)">
+                <!-- Decorative circles -->
+                <div class="banner-circle" style="width:180px;height:180px;top:-60px;right:-30px;"></div>
+                <div class="banner-circle" style="width:100px;height:100px;bottom:-40px;right:80px;opacity:0.5;"></div>
+                <div class="banner-circle" style="width:60px;height:60px;top:20px;right:150px;opacity:0.3;"></div>
+                <!-- Heartbeat icon -->
+                <div class="absolute right-4 top-0 bottom-0 flex items-center opacity-5">
+                    <i class="fas fa-heartbeat" style="font-size:9rem;"></i>
                 </div>
+                <!-- Content -->
                 <div class="flex items-center gap-4 relative">
-                    <div id="bannerAvatar" class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-xl font-bold flex-shrink-0 overflow-hidden border-2 border-white/30">
+                    <div id="bannerAvatar"
+                        class="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0 overflow-hidden border-2"
+                        style="background:rgba(255,255,255,0.18); border-color:rgba(255,255,255,0.3)">
                         <i class="fas fa-user"></i>
                     </div>
-                    <div>
-                        <p class="text-cyan-200 text-xs font-medium uppercase tracking-wider mb-0.5">Patient Portal</p>
-                        <h1 class="text-xl sm:text-2xl font-bold">Welcome back, <span id="bannerName">Patient</span>!</h1>
-                        <p class="text-cyan-100 text-xs mt-0.5 opacity-80">Internal Medicine Clinic &mdash; MediTrack</p>
+                    <div class="min-w-0">
+                        <p class="text-cyan-200 text-xs font-semibold uppercase tracking-widest mb-0.5">Patient Portal</p>
+                        <h1 class="text-xl sm:text-2xl font-bold leading-tight" style="font-family:'Outfit',sans-serif">
+                            Welcome back, <span id="bannerName">Patient</span>!
+                        </h1>
+                        <p class="text-cyan-100 text-xs mt-1 opacity-75">MediTrack Internal Medicine Clinic</p>
                     </div>
+                </div>
+                <!-- Stats row -->
+                <div class="flex gap-2 mt-4 flex-wrap">
+                    <div class="stat-pill"><i class="fas fa-shield-alt text-cyan-300 text-xs"></i> Secure & Private</div>
+                    <div class="stat-pill"><i class="fas fa-hospital text-cyan-300 text-xs"></i> Internal Medicine</div>
                 </div>
             </div>
 
-            <!-- ===== TAB: BOOK APPOINTMENT ===== -->
+            <!-- ═══════════════════════════════════════════
+                 TAB: BOOK APPOINTMENT
+            ════════════════════════════════════════════ -->
             <section id="tab-booking" class="tab-content">
                 <div class="max-w-2xl mx-auto">
                     <div class="card p-6">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-50">
-                            <div class="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-calendar-plus text-cyan-600 text-sm"></i>
+                        <!-- Card header -->
+                        <div class="flex items-center gap-3 mb-6 pb-5 border-b border-gray-50">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style="background:linear-gradient(135deg,#ECFEFF,#CFFAFE)">
+                                <i class="fas fa-calendar-plus text-cyan-600"></i>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-800">Book an Appointment</h2>
-                                <p class="text-xs text-gray-400">Select a date and available time slot</p>
+                                <h2 class="section-title">Book an Appointment</h2>
+                                <p class="text-xs text-gray-400 mt-0.5">Choose a date and available time slot</p>
                             </div>
                         </div>
 
-                        <!-- Step 1: Date -->
+                        <!-- Step 1: Date Picker -->
                         <div class="mb-5">
-                            <label class="label">Select Date</label>
-                            <input type="date" id="appointmentDate"
-                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white"
+                            <label class="label">
+                                <i class="fas fa-calendar-day mr-1 text-cyan-400"></i>
+                                Select Visit Date
+                            </label>
+                            <input type="date" id="appointmentDate" class="field"
                                 onchange="onDateChange(this.value)">
                         </div>
 
-                        <!-- Doctor Card -->
-                        <div id="doctorCard" class="hidden mb-5 rounded-xl p-4 border border-cyan-100" style="background: linear-gradient(135deg, #ECFEFF 0%, #F0FDFA 100%);">
-                            <div class="flex items-center gap-4">
-                                <div id="doctorAvatar" class="w-14 h-14 rounded-xl bg-cyan-100 flex items-center justify-center text-cyan-600 text-xl font-bold flex-shrink-0 overflow-hidden">
+                        <!-- Doctor Info Card (hidden until date selected) -->
+                        <div id="doctorCard" class="mb-5 rounded-xl p-4 border border-cyan-100 overflow-hidden relative"
+                            style="background:linear-gradient(135deg,#ECFEFF 0%,#F0FDFA 100%)">
+                            <div class="absolute top-0 right-0 w-32 h-full opacity-5 flex items-center justify-end pr-4">
+                                <i class="fas fa-user-md" style="font-size:5rem;"></i>
+                            </div>
+                            <div class="flex items-center gap-4 relative">
+                                <div id="doctorAvatar"
+                                    class="w-14 h-14 rounded-xl flex items-center justify-center text-cyan-600 text-xl font-bold flex-shrink-0 overflow-hidden"
+                                    style="background:linear-gradient(135deg,#CFFAFE,#A5F3FC)">
                                     <i class="fas fa-user-md"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h3 id="doctorName" class="font-bold text-gray-800">Dr. Name</h3>
-                                    <p id="doctorSpecialization" class="text-cyan-600 text-sm font-medium"></p>
+                                    <p class="text-xs text-cyan-500 font-semibold uppercase tracking-wide mb-0.5">Your Doctor</p>
+                                    <h3 id="doctorName" class="font-bold text-gray-900 text-base" style="font-family:'Outfit',sans-serif">Dr. Name</h3>
+                                    <p id="doctorSpecialization" class="text-cyan-600 text-sm font-semibold"></p>
                                     <p id="doctorDepartment" class="text-gray-400 text-xs mt-0.5"></p>
                                 </div>
                                 <div class="text-right flex-shrink-0">
-                                    <p class="text-xs text-gray-400">Consultation</p>
-                                    <p id="doctorFee" class="text-cyan-700 font-bold text-lg"></p>
+                                    <p class="text-xs text-gray-400 mb-0.5">Consultation Fee</p>
+                                    <p id="doctorFee" class="text-cyan-700 font-bold text-xl" style="font-family:'Outfit',sans-serif"></p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Slots loading -->
-                        <div id="slotsLoading" class="hidden text-center py-10">
-                            <i class="fas fa-spinner fa-spin text-cyan-500 text-2xl"></i>
-                            <p class="text-gray-400 mt-2 text-sm">Loading available slots...</p>
+                        <!-- Slots Loading -->
+                        <div id="slotsLoading" class="hidden text-center py-12">
+                            <div class="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center"
+                                style="background:linear-gradient(135deg,#ECFEFF,#CFFAFE)">
+                                <i class="fas fa-spinner fa-spin text-cyan-500 text-xl"></i>
+                            </div>
+                            <p class="text-gray-500 font-medium text-sm">Loading available slots…</p>
+                            <p class="text-gray-300 text-xs mt-1">This may take a moment</p>
                         </div>
 
-                        <!-- No slots -->
-                        <div id="noSlotsMsg" class="hidden text-center py-10 text-gray-400">
-                            <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <!-- No Slots Message -->
+                        <div id="noSlotsMsg" class="hidden text-center py-12">
+                            <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
                                 <i class="fas fa-calendar-times text-2xl text-gray-300"></i>
                             </div>
-                            <p class="font-semibold text-gray-600">No available slots</p>
-                            <p class="text-sm mt-1">Please try a different date.</p>
+                            <p class="font-semibold text-gray-600 text-sm">No available slots</p>
+                            <p class="text-xs text-gray-400 mt-1">Please try a different date.</p>
                         </div>
 
-                        <!-- Time Slots -->
+                        <!-- Time Slots Grid -->
                         <div id="slotsContainer" class="hidden mb-5">
-                            <label class="label">Available Time Slots</label>
-                            <div class="flex items-center gap-4 text-xs text-gray-400 mb-3">
-                                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-teal-100 border-2 border-teal-300 inline-block"></span>Available</span>
-                                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-cyan-500 inline-block"></span>Selected</span>
-                                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-gray-100 border-2 border-gray-200 inline-block"></span>Booked</span>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="label"><i class="fas fa-clock mr-1 text-cyan-400"></i>Available Time Slots</label>
+                                <div class="flex items-center gap-3 text-xs text-gray-400">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded bg-teal-100 border-2 border-teal-400 inline-block"></span>Free
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded bg-cyan-500 inline-block"></span>Selected
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded bg-gray-100 border-2 border-gray-200 inline-block"></span>Taken
+                                    </span>
+                                </div>
                             </div>
                             <div id="slotsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
                         </div>
 
-                        <!-- Booking Form -->
+                        <!-- Booking Form (revealed on slot selection) -->
                         <div id="bookingForm" class="hidden">
-                            <div class="flex items-center gap-2 bg-cyan-50 border border-cyan-100 rounded-xl px-4 py-3 mb-4 text-sm text-cyan-800">
-                                <i class="fas fa-clock text-cyan-500"></i>
-                                <span>Selected: <strong id="selectedSlotDisplay"></strong></span>
+                            <!-- Selected slot indicator -->
+                            <div class="flex items-center gap-3 rounded-xl px-4 py-3 mb-4 border"
+                                style="background:linear-gradient(135deg,#ECFEFF,#F0FDFA); border-color:#A5F3FC">
+                                <div class="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                    <i class="fas fa-clock text-white text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-cyan-500 font-semibold">Selected Slot</p>
+                                    <p class="text-cyan-800 font-bold text-sm" id="selectedSlotDisplay">—</p>
+                                </div>
                             </div>
+
+                            <!-- Reason for Visit -->
                             <div class="mb-4">
-                                <label class="label">Reason for Visit <span class="text-red-400 normal-case tracking-normal font-medium">*</span></label>
-                                <textarea id="reasonForVisit" rows="3" placeholder="Describe your symptoms or reason for the visit..."
-                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none resize-none transition bg-white"></textarea>
+                                <label class="label">
+                                    <i class="fas fa-notes-medical mr-1 text-cyan-400"></i>
+                                    Reason for Visit <span class="text-red-400 normal-case tracking-normal font-medium">*</span>
+                                </label>
+                                <textarea id="reasonForVisit" rows="3"
+                                    placeholder="Briefly describe your symptoms or the reason for your visit…"
+                                    class="field resize-none"></textarea>
                             </div>
+
+                            <!-- Book Button -->
                             <button onclick="bookAppointment()" id="bookBtn"
-                                class="w-full flex items-center justify-center gap-2 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-xl transition shadow-sm shadow-cyan-200">
-                                <i class="fas fa-calendar-check"></i> Book Appointment
+                                class="w-full flex items-center justify-center gap-2.5 font-semibold rounded-xl transition-all"
+                                style="min-height:52px; background:linear-gradient(135deg,#0891B2,#0E7490); color:#fff; box-shadow:0 4px 16px rgba(8,145,178,0.3); font-family:'DM Sans',sans-serif; font-size:0.95rem;"
+                                onmouseover="this.style.boxShadow='0 6px 20px rgba(8,145,178,0.45)'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.boxShadow='0 4px 16px rgba(8,145,178,0.3)'; this.style.transform=''">
+                                <i class="fas fa-calendar-check"></i>
+                                Confirm Appointment
                             </button>
                         </div>
+
+                        <!-- bookingExtras placeholder (for JS compatibility) -->
+                        <div id="bookingExtras"></div>
+                        <!-- doctorInfoCard placeholder (for JS compatibility) -->
+                        <div id="doctorInfoCard" class="hidden"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- ===== TAB: MY APPOINTMENTS ===== -->
+            <!-- ═══════════════════════════════════════════
+                 TAB: MY APPOINTMENTS
+            ════════════════════════════════════════════ -->
             <section id="tab-appointments" class="tab-content hidden">
+                <!-- Section header -->
                 <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-calendar-check text-cyan-600 text-sm"></i>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style="background:linear-gradient(135deg,#ECFEFF,#CFFAFE)">
+                            <i class="fas fa-calendar-check text-cyan-600"></i>
                         </div>
-                        <h2 class="text-lg font-bold text-gray-800">My Appointments</h2>
+                        <div>
+                            <h2 class="section-title">My Appointments</h2>
+                            <p class="text-xs text-gray-400 mt-0.5">Track and manage your bookings</p>
+                        </div>
                     </div>
-                    <button onclick="loadAppointments()" class="text-xs text-cyan-600 hover:text-cyan-800 flex items-center gap-1.5 font-medium transition px-3 py-1.5 rounded-lg hover:bg-cyan-50">
-                        <i class="fas fa-sync-alt"></i> Refresh
+                    <button onclick="loadAppointments()"
+                        class="flex items-center gap-1.5 text-xs font-semibold text-cyan-600 px-3 py-2 rounded-xl transition border border-cyan-100 hover:bg-cyan-50">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="hidden sm:inline">Refresh</span>
                     </button>
                 </div>
 
-                <!-- Filters -->
-                <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
-                    <button onclick="filterAppointments('all')" data-filter="all" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold bg-cyan-600 text-white transition">All</button>
-                    <button onclick="filterAppointments('scheduled')" data-filter="scheduled" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-500 hover:bg-gray-50 border border-gray-100 transition">Scheduled</button>
-                    <button onclick="filterAppointments('checked_in')" data-filter="checked_in" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-500 hover:bg-gray-50 border border-gray-100 transition">Checked In</button>
-                    <button onclick="filterAppointments('completed')" data-filter="completed" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-500 hover:bg-gray-50 border border-gray-100 transition">Completed</button>
-                    <button onclick="filterAppointments('cancelled')" data-filter="cancelled" class="appt-filter-btn flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-500 hover:bg-gray-50 border border-gray-100 transition">Cancelled</button>
+                <!-- Filter Pills -->
+                <div class="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+                    <button onclick="filterAppointments('all')" data-filter="all"
+                        class="appt-filter-btn active-filter">
+                        <i class="fas fa-th-list mr-1"></i> All
+                    </button>
+                    <button onclick="filterAppointments('scheduled')" data-filter="scheduled"
+                        class="appt-filter-btn">
+                        <i class="fas fa-clock mr-1"></i> Scheduled
+                    </button>
+                    <button onclick="filterAppointments('checked_in')" data-filter="checked_in"
+                        class="appt-filter-btn">
+                        <i class="fas fa-door-open mr-1"></i> Checked In
+                    </button>
+                    <button onclick="filterAppointments('completed')" data-filter="completed"
+                        class="appt-filter-btn">
+                        <i class="fas fa-check-circle mr-1"></i> Completed
+                    </button>
+                    <button onclick="filterAppointments('cancelled')" data-filter="cancelled"
+                        class="appt-filter-btn">
+                        <i class="fas fa-times-circle mr-1"></i> Cancelled
+                    </button>
                 </div>
 
-                <div id="appointmentsLoading" class="text-center py-14">
-                    <i class="fas fa-spinner fa-spin text-cyan-500 text-2xl"></i>
-                    <p class="text-gray-400 mt-3 text-sm">Loading appointments...</p>
+                <!-- Loading state -->
+                <div id="appointmentsLoading" class="text-center py-16">
+                    <div class="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center"
+                        style="background:linear-gradient(135deg,#ECFEFF,#CFFAFE)">
+                        <i class="fas fa-spinner fa-spin text-cyan-500 text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm">Loading your appointments…</p>
                 </div>
+
+                <!-- List container -->
                 <div id="appointmentsList" class="space-y-3"></div>
-                <div id="noAppointmentsMsg" class="hidden text-center py-14">
-                    <div class="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+
+                <!-- Empty state -->
+                <div id="noAppointmentsMsg" class="hidden text-center py-16">
+                    <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
                         <i class="fas fa-calendar-times text-3xl text-gray-200"></i>
                     </div>
-                    <p class="font-bold text-gray-600 text-lg">No appointments found</p>
-                    <p class="text-sm text-gray-400 mt-1">Book your first appointment to get started.</p>
-                    <button onclick="switchTab('booking')" class="mt-4 px-5 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-semibold hover:bg-cyan-700 transition shadow-sm">
-                        Book Appointment
+                    <p class="font-bold text-gray-700 text-lg" style="font-family:'Outfit',sans-serif">No appointments found</p>
+                    <p class="text-sm text-gray-400 mt-1.5 mb-5">Book your first appointment to get started.</p>
+                    <button onclick="switchTab('booking')"
+                        class="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-xl text-sm transition"
+                        style="background:linear-gradient(135deg,#0891B2,#0E7490); box-shadow:0 4px 14px rgba(8,145,178,0.3)">
+                        <i class="fas fa-calendar-plus"></i> Book Appointment
                     </button>
                 </div>
             </section>
 
-            <!-- ===== TAB: MEDICAL RECORDS ===== -->
+            <!-- ═══════════════════════════════════════════
+                 TAB: MEDICAL RECORDS
+            ════════════════════════════════════════════ -->
             <section id="tab-records" class="tab-content hidden">
+                <!-- Section header -->
                 <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-file-medical text-cyan-600 text-sm"></i>
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7)">
+                            <i class="fas fa-file-medical text-emerald-600"></i>
                         </div>
-                        <h2 class="text-lg font-bold text-gray-800">Medical Records</h2>
+                        <div>
+                            <h2 class="section-title">Medical Records</h2>
+                            <p class="text-xs text-gray-400 mt-0.5">Your complete health history</p>
+                        </div>
                     </div>
-                    <button onclick="loadMedicalRecords()" class="text-xs text-cyan-600 hover:text-cyan-800 flex items-center gap-1.5 font-medium transition px-3 py-1.5 rounded-lg hover:bg-cyan-50">
-                        <i class="fas fa-sync-alt"></i> Refresh
+                    <button onclick="loadMedicalRecords()"
+                        class="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 px-3 py-2 rounded-xl transition border border-emerald-100 hover:bg-emerald-50">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="hidden sm:inline">Refresh</span>
                     </button>
                 </div>
-                <div id="recordsLoading" class="text-center py-14">
-                    <i class="fas fa-spinner fa-spin text-cyan-500 text-2xl"></i>
-                    <p class="text-gray-400 mt-3 text-sm">Loading records...</p>
+
+                <!-- Loading state -->
+                <div id="recordsLoading" class="text-center py-16">
+                    <div class="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center"
+                        style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7)">
+                        <i class="fas fa-spinner fa-spin text-emerald-500 text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm">Loading medical records…</p>
                 </div>
+
+                <!-- Records list -->
                 <div id="recordsList" class="space-y-3"></div>
-                <div id="noRecordsMsg" class="hidden text-center py-14">
-                    <div class="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+
+                <!-- Empty state -->
+                <div id="noRecordsMsg" class="hidden text-center py-16">
+                    <div class="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
                         <i class="fas fa-folder-open text-3xl text-gray-200"></i>
                     </div>
-                    <p class="font-bold text-gray-600 text-lg">No medical records</p>
-                    <p class="text-sm text-gray-400 mt-1">Records from completed consultations will appear here.</p>
+                    <p class="font-bold text-gray-700 text-lg" style="font-family:'Outfit',sans-serif">No medical records yet</p>
+                    <p class="text-sm text-gray-400 mt-1.5">Records from completed consultations will appear here.</p>
                 </div>
             </section>
 
-            <!-- ===== TAB: PROFILE ===== -->
+            <!-- ═══════════════════════════════════════════
+                 TAB: PROFILE
+            ════════════════════════════════════════════ -->
             <section id="tab-profile" class="tab-content hidden">
                 <div class="max-w-3xl mx-auto space-y-5">
 
-                    <!-- Profile Form -->
+                    <!-- Profile Form Card -->
                     <div class="card p-6">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-50">
-                            <div class="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-user-circle text-cyan-600 text-sm"></i>
+                        <!-- Card header -->
+                        <div class="flex items-center gap-3 mb-6 pb-5 border-b border-gray-50">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style="background:linear-gradient(135deg,#ECFEFF,#CFFAFE)">
+                                <i class="fas fa-user-circle text-cyan-600"></i>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-800">My Profile</h2>
-                                <p class="text-xs text-gray-400">Manage your personal information</p>
+                                <h2 class="section-title">My Profile</h2>
+                                <p class="text-xs text-gray-400 mt-0.5">Manage your personal information</p>
                             </div>
                         </div>
 
+                        <!-- Profile Loading -->
                         <div id="profileLoading" class="text-center py-10">
                             <i class="fas fa-spinner fa-spin text-cyan-500 text-xl"></i>
-                            <p class="text-gray-400 mt-2 text-sm">Loading profile...</p>
+                            <p class="text-gray-400 mt-2 text-sm">Loading profile…</p>
                         </div>
 
+                        <!-- Profile Form -->
                         <form id="profileForm" class="hidden" onsubmit="saveProfile(event)">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
+                                <!-- Full Name -->
                                 <div class="sm:col-span-2">
-                                    <label class="label">Full Name <span class="text-red-400 normal-case font-medium">*</span></label>
-                                    <input type="text" id="pFullName" name="full_name" required
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label">Full Name <span class="text-red-400 normal-case tracking-normal font-medium">*</span></label>
+                                    <input type="text" id="pFullName" name="full_name" required class="field" placeholder="Enter full name">
                                 </div>
+
+                                <!-- Email (readonly) -->
                                 <div>
-                                    <label class="label">Email</label>
-                                    <input type="email" id="pEmail" readonly
-                                        class="w-full border border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-400 cursor-not-allowed">
+                                    <label class="label">Email Address</label>
+                                    <div class="relative">
+                                        <input type="email" id="pEmail" class="field pl-10" readonly>
+                                        <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                                    </div>
                                 </div>
+
+                                <!-- Contact -->
                                 <div>
-                                    <label class="label">Contact Number <span class="text-red-400 normal-case font-medium">*</span></label>
-                                    <input type="tel" id="pContact" name="contact_number" required
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label">Contact Number <span class="text-red-400 normal-case tracking-normal font-medium">*</span></label>
+                                    <input type="tel" id="pContact" name="contact_number" required class="field" placeholder="+63 9XX XXX XXXX">
                                 </div>
+
+                                <!-- Date of Birth -->
                                 <div>
-                                    <label class="label">Date of Birth <span class="text-red-400 normal-case font-medium">*</span></label>
-                                    <input type="date" id="pDob" name="date_of_birth" required
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label">Date of Birth <span class="text-red-400 normal-case tracking-normal font-medium">*</span></label>
+                                    <input type="date" id="pDob" name="date_of_birth" required class="field">
                                 </div>
+
+                                <!-- Gender -->
                                 <div>
-                                    <label class="label">Gender <span class="text-red-400 normal-case font-medium">*</span></label>
-                                    <select id="pGender" name="gender" required
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label">Gender <span class="text-red-400 normal-case tracking-normal font-medium">*</span></label>
+                                    <select id="pGender" name="gender" required class="field">
                                         <option value="">Select gender</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>
+
+                                <!-- Blood Group -->
                                 <div>
                                     <label class="label">Blood Group</label>
-                                    <select id="pBloodGroup" name="blood_group"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <select id="pBloodGroup" name="blood_group" class="field">
                                         <option value="">Select blood group</option>
                                         <option value="A+">A+</option><option value="A-">A-</option>
                                         <option value="B+">B+</option><option value="B-">B-</option>
@@ -414,91 +704,134 @@
                                         <option value="O+">O+</option><option value="O-">O-</option>
                                     </select>
                                 </div>
+
+                                <!-- Address -->
                                 <div class="sm:col-span-2">
-                                    <label class="label">Address</label>
-                                    <input type="text" id="pAddress" name="address"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label">Street Address</label>
+                                    <input type="text" id="pAddress" name="address" class="field" placeholder="House/Unit, Street">
                                 </div>
+
+                                <!-- Barangay -->
                                 <div>
                                     <label class="label">Barangay</label>
-                                    <input type="text" id="pBarangay" name="barangay"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <input type="text" id="pBarangay" name="barangay" class="field" placeholder="Barangay">
                                 </div>
+
+                                <!-- City -->
                                 <div>
                                     <label class="label">City / Municipality</label>
-                                    <input type="text" id="pCity" name="city"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <input type="text" id="pCity" name="city" class="field" placeholder="City or Municipality">
                                 </div>
+
+                                <!-- Region -->
                                 <div>
                                     <label class="label">Region</label>
-                                    <input type="text" id="pRegion" name="region"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <input type="text" id="pRegion" name="region" class="field" placeholder="Region">
                                 </div>
+
+                                <!-- Allergies -->
                                 <div>
-                                    <label class="label">Allergies</label>
-                                    <input type="text" id="pAllergies" name="allergies" placeholder="e.g. Penicillin, Aspirin"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label"><i class="fas fa-exclamation-triangle mr-1 text-amber-400"></i>Allergies</label>
+                                    <input type="text" id="pAllergies" name="allergies" class="field" placeholder="e.g. Penicillin, Aspirin">
                                 </div>
-                                <div>
-                                    <label class="label">Emergency Contact Name</label>
-                                    <input type="text" id="pEmergencyName" name="emergency_contact_name"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+
+                                <!-- Divider: Emergency Contact -->
+                                <div class="sm:col-span-2">
+                                    <div class="flex items-center gap-3 py-1">
+                                        <div class="h-px flex-1 bg-gray-100"></div>
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                                            <i class="fas fa-phone text-red-400"></i> Emergency Contact
+                                        </span>
+                                        <div class="h-px flex-1 bg-gray-100"></div>
+                                    </div>
                                 </div>
+
+                                <!-- Emergency Contact Name -->
                                 <div>
-                                    <label class="label">Emergency Contact Number</label>
-                                    <input type="tel" id="pEmergencyNumber" name="emergency_contact_number"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
+                                    <label class="label">Contact Name</label>
+                                    <input type="text" id="pEmergencyName" name="emergency_contact_name" class="field" placeholder="Full name">
+                                </div>
+
+                                <!-- Emergency Contact Number -->
+                                <div>
+                                    <label class="label">Contact Number</label>
+                                    <input type="tel" id="pEmergencyNumber" name="emergency_contact_number" class="field" placeholder="+63 9XX XXX XXXX">
                                 </div>
                             </div>
-                            <button type="submit" class="inline-flex items-center gap-2 px-8 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-xl transition shadow-sm">
+
+                            <!-- Save button -->
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 px-8 font-semibold rounded-xl text-white transition-all"
+                                style="min-height:48px; background:linear-gradient(135deg,#0891B2,#0E7490); box-shadow:0 4px 14px rgba(8,145,178,0.28); font-family:'DM Sans',sans-serif;"
+                                onmouseover="this.style.boxShadow='0 6px 20px rgba(8,145,178,0.4)'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.boxShadow='0 4px 14px rgba(8,145,178,0.28)'; this.style.transform=''">
                                 <i class="fas fa-save"></i> Save Changes
                             </button>
                         </form>
                     </div>
 
-                    <!-- Change Password -->
+                    <!-- Change Password Card -->
                     <div class="card p-6">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-50">
-                            <div class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-lock text-gray-500 text-sm"></i>
+                        <!-- Card header -->
+                        <div class="flex items-center gap-3 mb-6 pb-5 border-b border-gray-50">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
+                                <i class="fas fa-lock text-gray-500"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-gray-800">Change Password</h3>
-                                <p class="text-xs text-gray-400">Keep your account secure</p>
+                                <h3 class="section-title text-base">Change Password</h3>
+                                <p class="text-xs text-gray-400 mt-0.5">Keep your account secure</p>
                             </div>
                         </div>
+
                         <form id="passwordForm" onsubmit="changePassword(event)" class="space-y-4">
+                            <!-- Current Password -->
                             <div>
                                 <label class="label">Current Password</label>
                                 <div class="relative">
-                                    <input type="password" id="currentPassword" required placeholder="Enter current password"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
-                                    <button type="button" onclick="togglePwd('currentPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition">
+                                    <input type="password" id="currentPassword" required
+                                        placeholder="Enter your current password"
+                                        class="field pr-11">
+                                    <button type="button" onclick="togglePwd('currentPassword', this)"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition w-7 h-7 flex items-center justify-center">
                                         <i class="fas fa-eye text-sm"></i>
                                     </button>
                                 </div>
                             </div>
+
+                            <!-- New Password -->
                             <div>
                                 <label class="label">New Password</label>
                                 <div class="relative">
-                                    <input type="password" id="newPassword" required placeholder="Minimum 6 characters"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
-                                    <button type="button" onclick="togglePwd('newPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition">
+                                    <input type="password" id="newPassword" required
+                                        placeholder="Minimum 6 characters"
+                                        class="field pr-11">
+                                    <button type="button" onclick="togglePwd('newPassword', this)"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition w-7 h-7 flex items-center justify-center">
                                         <i class="fas fa-eye text-sm"></i>
                                     </button>
                                 </div>
                             </div>
+
+                            <!-- Confirm Password -->
                             <div>
                                 <label class="label">Confirm New Password</label>
                                 <div class="relative">
-                                    <input type="password" id="confirmPassword" required placeholder="Repeat new password"
-                                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-gray-800 focus:ring-2 focus:ring-cyan-400 focus:border-transparent outline-none transition bg-white">
-                                    <button type="button" onclick="togglePwd('confirmPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition">
+                                    <input type="password" id="confirmPassword" required
+                                        placeholder="Repeat your new password"
+                                        class="field pr-11">
+                                    <button type="button" onclick="togglePwd('confirmPassword', this)"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition w-7 h-7 flex items-center justify-center">
                                         <i class="fas fa-eye text-sm"></i>
                                     </button>
                                 </div>
                             </div>
-                            <button type="submit" class="inline-flex items-center gap-2 px-8 py-2.5 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition">
+
+                            <!-- Update Button -->
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 px-8 font-semibold rounded-xl text-white transition-all"
+                                style="min-height:48px; background:linear-gradient(135deg,#083344,#134E4A); box-shadow:0 4px 14px rgba(8,51,68,0.25); font-family:'DM Sans',sans-serif;"
+                                onmouseover="this.style.boxShadow='0 6px 20px rgba(8,51,68,0.35)'; this.style.transform='translateY(-1px)'"
+                                onmouseout="this.style.boxShadow='0 4px 14px rgba(8,51,68,0.25)'; this.style.transform=''">
                                 <i class="fas fa-key"></i> Update Password
                             </button>
                         </form>
@@ -508,75 +841,142 @@
             </section>
 
         </main>
-    </div><!-- end main-content -->
+    </div><!-- /main-content -->
 
-</div><!-- end layout wrapper -->
+</div><!-- /layout wrapper -->
 
-<!-- ===== QR MODAL ===== -->
-<div id="qrModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+<!-- ═══════════════════════════════════════════════
+     QR CODE MODAL
+════════════════════════════════════════════════ -->
+<div id="qrModal"
+    class="fixed inset-0 z-50 items-center justify-center p-4"
+    style="background:rgba(8,51,68,0.65); backdrop-filter:blur(8px);">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden"
+        style="box-shadow:0 25px 60px rgba(8,51,68,0.35)">
         <!-- Modal Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center">
-                    <i class="fas fa-qrcode text-cyan-600 text-sm"></i>
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100"
+            style="background:linear-gradient(135deg,#F0FDFA,#ECFEFF)">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+                    style="background:linear-gradient(135deg,#0891B2,#0E7490)">
+                    <i class="fas fa-qrcode text-white text-sm"></i>
                 </div>
-                <h3 class="font-bold text-gray-800">Appointment QR</h3>
+                <div>
+                    <h3 class="font-bold text-gray-800 text-sm" style="font-family:'Outfit',sans-serif">Appointment QR Code</h3>
+                    <p class="text-xs text-gray-400">For clinic check-in</p>
+                </div>
             </div>
-            <button onclick="closeQRModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition">
+            <button onclick="closeQRModal()"
+                class="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-100 hover:bg-gray-50 text-gray-400 transition shadow-sm">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
+
         <!-- Modal Body -->
         <div class="px-6 py-5 text-center">
-            <p id="qrApptNumber" class="text-xs text-gray-400 mb-0.5 font-medium"></p>
-            <p id="qrApptInfo" class="text-sm font-semibold text-gray-700 mb-5"></p>
+            <p id="qrApptNumber" class="text-xs text-gray-400 mb-0.5 font-semibold uppercase tracking-wide"></p>
+            <p id="qrApptInfo" class="text-sm font-bold text-gray-800 mb-5" style="font-family:'Outfit',sans-serif"></p>
+
+            <!-- QR Loading -->
             <div id="qrLoading" class="hidden py-10">
-                <i class="fas fa-spinner fa-spin text-cyan-500 text-2xl"></i>
-                <p class="text-gray-400 text-sm mt-2">Generating QR code...</p>
+                <i class="fas fa-spinner fa-spin text-cyan-500 text-3xl"></i>
+                <p class="text-gray-400 text-sm mt-3">Generating QR code…</p>
             </div>
-            <div id="qrImageWrapper" class="inline-flex items-center justify-center p-3 bg-gray-50 border-2 border-gray-100 rounded-2xl mb-4">
-                <img id="qrImage" src="" alt="QR Code" class="w-48 h-48 object-contain">
+
+            <!-- QR Image -->
+            <div id="qrImageWrapper"
+                class="inline-flex items-center justify-center p-4 mb-4 rounded-2xl border-2"
+                style="background:#FAFAFA; border-color:#E2E8F0; box-shadow:inset 0 2px 4px rgba(0,0,0,0.04)">
+                <img id="qrImage" src="" alt="QR Code"
+                    class="w-52 h-52 object-contain rounded-xl" loading="lazy">
             </div>
-            <p class="text-xs text-gray-300 font-medium">Present this QR code at the clinic for check-in</p>
+
+            <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
+                <i class="fas fa-info-circle text-cyan-400"></i>
+                <p>Show this QR code at the clinic for check-in</p>
+            </div>
         </div>
+
         <!-- Modal Footer -->
-        <div class="flex gap-3 px-6 pb-5">
+        <div class="flex gap-3 px-6 pb-6">
             <button onclick="regenerateQR()" id="regenerateBtn"
-                class="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-cyan-600 text-cyan-600 hover:bg-cyan-50 rounded-xl text-sm font-semibold transition">
+                class="flex-1 flex items-center justify-center gap-2 font-semibold rounded-xl text-sm transition border-2"
+                style="min-height:48px; color:#0891B2; border-color:#0891B2; background:#fff;"
+                onmouseover="this.style.background='#ECFEFF'"
+                onmouseout="this.style.background='#fff'">
                 <i class="fas fa-redo text-xs"></i> Regenerate
             </button>
             <button onclick="downloadQR()" id="downloadBtn"
-                class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-sm font-semibold transition shadow-sm">
+                class="flex-1 flex items-center justify-center gap-2 font-semibold rounded-xl text-sm text-white transition"
+                style="min-height:48px; background:linear-gradient(135deg,#0891B2,#0E7490); box-shadow:0 4px 14px rgba(8,145,178,0.3);"
+                onmouseover="this.style.boxShadow='0 6px 20px rgba(8,145,178,0.4)'"
+                onmouseout="this.style.boxShadow='0 4px 14px rgba(8,145,178,0.3)'">
                 <i class="fas fa-download text-xs"></i> Download
             </button>
         </div>
     </div>
 </div>
 
-<!-- ===== MOBILE BOTTOM NAV ===== -->
-<nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-40 md:hidden">
+<!-- ═══════════════════════════════════════════════
+     MOBILE BOTTOM NAVIGATION
+════════════════════════════════════════════════ -->
+<nav id="mobileBottomNav"
+    class="fixed bottom-0 left-0 right-0 z-40 md:hidden"
+    style="background:#fff; border-top:1px solid #F1F5F9; box-shadow:0 -4px 20px rgba(8,51,68,0.08)">
     <div class="flex">
-        <button onclick="switchTab('booking')" data-tab="booking" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 text-cyan-600 transition">
+        <button onclick="switchTab('booking')" data-tab="booking"
+            class="mobile-nav-btn mobile-active flex-1 flex flex-col items-center gap-0.5 py-3 transition">
             <i class="fas fa-calendar-plus text-base"></i>
             <span class="text-xs font-semibold">Book</span>
         </button>
-        <button onclick="switchTab('appointments')" data-tab="appointments" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 text-gray-400 transition">
+        <button onclick="switchTab('appointments')" data-tab="appointments"
+            class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 transition">
             <i class="fas fa-calendar-check text-base"></i>
             <span class="text-xs font-medium">Appointments</span>
         </button>
-        <button onclick="switchTab('records')" data-tab="records" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 text-gray-400 transition">
+        <button onclick="switchTab('records')" data-tab="records"
+            class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 transition">
             <i class="fas fa-file-medical text-base"></i>
             <span class="text-xs font-medium">Records</span>
         </button>
-        <button onclick="switchTab('profile')" data-tab="profile" class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 text-gray-400 transition">
+        <button onclick="switchTab('profile')" data-tab="profile"
+            class="mobile-nav-btn flex-1 flex flex-col items-center gap-0.5 py-3 transition">
             <i class="fas fa-user-circle text-base"></i>
             <span class="text-xs font-medium">Profile</span>
         </button>
     </div>
 </nav>
 
-<!-- Scripts -->
+<!-- ═══════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════ -->
+<script>
+    // Override switchTab to also handle mobile-nav-btn active classes
+    // (The real switchTab lives in patient-dashboard.js; we patch mobile classes here)
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set initial mobile nav active state
+        updateMobileNav('booking');
+    });
+
+    function updateMobileNav(tabName) {
+        document.querySelectorAll('#mobileBottomNav .mobile-nav-btn').forEach(btn => {
+            const active = btn.dataset.tab === tabName;
+            btn.classList.toggle('mobile-active', active);
+            btn.querySelector('span').style.fontWeight = active ? '700' : '500';
+        });
+    }
+
+    // Intercept switchTab after patient-dashboard.js defines it
+    window.addEventListener('load', () => {
+        const origSwitch = window.switchTab;
+        if (origSwitch) {
+            window.switchTab = function(tabName) {
+                origSwitch(tabName);
+                updateMobileNav(tabName);
+            };
+        }
+    });
+</script>
 <script src="../js/auth.js"></script>
 <script src="../js/patient-dashboard.js"></script>
 </body>

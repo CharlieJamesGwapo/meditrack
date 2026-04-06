@@ -1,620 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Create Account — MediTrack</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Create Account — MediTrack</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome 6.4 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-            background: #f9fafb;
-        }
-        h1, h2, h3 { font-family: 'Poppins', 'Inter', sans-serif; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      background: #F0FDFA;
+    }
+    h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; }
 
-        /* ── Layout ── */
-        .split-container { display: flex; min-height: 100vh; }
+    .split { display: flex; min-height: 100vh; }
 
-        /* ── Left Panel ── */
-        .left-panel {
-            flex: 0 0 34%;
-            background: linear-gradient(150deg, #0d4f6e 0%, #0e7490 45%, #0891b2 100%);
-            padding: 52px 36px;
-            display: flex; flex-direction: column; justify-content: center;
-            position: relative; overflow: hidden;
-        }
-        .left-panel::before { content: ''; position: absolute; top: -70px; right: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,0.05); }
-        .left-panel::after  { content: ''; position: absolute; bottom: -90px; left: -50px; width: 280px; height: 280px; border-radius: 50%; background: rgba(255,255,255,0.04); }
+    /* ── Left Panel ── */
+    .left {
+      flex: 0 0 34%;
+      background: linear-gradient(135deg, #083344 0%, #0891B2 60%, #22D3EE 100%);
+      padding: 52px 40px;
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+    .left-c1 { position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,0.06); z-index:0; }
+    .left-c2 { position: absolute; bottom: -100px; left: -60px; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.04); z-index:0; }
+    .left > * { position: relative; z-index: 1; }
 
-        .logo-box { width: 54px; height: 54px; background: rgba(255,255,255,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 22px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.22); overflow: hidden; }
-        .logo-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
-        .brand-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; }
-        .brand-subtitle { font-size: 13px; color: rgba(255,255,255,0.78); line-height: 1.7; margin-bottom: 32px; }
+    .logo-wrap { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 32px; }
+    .logo-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 13px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(10px); }
+    .logo-name { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #fff; }
 
-        .step-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
-        .step-num { width: 26px; height: 26px; background: rgba(103,232,249,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #67e8f9; }
-        .step-text { font-size: 13px; color: rgba(255,255,255,0.85); padding-top: 4px; }
+    .left-title { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 8px; }
+    .left-sub { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.7; margin-bottom: 36px; font-family: 'DM Sans', sans-serif; }
 
-        /* ── Right Panel ── */
-        .right-panel {
-            flex: 1;
-            background: #fff;
-            padding: 48px 44px;
-            display: flex; flex-direction: column;
-            align-items: center; overflow-y: auto;
-        }
-        .form-container { width: 100%; max-width: 700px; }
+    .step-item { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 16px; }
+    .step-num { width: 28px; height: 28px; background: rgba(103,232,249,0.2); border: 1px solid rgba(103,232,249,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 800; color: #67e8f9; font-family: 'Outfit', sans-serif; }
+    .step-text { font-size: 13px; color: rgba(255,255,255,0.88); padding-top: 5px; font-family: 'DM Sans', sans-serif; }
 
-        .form-title { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
-        .form-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
+    .left-bottom { margin-top: auto; padding-top: 36px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 12px; color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; }
 
-        /* ── Section heading ── */
-        .section-heading {
-            font-size: 13px; font-weight: 700; color: #0369a1;
-            text-transform: uppercase; letter-spacing: 0.7px;
-            border-bottom: 2px solid #e0f2fe;
-            padding-bottom: 8px; margin-bottom: 18px; margin-top: 28px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .section-heading:first-of-type { margin-top: 0; }
+    /* ── Right Panel ── */
+    .right {
+      flex: 1;
+      background: #fff;
+      padding: 48px 44px;
+      display: flex; flex-direction: column; align-items: center;
+      overflow-y: auto;
+    }
+    .form-box { width: 100%; max-width: 720px; }
 
-        /* ── Two-column grid ── */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
-        .full-col  { grid-column: 1 / -1; }
+    .form-title { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; color: #0c1a27; margin-bottom: 5px; }
+    .form-sub { font-size: 14px; color: #6b7280; margin-bottom: 28px; font-family: 'DM Sans', sans-serif; }
 
-        /* ── Fields ── */
-        .field-group { margin-bottom: 16px; }
-        .field-label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 5px; }
-        .required-star { color: #ef4444; margin-left: 2px; }
+    /* Section heading */
+    .sec-head {
+      font-size: 12px; font-weight: 700; color: #0891B2;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      border-bottom: 2px solid #e0f2fe;
+      padding-bottom: 9px; margin-bottom: 18px; margin-top: 30px;
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .sec-head:first-of-type { margin-top: 0; }
 
-        .input-wrapper { position: relative; }
-        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 13px; pointer-events: none; }
-        .input-icon-top { position: absolute; left: 12px; top: 14px; color: #9ca3af; font-size: 13px; pointer-events: none; }
+    /* Grid */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; }
+    .full { grid-column: 1 / -1; }
 
-        .input-field {
-            width: 100%; height: 42px;
-            background: #f9fafb;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 9px;
-            padding: 0 12px 0 38px;
-            font-size: 13px; color: #1f2937;
-            transition: all 0.2s ease; outline: none;
-        }
-        .input-field::placeholder { color: #9ca3af; }
-        .input-field:focus { border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: #fff; }
-        .input-field.is-error { border-color: #ef4444 !important; }
-        .input-field.no-icon { padding-left: 12px; }
+    /* Fields */
+    .field { margin-bottom: 16px; }
+    .label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; font-family: 'DM Sans', sans-serif; }
+    .req { color: #ef4444; margin-left: 2px; }
 
-        .textarea-field {
-            width: 100%;
-            background: #f9fafb;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 9px;
-            padding: 10px 12px 10px 38px;
-            font-size: 13px; color: #1f2937;
-            resize: vertical; min-height: 70px;
-            transition: all 0.2s ease; outline: none;
-            font-family: inherit;
-        }
-        .textarea-field::placeholder { color: #9ca3af; }
-        .textarea-field:focus { border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: #fff; }
+    .iw { position: relative; }
+    .ii { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 13px; pointer-events: none; }
+    .ii-top { position: absolute; left: 13px; top: 14px; color: #9ca3af; font-size: 13px; pointer-events: none; }
 
-        .select-field {
-            width: 100%; height: 42px;
-            background: #f9fafb;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 9px;
-            padding: 0 12px 0 38px;
-            font-size: 13px; color: #1f2937;
-            transition: all 0.2s ease; outline: none;
-            appearance: none; cursor: pointer;
-        }
-        .select-field:focus { border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: #fff; }
+    .inp {
+      width: 100%; height: 44px;
+      background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      padding: 0 13px 0 40px;
+      font-size: 13px; color: #111827; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s ease; outline: none;
+    }
+    .inp::placeholder { color: #9ca3af; }
+    .inp:focus { border-color: #0891B2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: #fff; }
+    .inp.err { border-color: #ef4444 !important; }
+    .inp.no-icon { padding-left: 13px; }
 
-        /* select chevron */
-        .select-wrapper { position: relative; }
-        .select-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 12px; pointer-events: none; }
+    .sel {
+      width: 100%; height: 44px;
+      background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      padding: 0 13px 0 40px;
+      font-size: 13px; color: #111827; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s ease; outline: none;
+      appearance: none; cursor: pointer;
+    }
+    .sel:focus { border-color: #0891B2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: #fff; }
+    .sel-arr { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 11px; pointer-events: none; }
 
-        /* toggle password */
-        .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; cursor: pointer; background: none; border: none; padding: 4px; font-size: 13px; transition: color 0.2s; }
-        .toggle-password:hover { color: #0891b2; }
+    .ta {
+      width: 100%; min-height: 72px;
+      background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      padding: 11px 13px 11px 40px;
+      font-size: 13px; color: #111827; font-family: 'DM Sans', sans-serif;
+      resize: vertical; transition: all 0.2s ease; outline: none;
+    }
+    .ta::placeholder { color: #9ca3af; }
+    .ta:focus { border-color: #0891B2; box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: #fff; }
 
-        /* strength */
-        .strength-bar-container { display: flex; gap: 4px; margin-top: 6px; }
-        .strength-segment { flex: 1; height: 3px; background: #e5e7eb; border-radius: 2px; transition: background 0.3s; }
+    /* Password toggle */
+    .pw-tog { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; cursor: pointer; background: none; border: none; padding: 4px; font-size: 13px; transition: color 0.2s; }
+    .pw-tog:hover { color: #0891B2; }
 
-        /* gender radios */
-        .radio-group { display: flex; gap: 16px; align-items: center; }
-        .radio-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-        .radio-item input[type="radio"] { width: 16px; height: 16px; accent-color: #0891b2; cursor: pointer; }
-        .radio-item label { font-size: 13px; color: #374151; cursor: pointer; }
+    /* Strength */
+    .str-wrap { display: flex; gap: 4px; margin-top: 6px; }
+    .str-seg { flex: 1; height: 3px; background: #e5e7eb; border-radius: 2px; transition: background 0.3s; }
 
-        /* field error text */
-        .field-error { font-size: 11px; color: #ef4444; margin-top: 3px; display: none; }
-        .field-error.show { display: block; }
+    /* Gender radios */
+    .radio-grp { display: flex; gap: 18px; align-items: center; padding-top: 4px; }
+    .radio-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .radio-item input[type="radio"] { width: 16px; height: 16px; accent-color: #0891B2; cursor: pointer; }
+    .radio-item label { font-size: 13px; color: #374151; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
-        /* password match */
-        .match-hint { font-size: 11px; margin-top: 3px; }
-        .match-ok  { color: #0891b2; }
-        .match-err { color: #ef4444; }
+    /* Match hint */
+    .match-hint { font-size: 12px; margin-top: 4px; font-family: 'DM Sans', sans-serif; }
+    .match-ok { color: #0891B2; }
+    .match-err { color: #ef4444; }
 
-        /* submit */
-        .btn-primary {
-            width: 100%; height: 46px;
-            background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%);
-            border: none; border-radius: 10px;
-            color: #fff; font-size: 15px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(8,145,178,0.3);
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(8,145,178,0.36); }
-        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    /* Field error */
+    .f-err { font-size: 11px; color: #ef4444; margin-top: 4px; display: none; font-family: 'DM Sans', sans-serif; }
+    .f-err.show { display: block; }
 
-        .login-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6b7280; }
-        .login-link a { color: #0369a1; font-weight: 600; text-decoration: none; }
-        .login-link a:hover { color: #0c4a6e; }
+    /* Submit btn */
+    .btn-submit {
+      width: 100%; height: 52px;
+      background: linear-gradient(135deg, #083344 0%, #0891B2 100%);
+      border: none; border-radius: 12px;
+      color: #fff; font-size: 16px; font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer; transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(8,145,178,0.35);
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+    }
+    .btn-submit:hover { transform: translateY(-1.5px); box-shadow: 0 7px 22px rgba(8,145,178,0.4); }
+    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
-        /* iOS zoom fix */
-        @supports (-webkit-touch-callout: none) {
-            input, select, textarea { font-size: 16px !important; -webkit-appearance: none; }
-        }
+    .login-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6b7280; font-family: 'DM Sans', sans-serif; }
+    .login-link a { color: #0891B2; font-weight: 700; text-decoration: none; }
+    .login-link a:hover { color: #0e7490; }
 
-        /* Mobile */
-        @media (max-width: 900px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .full-col  { grid-column: 1; }
-        }
-        @media (max-width: 767px) {
-            .split-container { flex-direction: column; }
-            .left-panel { flex: none; padding: 28px 24px; text-align: center; align-items: center; }
-            .brand-title { font-size: 22px; }
-            .brand-subtitle { font-size: 13px; margin-bottom: 0; }
-            .steps-list { display: none; }
-            .right-panel { padding: 28px 20px; }
-            .form-container { max-width: 100%; }
-        }
-        @media (hover: none) and (pointer: coarse) {
-            .btn-primary, button, a { min-height: 44px; }
-            .input-field, .textarea-field, .select-field { min-height: 44px; }
-        }
-    </style>
+    @supports (-webkit-touch-callout: none) {
+      input, select, textarea { font-size: 16px !important; -webkit-appearance: none; }
+    }
+
+    @media (max-width: 900px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .full { grid-column: 1; }
+    }
+    @media (max-width: 768px) {
+      .split { flex-direction: column; }
+      .left { flex: none; padding: 28px 24px; }
+      .left-title { font-size: 22px; }
+      .left-sub { margin-bottom: 0; font-size: 13px; }
+      .steps-list { display: none; }
+      .left-bottom { display: none; }
+      .right { padding: 32px 20px; }
+      .form-box { max-width: 100%; }
+    }
+    @media (hover: none) and (pointer: coarse) {
+      .btn-submit, .inp, .ta, .sel { min-height: 48px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="split-container">
-        <!-- ── Left Panel ── -->
-        <div class="left-panel">
-            <a href="../index.html" style="text-decoration:none;">
-                <div class="logo-box">
-                    <i class="fas fa-heart-pulse" style="color:#67e8f9;font-size:24px;"></i>
-                </div>
-            </a>
-            <div class="brand-title">MediTrack</div>
-            <div class="brand-subtitle">Internal Medicine Clinic &mdash; create your patient account to get started.</div>
+<div class="split">
 
-            <div class="steps-list">
-                <div class="step-item">
-                    <div class="step-num">1</div>
-                    <div class="step-text">Fill in your personal details</div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">2</div>
-                    <div class="step-text">Add contact &amp; address info</div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">3</div>
-                    <div class="step-text">Complete medical profile</div>
-                </div>
-                <div class="step-item">
-                    <div class="step-num">4</div>
-                    <div class="step-text">Start booking appointments</div>
-                </div>
-            </div>
-        </div>
+  <!-- ── Left Panel ── -->
+  <div class="left">
+    <div class="left-c1"></div>
+    <div class="left-c2"></div>
 
-        <!-- ── Right Panel ── -->
-        <div class="right-panel">
-            <div class="form-container">
-                <div class="form-title">Create Your Account</div>
-                <div class="form-subtitle">Fields marked with <span style="color:#ef4444;">*</span> are required</div>
+    <a href="../index.html" class="logo-wrap">
+      <div class="logo-icon">
+        <i class="fas fa-heart-pulse" style="color:#67e8f9;font-size:20px;"></i>
+      </div>
+      <span class="logo-name">MediTrack</span>
+    </a>
 
-                <form id="registerForm" novalidate>
+    <div class="left-title">Create your<br>patient account.</div>
+    <div class="left-sub">Internal Medicine Clinic &mdash; your health journey starts here.</div>
 
-                    <!-- ── Account Credentials ── -->
-                    <div class="section-heading">
-                        <i class="fas fa-key"></i> Account Credentials
-                    </div>
-                    <div class="form-grid">
-                        <div class="field-group">
-                            <label class="field-label" for="full_name">Full Name <span class="required-star">*</span></label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-user input-icon"></i>
-                                <input id="full_name" name="full_name" type="text" required
-                                       class="input-field" placeholder="e.g. Juan Dela Cruz" maxlength="120">
-                            </div>
-                            <div class="field-error" id="err_full_name">Please enter your full name.</div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="email">Email Address <span class="required-star">*</span></label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-envelope input-icon"></i>
-                                <input id="email" name="email" type="email" required
-                                       class="input-field" placeholder="you@example.com" maxlength="100">
-                            </div>
-                            <div class="field-error" id="err_email">Please enter a valid email address.</div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="username">Username <span class="required-star">*</span></label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-at input-icon"></i>
-                                <input id="username" name="username" type="text" required
-                                       class="input-field" placeholder="e.g. juandelacruz" maxlength="50">
-                            </div>
-                            <div class="field-error" id="err_username">Username must be at least 3 characters.</div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="password">Password <span class="required-star">*</span></label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-lock input-icon"></i>
-                                <input id="password" name="password" type="password" required
-                                       class="input-field" style="padding-right:38px;"
-                                       placeholder="Min. 6 characters" minlength="6" maxlength="100">
-                                <button type="button" class="toggle-password" data-target="password" data-icon="eyeIconPw">
-                                    <i class="fas fa-eye" id="eyeIconPw"></i>
-                                </button>
-                            </div>
-                            <div class="strength-bar-container" id="strengthBar">
-                                <div class="strength-segment"></div>
-                                <div class="strength-segment"></div>
-                                <div class="strength-segment"></div>
-                                <div class="strength-segment"></div>
-                            </div>
-                            <div class="field-error" id="err_password">Password must be at least 6 characters.</div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="confirm_password">Confirm Password <span class="required-star">*</span></label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-lock input-icon"></i>
-                                <input id="confirm_password" name="confirm_password" type="password" required
-                                       class="input-field" style="padding-right:38px;"
-                                       placeholder="Re-enter password" minlength="6" maxlength="100">
-                                <button type="button" class="toggle-password" data-target="confirm_password" data-icon="eyeIconCp">
-                                    <i class="fas fa-eye" id="eyeIconCp"></i>
-                                </button>
-                            </div>
-                            <div class="match-hint" id="matchHint"></div>
-                            <div class="field-error" id="err_confirm_password">Passwords do not match.</div>
-                        </div>
-                    </div><!-- /form-grid credentials -->
-
-                    <!-- ── Personal Information ── -->
-                    <div class="section-heading">
-                        <i class="fas fa-id-card"></i> Personal Information
-                    </div>
-                    <div class="form-grid">
-                        <div class="field-group">
-                            <label class="field-label" for="date_of_birth">Date of Birth</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-calendar input-icon"></i>
-                                <input id="date_of_birth" name="date_of_birth" type="date"
-                                       class="input-field">
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label">Gender</label>
-                            <div class="radio-group" style="margin-top:6px;">
-                                <div class="radio-item">
-                                    <input type="radio" id="genderMale" name="gender" value="Male">
-                                    <label for="genderMale">Male</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="genderFemale" name="gender" value="Female">
-                                    <label for="genderFemale">Female</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="genderOther" name="gender" value="Other">
-                                    <label for="genderOther">Other</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="contact_number">Contact Number</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-phone input-icon"></i>
-                                <input id="contact_number" name="contact_number" type="tel"
-                                       class="input-field" placeholder="e.g. 09xxxxxxxxx" maxlength="20">
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="blood_group">Blood Group</label>
-                            <div class="input-wrapper select-wrapper">
-                                <i class="fas fa-droplet input-icon"></i>
-                                <select id="blood_group" name="blood_group" class="select-field">
-                                    <option value="">— Select —</option>
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                </select>
-                                <i class="fas fa-chevron-down select-arrow"></i>
-                            </div>
-                        </div>
-
-                        <div class="field-group full-col">
-                            <label class="field-label" for="address">Street Address</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-map-marker-alt input-icon"></i>
-                                <input id="address" name="address" type="text"
-                                       class="input-field" placeholder="House/Unit No., Street, Subdivision" maxlength="255">
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="barangay">Barangay</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-location-dot input-icon"></i>
-                                <input id="barangay" name="barangay" type="text"
-                                       class="input-field" placeholder="Barangay" maxlength="100">
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="city">City / Municipality</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-city input-icon"></i>
-                                <input id="city" name="city" type="text"
-                                       class="input-field" placeholder="City or Municipality" maxlength="100">
-                            </div>
-                        </div>
-
-                        <div class="field-group full-col">
-                            <label class="field-label" for="region">Region</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-map input-icon"></i>
-                                <input id="region" name="region" type="text"
-                                       class="input-field" placeholder="e.g. Region III" maxlength="100">
-                            </div>
-                        </div>
-                    </div><!-- /form-grid personal -->
-
-                    <!-- ── Medical Information ── -->
-                    <div class="section-heading">
-                        <i class="fas fa-stethoscope"></i> Medical Information
-                    </div>
-                    <div class="form-grid">
-                        <div class="field-group full-col">
-                            <label class="field-label" for="allergies">Known Allergies</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-triangle-exclamation input-icon-top"></i>
-                                <textarea id="allergies" name="allergies"
-                                          class="textarea-field" placeholder="List any known allergies (medications, food, etc.) or write 'None'"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Emergency Contact ── -->
-                    <div class="section-heading">
-                        <i class="fas fa-phone-volume"></i> Emergency Contact
-                    </div>
-                    <div class="form-grid">
-                        <div class="field-group">
-                            <label class="field-label" for="emergency_contact_name">Contact Name</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-user-shield input-icon"></i>
-                                <input id="emergency_contact_name" name="emergency_contact_name" type="text"
-                                       class="input-field" placeholder="Full name" maxlength="120">
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label" for="emergency_contact_number">Contact Number</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-phone-flip input-icon"></i>
-                                <input id="emergency_contact_number" name="emergency_contact_number" type="tel"
-                                       class="input-field" placeholder="e.g. 09xxxxxxxxx" maxlength="20">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Submit -->
-                    <div style="margin-top:28px;">
-                        <button type="submit" id="registerBtn" class="btn-primary">
-                            <span id="registerText"><i class="fas fa-user-plus"></i> Create Account</span>
-                            <span id="registerSpinner" style="display:none;">
-                                <i class="fas fa-spinner fa-spin"></i> Creating account...
-                            </span>
-                        </button>
-                    </div>
-                </form>
-
-                <div class="login-link">
-                    Already have an account? <a href="login.html">Log in</a>
-                </div>
-            </div>
-        </div>
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text">Fill in your personal details</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text">Add contact &amp; address info</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text">Complete your medical profile</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-text">Start booking appointments</div>
+      </div>
     </div>
 
-    <script>
-        // ── Password toggles ──
-        document.querySelectorAll('.toggle-password').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const input = document.getElementById(btn.dataset.target);
-                const icon  = document.getElementById(btn.dataset.icon);
-                input.type = input.type === 'password' ? 'text' : 'password';
-                icon.classList.toggle('fa-eye');
-                icon.classList.toggle('fa-eye-slash');
-            });
+    <div class="left-bottom">
+      &copy; 2026 MediTrack &mdash; Internal Medicine Clinic
+    </div>
+  </div>
+
+  <!-- ── Right Panel ── -->
+  <div class="right">
+    <div class="form-box">
+
+      <div class="form-title">Create Account</div>
+      <div class="form-sub">Fields marked with <span style="color:#ef4444;">*</span> are required</div>
+
+      <form id="registerForm" novalidate>
+
+        <!-- ── Account Info ── -->
+        <div class="sec-head"><i class="fas fa-key"></i> Account Credentials</div>
+        <div class="form-grid">
+
+          <div class="field">
+            <label class="label" for="full_name">Full Name <span class="req">*</span></label>
+            <div class="iw">
+              <i class="fas fa-user ii"></i>
+              <input id="full_name" name="full_name" type="text" required class="inp" placeholder="e.g. Juan Dela Cruz" maxlength="120">
+            </div>
+            <div class="f-err" id="err_full_name">Please enter your full name.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="email">Email Address <span class="req">*</span></label>
+            <div class="iw">
+              <i class="fas fa-envelope ii"></i>
+              <input id="email" name="email" type="email" required class="inp" placeholder="you@example.com" maxlength="100">
+            </div>
+            <div class="f-err" id="err_email">Please enter a valid email address.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="username">Username <span class="req">*</span></label>
+            <div class="iw">
+              <i class="fas fa-at ii"></i>
+              <input id="username" name="username" type="text" required class="inp" placeholder="e.g. juandelacruz" maxlength="50">
+            </div>
+            <div class="f-err" id="err_username">Username must be at least 3 characters.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="password">Password <span class="req">*</span></label>
+            <div class="iw">
+              <i class="fas fa-lock ii"></i>
+              <input id="password" name="password" type="password" required class="inp" style="padding-right:40px;" placeholder="Min. 6 characters" minlength="6" maxlength="100">
+              <button type="button" class="pw-tog" data-target="password" data-icon="eyePw">
+                <i class="fas fa-eye" id="eyePw"></i>
+              </button>
+            </div>
+            <div class="str-wrap" id="strengthBar">
+              <div class="str-seg"></div><div class="str-seg"></div><div class="str-seg"></div><div class="str-seg"></div>
+            </div>
+            <div class="f-err" id="err_password">Password must be at least 6 characters.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="confirm_password">Confirm Password <span class="req">*</span></label>
+            <div class="iw">
+              <i class="fas fa-lock ii"></i>
+              <input id="confirm_password" name="confirm_password" type="password" required class="inp" style="padding-right:40px;" placeholder="Re-enter password" minlength="6" maxlength="100">
+              <button type="button" class="pw-tog" data-target="confirm_password" data-icon="eyeCp">
+                <i class="fas fa-eye" id="eyeCp"></i>
+              </button>
+            </div>
+            <div class="match-hint" id="matchHint"></div>
+            <div class="f-err" id="err_confirm_password">Passwords do not match.</div>
+          </div>
+
+        </div>
+
+        <!-- ── Personal Info ── -->
+        <div class="sec-head"><i class="fas fa-id-card"></i> Personal Information</div>
+        <div class="form-grid">
+
+          <div class="field">
+            <label class="label" for="date_of_birth">Date of Birth</label>
+            <div class="iw">
+              <i class="fas fa-calendar ii"></i>
+              <input id="date_of_birth" name="date_of_birth" type="date" class="inp">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Gender</label>
+            <div class="radio-grp">
+              <div class="radio-item">
+                <input type="radio" id="gM" name="gender" value="Male">
+                <label for="gM">Male</label>
+              </div>
+              <div class="radio-item">
+                <input type="radio" id="gF" name="gender" value="Female">
+                <label for="gF">Female</label>
+              </div>
+              <div class="radio-item">
+                <input type="radio" id="gO" name="gender" value="Other">
+                <label for="gO">Other</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="contact_number">Contact Number</label>
+            <div class="iw">
+              <i class="fas fa-phone ii"></i>
+              <input id="contact_number" name="contact_number" type="tel" class="inp" placeholder="e.g. 09xxxxxxxxx" maxlength="20">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="blood_group">Blood Group</label>
+            <div class="iw">
+              <i class="fas fa-droplet ii"></i>
+              <select id="blood_group" name="blood_group" class="sel">
+                <option value="">— Select —</option>
+                <option>A+</option><option>A-</option>
+                <option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option>
+                <option>O+</option><option>O-</option>
+              </select>
+              <i class="fas fa-chevron-down sel-arr"></i>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label class="label" for="address">Street Address</label>
+            <div class="iw">
+              <i class="fas fa-map-marker-alt ii"></i>
+              <input id="address" name="address" type="text" class="inp" placeholder="House/Unit No., Street, Subdivision" maxlength="255">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="barangay">Barangay</label>
+            <div class="iw">
+              <i class="fas fa-location-dot ii"></i>
+              <input id="barangay" name="barangay" type="text" class="inp" placeholder="Barangay" maxlength="100">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="city">City / Municipality</label>
+            <div class="iw">
+              <i class="fas fa-city ii"></i>
+              <input id="city" name="city" type="text" class="inp" placeholder="City or Municipality" maxlength="100">
+            </div>
+          </div>
+
+          <div class="field full">
+            <label class="label" for="region">Region</label>
+            <div class="iw">
+              <i class="fas fa-map ii"></i>
+              <input id="region" name="region" type="text" class="inp" placeholder="e.g. Region III" maxlength="100">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Medical Info ── -->
+        <div class="sec-head"><i class="fas fa-stethoscope"></i> Medical Information</div>
+        <div class="form-grid">
+          <div class="field full">
+            <label class="label" for="allergies">Known Allergies</label>
+            <div class="iw">
+              <i class="fas fa-triangle-exclamation ii-top"></i>
+              <textarea id="allergies" name="allergies" class="ta" placeholder="List any known allergies (medications, food, etc.) or write 'None'"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Emergency Contact ── -->
+        <div class="sec-head"><i class="fas fa-phone-volume"></i> Emergency Contact</div>
+        <div class="form-grid">
+
+          <div class="field">
+            <label class="label" for="emergency_contact_name">Contact Name</label>
+            <div class="iw">
+              <i class="fas fa-user-shield ii"></i>
+              <input id="emergency_contact_name" name="emergency_contact_name" type="text" class="inp" placeholder="Full name" maxlength="120">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="emergency_contact_number">Contact Number</label>
+            <div class="iw">
+              <i class="fas fa-phone-flip ii"></i>
+              <input id="emergency_contact_number" name="emergency_contact_number" type="tel" class="inp" placeholder="e.g. 09xxxxxxxxx" maxlength="20">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Submit -->
+        <div style="margin-top:30px;">
+          <button type="submit" id="registerBtn" class="btn-submit">
+            <span id="regText"><i class="fas fa-user-plus"></i> Create Account</span>
+            <span id="regSpinner" style="display:none;">
+              <i class="fas fa-spinner fa-spin"></i> Creating account…
+            </span>
+          </button>
+        </div>
+
+      </form>
+
+      <div class="login-link">Already have an account? <a href="login.html">Log in</a></div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Password toggles ──
+  document.querySelectorAll('.pw-tog').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById(btn.dataset.target);
+      var ico = document.getElementById(btn.dataset.icon);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      ico.classList.toggle('fa-eye');
+      ico.classList.toggle('fa-eye-slash');
+    });
+  });
+
+  // ── Strength bar ──
+  var pwInp = document.getElementById('password');
+  var segs = document.querySelectorAll('.str-seg');
+  pwInp.addEventListener('input', function () {
+    var v = pwInp.value, s = 0;
+    if (v.length >= 6) s++;
+    if (v.length >= 10) s++;
+    if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++;
+    if (/[0-9]/.test(v)) s++;
+    if (/[^a-zA-Z0-9]/.test(v)) s++;
+    var filled = Math.min(4, Math.round(s * 4 / 5));
+    var color = filled <= 1 ? '#ef4444' : filled <= 3 ? '#f59e0b' : '#0891B2';
+    segs.forEach(function (seg, i) { seg.style.background = i < filled ? color : '#e5e7eb'; });
+  });
+
+  // ── Match hint ──
+  var cpInp = document.getElementById('confirm_password');
+  var matchHint = document.getElementById('matchHint');
+  function checkMatch() {
+    var cp = cpInp.value;
+    if (!cp) { matchHint.textContent = ''; return; }
+    if (pwInp.value === cp) {
+      matchHint.textContent = '✓ Passwords match';
+      matchHint.className = 'match-hint match-ok';
+    } else {
+      matchHint.textContent = '✗ Passwords do not match';
+      matchHint.className = 'match-hint match-err';
+    }
+  }
+  cpInp.addEventListener('input', checkMatch);
+  pwInp.addEventListener('input', checkMatch);
+
+  // ── Validation helpers ──
+  function showErr(id, msg) {
+    var el = document.getElementById('err_' + id);
+    var inp = document.getElementById(id);
+    if (el) { if (msg) el.textContent = msg; el.classList.add('show'); }
+    if (inp) inp.classList.add('err');
+  }
+  function clearErr(id) {
+    var el = document.getElementById('err_' + id);
+    var inp = document.getElementById(id);
+    if (el) el.classList.remove('show');
+    if (inp) inp.classList.remove('err');
+  }
+  function clearAll() {
+    ['full_name','email','username','password','confirm_password'].forEach(clearErr);
+  }
+
+  // ── Clear on input ──
+  ['full_name','email','username','password','confirm_password'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', function () { clearErr(id); });
+  });
+
+  // ── Submit ──
+  document.getElementById('registerForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearAll();
+
+    var full_name = document.getElementById('full_name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    var confirm_password = document.getElementById('confirm_password').value;
+    var date_of_birth = document.getElementById('date_of_birth').value;
+    var gender = (document.querySelector('input[name="gender"]:checked') || {}).value || '';
+    var contact_number = document.getElementById('contact_number').value.trim();
+    var address = document.getElementById('address').value.trim();
+    var region = document.getElementById('region').value.trim();
+    var city = document.getElementById('city').value.trim();
+    var barangay = document.getElementById('barangay').value.trim();
+    var blood_group = document.getElementById('blood_group').value;
+    var allergies = document.getElementById('allergies').value.trim();
+    var emergency_contact_name = document.getElementById('emergency_contact_name').value.trim();
+    var emergency_contact_number = document.getElementById('emergency_contact_number').value.trim();
+
+    var valid = true;
+    if (!full_name) { showErr('full_name', 'Please enter your full name.'); valid = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('email', 'Please enter a valid email address.'); valid = false; }
+    if (!username || username.length < 3) { showErr('username', 'Username must be at least 3 characters.'); valid = false; }
+    if (!password || password.length < 6) { showErr('password', 'Password must be at least 6 characters.'); valid = false; }
+    if (password !== confirm_password) { showErr('confirm_password', 'Passwords do not match.'); valid = false; }
+
+    if (!valid) {
+      var first = document.querySelector('.err');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    var btn = document.getElementById('registerBtn');
+    var regText = document.getElementById('regText');
+    var regSpinner = document.getElementById('regSpinner');
+    btn.disabled = true;
+    regText.style.display = 'none';
+    regSpinner.style.display = 'flex';
+
+    try {
+      var res = await fetch('../api/auth/register.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          full_name, email, username, password, confirm_password,
+          date_of_birth, gender, contact_number,
+          address, region, city, barangay,
+          blood_group, allergies,
+          emergency_contact_name, emergency_contact_number
+        })
+      });
+      var data = await res.json();
+
+      if (data.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Account Created!',
+          html: '<p>Welcome to MediTrack, <strong>' + full_name + '</strong>!</p><p style="font-size:13px;color:#6b7280;margin-top:8px;">You can now log in with your credentials.</p>',
+          confirmButtonText: 'Go to Login',
+          confirmButtonColor: '#0891B2',
+          allowOutsideClick: false
         });
-
-        // ── Strength bar ──
-        const pwInput   = document.getElementById('password');
-        const segments  = document.querySelectorAll('.strength-segment');
-        pwInput.addEventListener('input', () => {
-            const v = pwInput.value;
-            let s = 0;
-            if (v.length >= 6) s++;
-            if (v.length >= 10) s++;
-            if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++;
-            if (/[0-9]/.test(v)) s++;
-            if (/[^a-zA-Z0-9]/.test(v)) s++;
-            const filled = Math.min(4, Math.round(s * 4 / 5));
-            const color  = filled <= 1 ? '#ef4444' : filled <= 3 ? '#f59e0b' : '#0891b2';
-            segments.forEach((seg, i) => { seg.style.background = i < filled ? color : '#e5e7eb'; });
-        });
-
-        // ── Match hint ──
-        const cpInput   = document.getElementById('confirm_password');
-        const matchHint = document.getElementById('matchHint');
-        function checkMatch() {
-            const pw = pwInput.value;
-            const cp = cpInput.value;
-            if (!cp) { matchHint.textContent = ''; return; }
-            if (pw === cp) {
-                matchHint.textContent = '✓ Passwords match';
-                matchHint.className = 'match-hint match-ok';
-            } else {
-                matchHint.textContent = '✗ Passwords do not match';
-                matchHint.className = 'match-hint match-err';
-            }
-        }
-        cpInput.addEventListener('input', checkMatch);
-        pwInput.addEventListener('input', checkMatch);
-
-        // ── Validation helpers ──
-        function showErr(id, msg) {
-            const el = document.getElementById('err_' + id);
-            const input = document.getElementById(id);
-            if (el) { el.textContent = msg || el.textContent; el.classList.add('show'); }
-            if (input) input.classList.add('is-error');
-        }
-        function clearErr(id) {
-            const el = document.getElementById('err_' + id);
-            const input = document.getElementById(id);
-            if (el) el.classList.remove('show');
-            if (input) input.classList.remove('is-error');
-        }
-        function clearAllErrors() {
-            ['full_name','email','username','password','confirm_password'].forEach(clearErr);
-        }
-
-        // ── Form submit ──
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            clearAllErrors();
-
-            const full_name        = document.getElementById('full_name').value.trim();
-            const email            = document.getElementById('email').value.trim();
-            const username         = document.getElementById('username').value.trim();
-            const password         = document.getElementById('password').value;
-            const confirm_password = document.getElementById('confirm_password').value;
-            const date_of_birth    = document.getElementById('date_of_birth').value;
-            const gender           = document.querySelector('input[name="gender"]:checked')?.value || '';
-            const contact_number   = document.getElementById('contact_number').value.trim();
-            const address          = document.getElementById('address').value.trim();
-            const region           = document.getElementById('region').value.trim();
-            const city             = document.getElementById('city').value.trim();
-            const barangay         = document.getElementById('barangay').value.trim();
-            const blood_group      = document.getElementById('blood_group').value;
-            const allergies        = document.getElementById('allergies').value.trim();
-            const emergency_contact_name   = document.getElementById('emergency_contact_name').value.trim();
-            const emergency_contact_number = document.getElementById('emergency_contact_number').value.trim();
-
-            // Validate
-            let valid = true;
-            if (!full_name) { showErr('full_name', 'Please enter your full name.'); valid = false; }
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('email', 'Please enter a valid email address.'); valid = false; }
-            if (!username || username.length < 3) { showErr('username', 'Username must be at least 3 characters.'); valid = false; }
-            if (!password || password.length < 6) { showErr('password', 'Password must be at least 6 characters.'); valid = false; }
-            if (password !== confirm_password) { showErr('confirm_password', 'Passwords do not match.'); valid = false; }
-
-            if (!valid) {
-                const firstErr = document.querySelector('.is-error');
-                if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-
-            const btn     = document.getElementById('registerBtn');
-            const text    = document.getElementById('registerText');
-            const spinner = document.getElementById('registerSpinner');
-            btn.disabled = true;
-            text.style.display = 'none';
-            spinner.style.display = 'flex';
-
-            try {
-                const res  = await fetch('../api/auth/register.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        full_name, email, username, password, confirm_password,
-                        date_of_birth, gender, contact_number,
-                        address, region, city, barangay,
-                        blood_group, allergies,
-                        emergency_contact_name, emergency_contact_number
-                    })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Account Created!',
-                        html: `<p>Welcome to MediTrack, <strong>${full_name}</strong>!</p><p style="font-size:13px;color:#6b7280;margin-top:6px;">You can now log in with your credentials.</p>`,
-                        confirmButtonText: 'Go to Login',
-                        confirmButtonColor: '#0891b2',
-                        allowOutsideClick: false
-                    });
-                    window.location.href = 'login.html';
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Registration Failed',
-                        text: data.message || 'Unable to create your account. Please try again.',
-                        confirmButtonColor: '#0891b2'
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-                Swal.fire({ icon: 'error', title: 'Connection Error', text: 'Unable to reach the server. Please try again.', confirmButtonColor: '#0891b2' });
-            } finally {
-                btn.disabled = false;
-                text.style.display = '';
-                spinner.style.display = 'none';
-            }
-        });
-
-        // Clear error on user input
-        ['full_name','email','username','password','confirm_password'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('input', () => clearErr(id));
-        });
-    </script>
+        window.location.href = 'login.html';
+      } else {
+        Swal.fire({ icon: 'error', title: 'Registration Failed', text: data.message || 'Unable to create your account. Please try again.', confirmButtonColor: '#0891B2' });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({ icon: 'error', title: 'Connection Error', text: 'Unable to reach the server. Please try again.', confirmButtonColor: '#0891B2' });
+    } finally {
+      btn.disabled = false;
+      regText.style.display = '';
+      regSpinner.style.display = 'none';
+    }
+  });
+</script>
 </body>
 </html>

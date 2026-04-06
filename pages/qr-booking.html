@@ -1,246 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book an Appointment — MediTrack</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book an Appointment — MediTrack</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome 6.4 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- SweetAlert2 (available if needed) -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #083344 0%, #0891B2 55%, #22D3EE 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    h1, h2, h3 { font-family: 'Outfit', sans-serif; }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-            background: linear-gradient(150deg, #0d4f6e 0%, #0e7490 45%, #0891b2 100%);
-            display: flex; align-items: center; justify-content: center;
-            padding: 24px 16px;
-        }
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
 
-        /* ── Card ── */
-        .card {
-            background: #fff;
-            border-radius: 24px;
-            box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.08);
-            padding: 48px 44px;
-            width: 100%; max-width: 460px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .card::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #0d4f6e, #0891b2, #67e8f9);
-        }
+    /* Background circles */
+    .bg-c1 { position: absolute; top: -100px; right: -100px; width: 360px; height: 360px; border-radius: 50%; background: rgba(255,255,255,0.06); z-index: 0; }
+    .bg-c2 { position: absolute; bottom: -120px; left: -80px; width: 420px; height: 420px; border-radius: 50%; background: rgba(255,255,255,0.04); z-index: 0; }
+    .bg-c3 { position: absolute; top: 30%; left: -60px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.03); z-index: 0; }
 
-        /* ── Branding ── */
-        .logo-wrapper {
-            width: 72px; height: 72px;
-            margin: 0 auto 16px;
-            background: #f0f9ff;
-            border-radius: 20px;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid #bae6fd;
-        }
+    /* ── Card ── */
+    .card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 28px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 4px 24px rgba(0,0,0,0.1);
+      padding: 52px 48px;
+      width: 100%; max-width: 480px;
+      text-align: center;
+      position: relative; z-index: 1;
+      border: 1px solid rgba(255,255,255,0.6);
+      animation: cardIn 0.5s cubic-bezier(0.34,1.2,0.64,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(32px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
-        .brand-name {
-            font-family: 'Poppins', sans-serif;
-            font-size: 28px; font-weight: 800;
-            color: #0d4f6e;
-            line-height: 1.1; margin-bottom: 4px;
-        }
-        .clinic-subtitle {
-            font-size: 13px; color: #0891b2; font-weight: 600;
-            letter-spacing: 0.5px; margin-bottom: 28px;
-        }
+    /* Accent top bar */
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #083344, #0891B2, #22D3EE);
+      border-radius: 28px 28px 0 0;
+    }
 
-        /* ── Heartbeat icon ── */
-        .heartbeat-wrap {
-            width: 80px; height: 80px;
-            background: linear-gradient(135deg, #0e7490, #0891b2);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 22px;
-            box-shadow: 0 8px 24px rgba(8,145,178,0.35);
-            animation: pulse 2.4s ease-in-out infinite;
-        }
-        .heartbeat-wrap i { color: #fff; font-size: 32px; }
+    /* ── Heartbeat icon ── */
+    .hb-wrap {
+      width: 84px; height: 84px;
+      background: linear-gradient(135deg, #083344, #0891B2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 28px rgba(8,145,178,0.4);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    .hb-wrap i { color: #fff; font-size: 34px; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 8px 28px rgba(8,145,178,0.4); }
+      50% { transform: scale(1.07); box-shadow: 0 14px 40px rgba(8,145,178,0.55); }
+    }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 8px 24px rgba(8,145,178,0.35); }
-            50% { transform: scale(1.06); box-shadow: 0 12px 32px rgba(8,145,178,0.5); }
-        }
+    /* ── Brand ── */
+    .brand-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px; font-weight: 800;
+      color: #083344; margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+    .clinic-sub {
+      font-size: 13px; font-weight: 600; color: #0891B2;
+      letter-spacing: 0.5px; margin-bottom: 30px;
+      font-family: 'DM Sans', sans-serif;
+    }
 
-        /* ── Heading ── */
-        .heading {
-            font-family: 'Poppins', sans-serif;
-            font-size: 22px; font-weight: 700;
-            color: #1f2937; margin-bottom: 8px;
-        }
-        .tagline {
-            font-size: 15px; color: #6b7280;
-            line-height: 1.6; margin-bottom: 34px;
-        }
-        .tagline strong { color: #0369a1; }
+    /* ── Chips ── */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 32px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f0fdfa; border: 1px solid #a5f3fc;
+      padding: 6px 13px; border-radius: 999px;
+      font-size: 12px; color: #0e7490; font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .chip i { font-size: 11px; }
 
-        /* ── Divider ── */
-        .divider { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
-        .divider-line { flex: 1; height: 1px; background: #e5e7eb; }
-        .divider-text { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; }
+    /* ── Divider ── */
+    .divider { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+    .div-line { flex: 1; height: 1px; background: #f3f4f6; }
+    .div-text { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; font-family: 'DM Sans', sans-serif; }
 
-        /* ── Buttons ── */
-        .btn-login {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; height: 50px;
-            background: linear-gradient(135deg, #0e7490, #0891b2);
-            border: none; border-radius: 12px;
-            color: #fff; font-size: 16px; font-weight: 600;
-            text-decoration: none;
-            cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 4px 16px rgba(8,145,178,0.35);
-            margin-bottom: 14px;
-            position: relative; overflow: hidden;
-        }
-        .btn-login::before {
-            content: '';
-            position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
-            transition: left 0.5s;
-        }
-        .btn-login:hover::before { left: 100%; }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(8,145,178,0.4); }
-        .btn-login:active { transform: translateY(0); }
+    /* ── Buttons ── */
+    .btn-login {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; height: 54px;
+      background: linear-gradient(135deg, #083344, #0891B2);
+      border: none; border-radius: 14px;
+      color: #fff; font-size: 16px; font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      text-decoration: none; cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 18px rgba(8,145,178,0.38);
+      margin-bottom: 14px;
+      position: relative; overflow: hidden;
+    }
+    .btn-login::after {
+      content: '';
+      position: absolute; top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.5s;
+    }
+    .btn-login:hover::after { left: 100%; }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(8,145,178,0.45); }
+    .btn-login:active { transform: translateY(0); }
 
-        .btn-register {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; height: 50px;
-            background: #fff;
-            border: 2px solid #0891b2;
-            border-radius: 12px;
-            color: #0369a1; font-size: 16px; font-weight: 600;
-            text-decoration: none;
-            cursor: pointer; transition: all 0.2s ease;
-        }
-        .btn-register:hover { background: #f0f9ff; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(8,145,178,0.15); }
-        .btn-register:active { transform: translateY(0); }
+    .btn-register {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; height: 54px;
+      background: #fff;
+      border: 2px solid #0891B2;
+      border-radius: 14px;
+      color: #0891B2; font-size: 16px; font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      text-decoration: none; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-register:hover { background: #f0fdfa; transform: translateY(-2px); box-shadow: 0 4px 18px rgba(8,145,178,0.15); }
+    .btn-register:active { transform: translateY(0); }
 
-        /* ── Footer note ── */
-        .footer-note {
-            margin-top: 28px;
-            padding: 14px 16px;
-            background: #f8fafc;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            font-size: 12px; color: #64748b;
-            line-height: 1.5;
-        }
-        .footer-note a { color: #0369a1; font-weight: 600; text-decoration: none; }
-        .footer-note a:hover { color: #0c4a6e; text-decoration: underline; }
+    /* ── Footer note ── */
+    .footer-note {
+      margin-top: 28px; padding: 14px 16px;
+      background: #f8fafc; border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      font-size: 12px; color: #64748b; line-height: 1.6;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .footer-note a { color: #0891B2; font-weight: 700; text-decoration: none; }
+    .footer-note a:hover { text-decoration: underline; }
 
-        /* ── Feature chips ── */
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 30px; }
-        .chip {
-            display: inline-flex; align-items: center; gap: 5px;
-            background: #f0f9ff; border: 1px solid #bae6fd;
-            padding: 5px 12px; border-radius: 999px;
-            font-size: 12px; color: #0369a1; font-weight: 500;
-        }
-        .chip i { font-size: 11px; }
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      position: absolute; top: 24px; left: 24px;
+      color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 600;
+      text-decoration: none; transition: color 0.2s;
+      font-family: 'DM Sans', sans-serif; z-index: 2;
+    }
+    .back-link:hover { color: #fff; }
 
-        @media (hover: none) and (pointer: coarse) {
-            .btn-login, .btn-register { min-height: 50px; }
-        }
-
-        @media (max-width: 480px) {
-            .card { padding: 36px 28px; }
-            .brand-name { font-size: 24px; }
-            .heading { font-size: 20px; }
-        }
-    </style>
+    @media (max-width: 520px) {
+      .card { padding: 40px 28px; }
+      .brand-name { font-size: 26px; }
+    }
+    @media (hover: none) and (pointer: coarse) {
+      .btn-login, .btn-register { min-height: 52px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <!-- Logo + Brand -->
-        <div class="logo-wrapper">
-            <i class="fas fa-heart-pulse" style="color:#0891b2;font-size:30px;"></i>
-        </div>
 
-        <div class="brand-name">MediTrack</div>
-        <div class="clinic-subtitle">
-            <i class="fas fa-stethoscope" style="margin-right:5px;"></i>
-            Internal Medicine Clinic
-        </div>
+  <div class="bg-c1"></div>
+  <div class="bg-c2"></div>
+  <div class="bg-c3"></div>
 
-        <!-- Heartbeat icon -->
-        <div class="heartbeat-wrap">
-            <i class="fas fa-heartbeat"></i>
-        </div>
+  <!-- Back to home -->
+  <a href="../index.html" class="back-link">
+    <i class="fas fa-arrow-left"></i> Home
+  </a>
 
-        <!-- Main heading -->
-        <div class="heading">Book Your Appointment</div>
-        <div class="tagline">
-            Access <strong>quality internal medicine</strong> care.<br>
-            Create an account or log in to get started.
-        </div>
+  <div class="card">
 
-        <!-- Feature chips -->
-        <div class="chips">
-            <div class="chip"><i class="fas fa-calendar-check"></i> Easy Booking</div>
-            <div class="chip"><i class="fas fa-qrcode"></i> QR Check-in</div>
-            <div class="chip"><i class="fas fa-file-medical"></i> Health Records</div>
-            <div class="chip"><i class="fas fa-shield-halved"></i> Secure &amp; Private</div>
-        </div>
-
-        <!-- CTA divider -->
-        <div class="divider">
-            <div class="divider-line"></div>
-            <span class="divider-text">get started</span>
-            <div class="divider-line"></div>
-        </div>
-
-        <!-- Buttons -->
-        <a href="login.html" class="btn-login">
-            <i class="fas fa-right-to-bracket"></i>
-            Log In to Book
-        </a>
-        <a href="register.html" class="btn-register">
-            <i class="fas fa-user-plus"></i>
-            Create Account
-        </a>
-
-        <!-- Footer note -->
-        <div class="footer-note">
-            <i class="fas fa-circle-info" style="color:#0369a1;margin-right:5px;"></i>
-            Already have an appointment?
-            <a href="login.html">Log in to view your QR code</a> and check in at the clinic.
-        </div>
+    <!-- Heartbeat pulse icon -->
+    <div class="hb-wrap">
+      <i class="fas fa-heartbeat"></i>
     </div>
 
-    <script>
-        // If already logged in as a patient, go directly to the dashboard
-        (function() {
-            try {
-                const user = JSON.parse(sessionStorage.getItem('user') || 'null');
-                if (user && user.role === 'patient') {
-                    window.location.replace('patient-dashboard.html');
-                }
-            } catch (e) { /* ignore */ }
-        })();
-    </script>
+    <!-- Brand -->
+    <div class="brand-name">MediTrack</div>
+    <div class="clinic-sub">
+      <i class="fas fa-stethoscope" style="margin-right:5px;"></i>
+      Internal Medicine Clinic
+    </div>
+
+    <!-- Feature chips -->
+    <div class="chips">
+      <div class="chip"><i class="fas fa-calendar-check"></i> Easy Booking</div>
+      <div class="chip"><i class="fas fa-qrcode"></i> QR Check-in</div>
+      <div class="chip"><i class="fas fa-file-medical"></i> Health Records</div>
+      <div class="chip"><i class="fas fa-shield-halved"></i> Secure</div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider">
+      <div class="div-line"></div>
+      <span class="div-text">get started</span>
+      <div class="div-line"></div>
+    </div>
+
+    <!-- Buttons -->
+    <a href="login.html" class="btn-login">
+      <i class="fas fa-right-to-bracket"></i>
+      Log In to Book
+    </a>
+    <a href="register.html" class="btn-register">
+      <i class="fas fa-user-plus"></i>
+      Create Free Account
+    </a>
+
+    <!-- Footer note -->
+    <div class="footer-note">
+      <i class="fas fa-circle-info" style="color:#0891B2;margin-right:5px;"></i>
+      Already have an appointment?
+      <a href="login.html">Log in to view your QR code</a> and check in at the clinic.
+    </div>
+
+  </div>
+
+  <script>
+    // If already logged in as patient → go to dashboard
+    (function () {
+      try {
+        var user = JSON.parse(sessionStorage.getItem('user') || 'null');
+        if (user && user.role === 'patient') {
+          window.location.replace('patient-dashboard.html');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>
