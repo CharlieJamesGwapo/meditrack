@@ -32,9 +32,10 @@
 
     /* ── Left Panel ── */
     .left {
-      flex: 0 0 45%;
+      flex: 0 0 40%;
+      max-width: 480px;
       background: linear-gradient(135deg, #083344 0%, #0891B2 60%, #22D3EE 100%);
-      padding: 52px 48px;
+      padding: 40px 36px;
       display: flex; flex-direction: column; justify-content: center;
       position: relative; overflow: hidden;
     }
@@ -120,10 +121,10 @@
       background: #fff;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
-      padding: 52px 44px;
+      padding: 40px 32px;
       overflow-y: auto;
     }
-    .form-box { width: 100%; max-width: 420px; }
+    .form-box { width: 100%; max-width: 400px; }
 
     /* Clock badge */
     .clock-badge {
@@ -248,13 +249,15 @@
     /* Mobile */
     @media (max-width: 768px) {
       .split { flex-direction: column; }
-      .left { flex: none; padding: 28px 24px; }
-      .left-title { font-size: 24px; }
+      .left { flex: none; max-width: 100%; padding: 24px 20px; min-height: auto; }
+      .left-title { font-size: 22px; }
       .left-subtitle { margin-bottom: 0; font-size: 13px; }
       .feat-list { display: none; }
       .left-bottom { display: none; }
-      .right { padding: 32px 20px; }
+      .left-circle-1, .left-circle-2, .left-circle-3 { display: none; }
+      .right { padding: 28px 20px; }
       .form-box { max-width: 100%; }
+      .clock-badge { display: none; }
     }
     @media (hover: none) and (pointer: coarse) {
       .btn-submit, .input, .reg-link { min-height: 48px; }
