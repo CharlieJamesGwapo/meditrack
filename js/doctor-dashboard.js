@@ -1,6 +1,6 @@
 /**
  * doctor-dashboard.js
- * MediTrack — Internal Medicine Clinic
+ * Internal Medicine OPD Management System
  * Doctor Portal — fully functional dashboard with QR check-in and medical records
  */
 
@@ -153,6 +153,28 @@ function spinRefreshIcon(id, spinning) {
     const icon = document.getElementById(id);
     if (!icon) return;
     spinning ? icon.classList.add('fa-spin') : icon.classList.remove('fa-spin');
+}
+
+function showToast(icon, title, text = '') {
+    Swal.fire({
+        icon, title, text,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        showClass: { popup: 'animate__animated animate__slideInRight' },
+        hideClass: { popup: 'animate__animated animate__slideOutRight' }
+    });
+}
+
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops!',
+        text: message,
+        confirmButtonColor: '#0891B2'
+    });
 }
 
 function escapeHtml(str) {
@@ -438,7 +460,7 @@ function onQRScanSuccess(decodedText) {
     }
 
     if (!tokenHash) {
-        Swal.fire({ icon: 'warning', title: 'Invalid QR', text: 'Could not extract a token from the QR code.', confirmButtonColor: '#0d9488' });
+        Swal.fire({ icon: 'warning', title: 'Invalid QR', text: 'Could not extract a token from the QR code.', confirmButtonColor: '#0891B2' });
         return;
     }
 
@@ -449,7 +471,7 @@ function onQRScanSuccess(decodedText) {
 function checkInManual() {
     const tokenHash = document.getElementById('manual-token').value.trim();
     if (!tokenHash) {
-        Swal.fire({ icon: 'warning', title: 'Token required', text: 'Please enter a QR token.', confirmButtonColor: '#0d9488' });
+        Swal.fire({ icon: 'warning', title: 'Token Required', text: 'Please enter a QR token.', confirmButtonColor: '#0891B2' });
         return;
     }
     stopQRScanner();
@@ -478,7 +500,7 @@ async function performCheckIn(tokenHash) {
                 icon: 'error',
                 title: 'Check-in Failed',
                 text: res?.message || 'Could not check in patient.',
-                confirmButtonColor: '#0d9488'
+                confirmButtonColor: '#0891B2'
             });
             return;
         }
@@ -504,7 +526,7 @@ async function performCheckIn(tokenHash) {
                         ${appt.allergies ? `<div class="col-span-2"><span class="text-gray-500">Allergies:</span> <span class="font-medium text-orange-600">${escapeHtml(appt.allergies)}</span></div>` : ''}
                     </div>
                 </div>`,
-            confirmButtonColor: '#0d9488',
+            confirmButtonColor: '#0891B2',
             confirmButtonText: 'Got it'
         });
 
@@ -517,7 +539,7 @@ async function performCheckIn(tokenHash) {
             icon: 'error',
             title: 'Network Error',
             text: 'Could not connect to the server. Please try again.',
-            confirmButtonColor: '#0d9488'
+            confirmButtonColor: '#0891B2'
         });
     }
 }
@@ -649,7 +671,7 @@ async function submitMedicalRecord(event) {
             icon: 'warning',
             title: 'Required Fields',
             text: 'Please enter at least a chief complaint or diagnosis.',
-            confirmButtonColor: '#0d9488'
+            confirmButtonColor: '#0891B2'
         });
         return;
     }
@@ -665,11 +687,8 @@ async function submitMedicalRecord(event) {
                 patient_id:     patientId,
                 chief_complaint: chiefComplaint,
                 symptoms,
-                bp:              bp,
-                temperature:     temp,
-                heart_rate:      hr,
-                weight:          weight,
-                height:          height,
+                vital_signs: { bp, temperature: temp, heart_rate: hr, weight, height },
+                bp, temperature: temp, heart_rate: hr, weight, height,
                 diagnosis,
                 prescription,
                 lab_tests_ordered: labTests,
@@ -686,21 +705,14 @@ async function submitMedicalRecord(event) {
                 icon: 'error',
                 title: 'Save Failed',
                 text: res?.message || 'Could not save medical record.',
-                confirmButtonColor: '#0d9488'
+                confirmButtonColor: '#0891B2'
             });
             return;
         }
 
         closeRecordModal();
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Record Saved!',
-            text: 'Medical record saved and appointment marked as completed.',
-            confirmButtonColor: '#0d9488',
-            timer: 3000,
-            timerProgressBar: true
-        });
+        showToast('success', 'Record Saved!', 'Medical record saved and appointment marked as completed.');
 
         // Refresh data
         loadTodayAppointments(true);
@@ -714,7 +726,7 @@ async function submitMedicalRecord(event) {
             icon: 'error',
             title: 'Network Error',
             text: 'Could not connect. Please try again.',
-            confirmButtonColor: '#0d9488'
+            confirmButtonColor: '#0891B2'
         });
     }
 }
@@ -857,7 +869,7 @@ async function submitChangePassword(event) {
             icon: 'warning',
             title: 'Password Mismatch',
             text: 'New password and confirmation do not match.',
-            confirmButtonColor: '#0d9488'
+            confirmButtonColor: '#0891B2'
         });
         return;
     }
@@ -867,7 +879,7 @@ async function submitChangePassword(event) {
             icon: 'warning',
             title: 'Too Short',
             text: 'New password must be at least 8 characters.',
-            confirmButtonColor: '#0d9488'
+            confirmButtonColor: '#0891B2'
         });
         return;
     }
@@ -888,21 +900,14 @@ async function submitChangePassword(event) {
                 icon: 'error',
                 title: 'Failed',
                 text: res?.message || 'Could not change password.',
-                confirmButtonColor: '#0d9488'
+                confirmButtonColor: '#0891B2'
             });
             return;
         }
 
         document.getElementById('change-password-form').reset();
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Password Updated',
-            text: 'Your password has been changed successfully.',
-            confirmButtonColor: '#0d9488',
-            timer: 3000,
-            timerProgressBar: true
-        });
+        showToast('success', 'Password Updated', 'Your password has been changed successfully.');
 
     } catch (e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
@@ -910,7 +915,7 @@ async function submitChangePassword(event) {
             icon: 'error',
             title: 'Network Error',
             text: 'Could not connect to the server.',
-            confirmButtonColor: '#0d9488'
+            confirmButtonColor: '#0891B2'
         });
     }
 }

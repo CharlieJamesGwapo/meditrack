@@ -18,7 +18,7 @@ class Mailer {
         $this->smtpUser  = $env['SMTP_USER']  ?? 'meditrack@merry-scarlet-gazelle.stjohnbaptisthighschoolinc.com';
         $this->smtpPass  = $env['SMTP_PASS']  ?? '';
         $this->fromEmail = $env['SMTP_FROM']  ?? $this->smtpUser;
-        $this->fromName  = $env['SMTP_NAME']  ?? 'MediTrack Clinic';
+        $this->fromName  = $env['SMTP_NAME']  ?? 'Internal Medicine OPD';
     }
 
     /**
@@ -70,12 +70,12 @@ class Mailer {
      * Send OTP email
      */
     public function sendOTP($to, $otp) {
-        $subject = "MediTrack - Password Reset OTP";
+        $subject = "IM-OPD - Password Reset OTP";
         $body = "
         <div style='font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;'>
             <div style='text-align:center;padding:20px;background:linear-gradient(135deg,#0f766e,#0284c7);border-radius:12px 12px 0 0;'>
-                <h1 style='color:#fff;margin:0;font-size:24px;'>MediTrack</h1>
-                <p style='color:#ccfbf1;margin:5px 0 0;'>Internal Medicine Clinic</p>
+                <h1 style='color:#fff;margin:0;font-size:24px;'>IM-OPD</h1>
+                <p style='color:#ccfbf1;margin:5px 0 0;'>Internal Medicine OPD Management System</p>
             </div>
             <div style='padding:30px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;'>
                 <p style='color:#374151;'>You requested a password reset. Use this OTP code:</p>
@@ -85,7 +85,7 @@ class Mailer {
                 <p style='color:#6b7280;font-size:14px;'>This code expires in <strong>15 minutes</strong>.</p>
                 <p style='color:#6b7280;font-size:14px;'>If you didn't request this, please ignore this email.</p>
             </div>
-            <p style='text-align:center;color:#9ca3af;font-size:12px;margin-top:15px;'>MediTrack Internal Medicine Clinic</p>
+            <p style='text-align:center;color:#9ca3af;font-size:12px;margin-top:15px;'>Internal Medicine OPD Management System</p>
         </div>";
         return $this->send($to, $subject, $body);
     }
@@ -94,13 +94,13 @@ class Mailer {
      * Send appointment confirmation email
      */
     public function sendAppointmentConfirmation($to, $patientName, $appointmentNumber, $date, $time, $doctorName) {
-        $subject = "MediTrack - Appointment Confirmed #{$appointmentNumber}";
+        $subject = "IM-OPD - Appointment Confirmed #{$appointmentNumber}";
         $formattedDate = date('F j, Y', strtotime($date));
         $formattedTime = date('g:i A', strtotime($time));
         $body = "
         <div style='font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;'>
             <div style='text-align:center;padding:20px;background:linear-gradient(135deg,#0f766e,#0284c7);border-radius:12px 12px 0 0;'>
-                <h1 style='color:#fff;margin:0;font-size:24px;'>MediTrack</h1>
+                <h1 style='color:#fff;margin:0;font-size:24px;'>IM-OPD</h1>
             </div>
             <div style='padding:30px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;'>
                 <p style='color:#374151;'>Hi <strong>{$patientName}</strong>,</p>

@@ -50,13 +50,14 @@ try {
     $notes            = sanitizeInput($input['notes'] ?? '');
     $follow_up_date   = sanitizeInput($input['follow_up_date'] ?? '') ?: null;
 
-    // Build vital_signs JSON
+    // Build vital_signs JSON — accept nested object or top-level fields
+    $vs = $input['vital_signs'] ?? [];
     $vital_signs = json_encode([
-        'bp'          => sanitizeInput($input['bp'] ?? ''),
-        'temperature' => sanitizeInput($input['temperature'] ?? ''),
-        'heart_rate'  => sanitizeInput($input['heart_rate'] ?? ''),
-        'weight'      => sanitizeInput($input['weight'] ?? ''),
-        'height'      => sanitizeInput($input['height'] ?? '')
+        'bp'          => sanitizeInput($vs['bp'] ?? $input['bp'] ?? ''),
+        'temperature' => sanitizeInput($vs['temperature'] ?? $vs['temp'] ?? $input['temperature'] ?? ''),
+        'heart_rate'  => sanitizeInput($vs['heart_rate'] ?? $input['heart_rate'] ?? ''),
+        'weight'      => sanitizeInput($vs['weight'] ?? $input['weight'] ?? ''),
+        'height'      => sanitizeInput($vs['height'] ?? $input['height'] ?? '')
     ]);
 
     $db->beginTransaction();

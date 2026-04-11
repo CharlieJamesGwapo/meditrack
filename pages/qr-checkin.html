@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Check-In — Internal Medicine OPD</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #083344 0%, #0891B2 55%, #22D3EE 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px;
+      position: relative; overflow: hidden;
+    }
+    h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+
+    body::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    .bg-c1 { position: absolute; top: -100px; right: -100px; width: 360px; height: 360px; border-radius: 50%; background: rgba(255,255,255,0.06); z-index: 0; }
+    .bg-c2 { position: absolute; bottom: -120px; left: -80px; width: 420px; height: 420px; border-radius: 50%; background: rgba(255,255,255,0.04); z-index: 0; }
+
+    .card {
+      background: rgba(255,255,255,0.97);
+      border-radius: 28px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 4px 24px rgba(0,0,0,0.1);
+      padding: 40px 36px;
+      width: 100%; max-width: 480px;
+      text-align: center;
+      position: relative; z-index: 1;
+    }
+    @media (max-width: 480px) {
+      .card { padding: 32px 20px; border-radius: 20px; }
+    }
+
+    .info-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 12px;
+      background: #F8FAFC; border: 1px solid #F1F5F9;
+      text-align: left;
+    }
+    .info-row i { width: 18px; text-align: center; color: #0891B2; flex-shrink: 0; }
+    .info-label { font-size: 0.68rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.04em; }
+    .info-value { font-size: 0.88rem; font-weight: 600; color: #1E293B; }
+
+    .btn-primary {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 24px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #0891B2, #0E7490);
+      color: #fff; font-weight: 700; font-size: 0.95rem;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(8,145,178,0.3);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-primary:hover { box-shadow: 0 6px 24px rgba(8,145,178,0.45); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; border-radius: 14px;
+      border: 2px solid #E2E8F0; background: #fff;
+      color: #64748B; font-weight: 600; font-size: 0.88rem;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-secondary:hover { border-color: #0891B2; color: #0891B2; background: #F0FDFA; }
+
+    .pulse-icon { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+    .fade-in { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="bg-c1"></div>
+  <div class="bg-c2"></div>
+
+  <div class="card fade-in" id="mainCard">
+    <!-- Loading State -->
+    <div id="loadingState">
+      <div class="w-20 h-20 rounded-3xl mx-auto mb-5 flex items-center justify-center"
+        style="background: linear-gradient(135deg, #ECFEFF, #CFFAFE)">
+        <i class="fas fa-spinner fa-spin text-cyan-600 text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Verifying QR Code</h2>
+      <p class="text-sm text-gray-400">Please wait while we verify your appointment...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden">
+      <div class="w-20 h-20 rounded-3xl mx-auto mb-5 flex items-center justify-center"
+        style="background: linear-gradient(135deg, #FEF2F2, #FECACA)">
+        <i class="fas fa-times-circle text-red-500 text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Check-in Failed</h2>
+      <p id="errorMessage" class="text-sm text-gray-500 mb-6">Invalid or expired QR code.</p>
+      <div class="space-y-3">
+        <button onclick="window.location.href='/meditrack/pages/login.html'" class="btn-secondary">
+          <i class="fas fa-sign-in-alt"></i> Go to Login
+        </button>
+      </div>
+    </div>
+
+    <!-- Appointment Found - Confirm Check-in -->
+    <div id="confirmState" class="hidden">
+      <div class="w-20 h-20 rounded-3xl mx-auto mb-5 flex items-center justify-center pulse-icon"
+        style="background: linear-gradient(135deg, #ECFEFF, #CFFAFE)">
+        <i class="fas fa-qrcode text-cyan-600 text-3xl"></i>
+      </div>
+      <div class="mb-1">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-50 text-cyan-700 text-xs font-bold rounded-full border border-cyan-200 uppercase tracking-wider">
+          <i class="fas fa-hospital text-xs"></i> Internal Medicine OPD
+        </span>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mt-3 mb-1">Appointment Check-In</h2>
+      <p class="text-sm text-gray-400 mb-5">Confirm your details below to check in</p>
+
+      <div class="space-y-2.5 mb-6" id="appointmentDetails">
+        <!-- Filled dynamically -->
+      </div>
+
+      <button onclick="processCheckin()" id="checkinBtn" class="btn-primary">
+        <i class="fas fa-check-circle"></i> Confirm Check-In
+      </button>
+    </div>
+
+    <!-- Success State -->
+    <div id="successState" class="hidden">
+      <div class="w-20 h-20 rounded-3xl mx-auto mb-5 flex items-center justify-center"
+        style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7)">
+        <i class="fas fa-check-circle text-emerald-500 text-3xl pulse-icon"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Checked In!</h2>
+      <p class="text-sm text-gray-500 mb-5">You have been checked in successfully. Please wait to be called.</p>
+
+      <div class="space-y-2.5 mb-6" id="successDetails">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+        <div class="flex items-start gap-3">
+          <i class="fas fa-info-circle text-amber-500 mt-0.5"></i>
+          <p class="text-sm text-amber-700 text-left">Please stay in the waiting area. The doctor will call you when it's your turn.</p>
+        </div>
+      </div>
+
+      <button onclick="window.location.href='/meditrack/pages/patient-dashboard.html'" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </button>
+    </div>
+
+    <!-- Already Checked In State -->
+    <div id="alreadyState" class="hidden">
+      <div class="w-20 h-20 rounded-3xl mx-auto mb-5 flex items-center justify-center"
+        style="background: linear-gradient(135deg, #FEF3C7, #FDE68A)">
+        <i class="fas fa-exclamation-triangle text-amber-500 text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2">Already Checked In</h2>
+      <p id="alreadyMessage" class="text-sm text-gray-500 mb-6">This QR code has already been used for check-in.</p>
+      <button onclick="window.location.href='/meditrack/pages/patient-dashboard.html'" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </button>
+    </div>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+    'use strict';
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!token) {
+        showError('No QR token provided. Please scan a valid QR code.');
+        return;
+      }
+      verifyToken(token);
+    });
+
+    async function verifyToken(tokenHash) {
+      try {
+        // First try to get appointment info from the token
+        const res = await fetch(`${API_BASE}/appointments/verify-qr.php?token=${encodeURIComponent(tokenHash)}`, {
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (data && data.success && data.appointment) {
+          showConfirm(data.appointment, tokenHash);
+        } else if (data && data.message && data.message.toLowerCase().includes('already')) {
+          showAlready(data.message);
+        } else {
+          showError(data?.message || 'Invalid or expired QR code.');
+        }
+      } catch (err) {
+        // If verify-qr endpoint doesn't exist, try direct checkin approach
+        // Show a simpler confirm screen
+        showSimpleConfirm(tokenHash);
+      }
+    }
+
+    function showSimpleConfirm(tokenHash) {
+      hideAll();
+      document.getElementById('confirmState').classList.remove('hidden');
+      document.getElementById('appointmentDetails').innerHTML = `
+        <div class="info-row">
+          <i class="fas fa-qrcode"></i>
+          <div>
+            <p class="info-label">QR Token</p>
+            <p class="info-value" style="font-size:0.75rem; word-break:break-all;">${tokenHash.substring(0, 20)}...</p>
+          </div>
+        </div>
+        <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 mt-3">
+          <p class="text-xs text-cyan-700"><i class="fas fa-info-circle mr-1"></i> Click below to check in for your appointment.</p>
+        </div>
+      `;
+    }
+
+    function showConfirm(appt, tokenHash) {
+      hideAll();
+      document.getElementById('confirmState').classList.remove('hidden');
+
+      const dateStr = appt.appointment_date ? formatDate(appt.appointment_date) : 'N/A';
+      const timeStr = appt.appointment_time ? formatTime(appt.appointment_time) : 'N/A';
+
+      document.getElementById('appointmentDetails').innerHTML = `
+        <div class="info-row">
+          <i class="fas fa-hashtag"></i>
+          <div>
+            <p class="info-label">Appointment</p>
+            <p class="info-value">${escHtml(appt.appointment_number || '')}</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <i class="fas fa-user"></i>
+          <div>
+            <p class="info-label">Patient</p>
+            <p class="info-value">${escHtml(appt.patient_name || '')}</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <i class="fas fa-user-md"></i>
+          <div>
+            <p class="info-label">Doctor</p>
+            <p class="info-value">Dr. ${escHtml(appt.doctor_name || '')}</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <i class="fas fa-calendar"></i>
+          <div>
+            <p class="info-label">Date & Time</p>
+            <p class="info-value">${dateStr} at ${timeStr}</p>
+          </div>
+        </div>
+        ${appt.reason_for_visit ? `
+        <div class="info-row">
+          <i class="fas fa-notes-medical"></i>
+          <div>
+            <p class="info-label">Reason</p>
+            <p class="info-value">${escHtml(appt.reason_for_visit)}</p>
+          </div>
+        </div>` : ''}
+      `;
+    }
+
+    async function processCheckin() {
+      const btn = document.getElementById('checkinBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking in...';
+
+      try {
+        const res = await fetch(`${API_BASE}/appointments/checkin.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ token_hash: token })
+        });
+        const data = await res.json();
+
+        if (data && data.success) {
+          showSuccess(data.appointment);
+        } else {
+          if (data?.message?.toLowerCase().includes('already') || data?.message?.toLowerCase().includes('checked')) {
+            showAlready(data.message);
+          } else {
+            showError(data?.message || 'Check-in failed. Please try again.');
+          }
+        }
+      } catch (err) {
+        showError('Network error. Please check your connection and try again.');
+        console.error(err);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Check-In';
+    }
+
+    function showSuccess(appt) {
+      hideAll();
+      document.getElementById('successState').classList.remove('hidden');
+
+      if (appt) {
+        const dateStr = appt.appointment_date ? formatDate(appt.appointment_date) : '';
+        const timeStr = appt.appointment_time ? formatTime(appt.appointment_time) : '';
+
+        document.getElementById('successDetails').innerHTML = `
+          <div class="info-row">
+            <i class="fas fa-hashtag"></i>
+            <div>
+              <p class="info-label">Appointment</p>
+              <p class="info-value">${escHtml(appt.appointment_number || '')}</p>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-user"></i>
+            <div>
+              <p class="info-label">Patient</p>
+              <p class="info-value">${escHtml(appt.patient_name || '')}</p>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-clock"></i>
+            <div>
+              <p class="info-label">Checked in at</p>
+              <p class="info-value">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function showError(message) {
+      hideAll();
+      document.getElementById('errorState').classList.remove('hidden');
+      document.getElementById('errorMessage').textContent = message;
+    }
+
+    function showAlready(message) {
+      hideAll();
+      document.getElementById('alreadyState').classList.remove('hidden');
+      document.getElementById('alreadyMessage').textContent = message || 'This QR code has already been used.';
+    }
+
+    function hideAll() {
+      ['loadingState', 'errorState', 'confirmState', 'successState', 'alreadyState'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      try {
+        const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch { return dateStr; }
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return 'N/A';
+      try {
+        const [h, m] = timeStr.split(':');
+        const hour = parseInt(h, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${m} ${ampm}`;
+      } catch { return timeStr; }
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

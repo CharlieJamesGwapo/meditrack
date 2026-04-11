@@ -1,6 +1,6 @@
 /**
- * patient-dashboard.js — MediTrack Patient Portal
- * Internal Medicine Clinic
+ * patient-dashboard.js — Internal Medicine OPD Management System
+ * Patient Portal
  */
 
 'use strict';
@@ -14,7 +14,7 @@
 })();
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const API_BASE = '/meditrack/api';
+// API_BASE is defined in auth.js (loaded first)
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let currentUser       = null;
@@ -99,16 +99,44 @@ function switchTab(tabName) {
 // TAB: BOOK APPOINTMENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function loadBookingTab() {
-    // Just ensure the date input is set to today minimum
+async function loadBookingTab() {
     const dateInput = document.getElementById('appointmentDate');
     if (dateInput) {
         dateInput.min = todayISO();
-        if (!dateInput.value) {
-            // Don't auto-trigger; wait for user selection
-            hideBookingExtras();
-        }
+        if (!dateInput.value) hideBookingExtras();
     }
+
+    // Check if any active doctor exists
+    hide('noDoctorAlert');
+    try {
+        const data = await apiRequest(`/patient/get-available-slots.php?date=${todayISO()}`);
+        if (!data || !data.success) {
+            showNoDoctorAlert(data?.message || 'No doctor is currently available.');
+        }
+    } catch (err) {
+        // Silently fail — user will see error when selecting a date
+    }
+}
+
+function showNoDoctorAlert(msg) {
+    const container = document.getElementById('noDoctorAlert');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="rounded-xl p-4 mb-5 border border-red-200" style="background:linear-gradient(135deg,#FEF2F2,#FFF1F2);">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user-doctor text-red-500"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-red-700 text-sm" style="font-family:'Outfit',sans-serif;">No Doctor Available</p>
+                    <p class="text-xs text-red-500 mt-0.5">Appointment booking is temporarily unavailable. Please contact the clinic or try again later.</p>
+                </div>
+            </div>
+        </div>`;
+    container.classList.remove('hidden');
+    // Disable the date picker
+    const dateInput = document.getElementById('appointmentDate');
+    if (dateInput) { dateInput.disabled = true; dateInput.title = 'No doctor available'; }
 }
 
 function hideBookingExtras() {
@@ -256,7 +284,7 @@ async function bookAppointment() {
             })
         });
 
-        setLoading(bookBtn, false, '<i class="fas fa-calendar-check"></i> Book Appointment');
+        setLoading(bookBtn, false, '<i class="fas fa-calendar-check"></i> Confirm Appointment');
 
         if (data && data.success) {
             const appt = data.appointment || {};
@@ -267,20 +295,37 @@ async function bookAppointment() {
                     <p><span class="font-semibold">Date:</span> ${appt.appointment_date ? formatDate(appt.appointment_date) : ''}</p>
                     <p><span class="font-semibold">Time:</span> ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}</p>
                 </div>
-                ${appt.qr_image ? `
                 <div class="mt-4 text-center">
                     <p class="text-xs text-gray-500 mb-2">Your QR Code for Check-in:</p>
-                    <img src="${appt.qr_image}" alt="QR Code" class="w-40 h-40 mx-auto border rounded-lg p-1">
+                    <canvas id="swalQrCanvas" style="margin:0 auto;"></canvas>
                     <p class="text-xs text-gray-400 mt-1">Show this to the doctor when you arrive</p>
-                </div>` : ''}`;
+                </div>`;
 
             await Swal.fire({
                 icon:  'success',
                 title: 'Appointment Booked!',
                 html:  htmlContent,
                 confirmButtonText: 'View My Appointments',
-                confirmButtonColor: '#0d9488',
-                width: '480px'
+                confirmButtonColor: '#0891B2',
+                width: '480px',
+                didOpen: () => {
+                    // Generate QR code in the SweetAlert dialog
+                    const qrUrl = appt.qr_url || '';
+                    const canvas = document.getElementById('swalQrCanvas');
+                    if (canvas && qrUrl && typeof QRCode !== 'undefined') {
+                        QRCode.toCanvas(canvas, qrUrl, {
+                            width: 180, margin: 2,
+                            color: { dark: '#083344', light: '#ffffff' }
+                        });
+                    } else if (canvas && appt.qr_image) {
+                        // Fallback to image
+                        const img = document.createElement('img');
+                        img.src = appt.qr_image;
+                        img.className = 'w-40 h-40 mx-auto border rounded-lg p-1';
+                        img.alt = 'QR Code';
+                        canvas.replaceWith(img);
+                    }
+                }
             });
 
             // Reset form
@@ -296,7 +341,7 @@ async function bookAppointment() {
             showError(data?.message || 'Failed to book appointment.');
         }
     } catch (err) {
-        setLoading(bookBtn, false, '<i class="fas fa-calendar-check"></i> Book Appointment');
+        setLoading(bookBtn, false, '<i class="fas fa-calendar-check"></i> Confirm Appointment');
         showError('An error occurred while booking. Please try again.');
         console.error(err);
     }
@@ -335,10 +380,7 @@ function filterAppointments(filter) {
     // Update filter button styles
     document.querySelectorAll('.appt-filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
-        btn.classList.toggle('bg-teal-600',   isActive);
-        btn.classList.toggle('text-white',    isActive);
-        btn.classList.toggle('bg-gray-100',  !isActive);
-        btn.classList.toggle('text-gray-600', !isActive);
+        btn.classList.toggle('active-filter', isActive);
     });
 
     if (filter === 'all') {
@@ -456,7 +498,7 @@ async function cancelAppointment(appointmentId, apptNumber) {
         });
 
         if (data && data.success) {
-            Swal.fire({ icon: 'success', title: 'Cancelled', text: 'Appointment has been cancelled.', timer: 2000, showConfirmButton: false });
+            showToast('success', 'Cancelled', 'Appointment has been cancelled.');
             loadAppointments();
         } else {
             showError(data?.message || 'Failed to cancel appointment.');
@@ -705,7 +747,7 @@ async function saveProfile(event) {
                 setAvatarInitials('headerAvatar',   initials, 'teal');
                 setAvatarInitials('bannerAvatar',   initials, 'teal');
             }
-            Swal.fire({ icon: 'success', title: 'Profile Updated', text: 'Your profile has been saved successfully.', timer: 2500, showConfirmButton: false });
+            showToast('success', 'Profile Updated', 'Your profile has been saved successfully.');
         } else {
             showError(data?.message || 'Failed to save profile.');
         }
@@ -741,7 +783,7 @@ async function changePassword(event) {
 
         if (data && data.success) {
             document.getElementById('passwordForm').reset();
-            Swal.fire({ icon: 'success', title: 'Password Updated', text: 'Your password has been changed successfully.', timer: 2500, showConfirmButton: false });
+            showToast('success', 'Password Updated', 'Your password has been changed successfully.');
         } else {
             showError(data?.message || 'Failed to change password.');
         }
@@ -762,7 +804,7 @@ function togglePwd(inputId, btnEl) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// QR MODAL
+// QR MODAL — Client-side QR generation (no external API needed)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function showQRModal(appointmentId) {
@@ -782,19 +824,13 @@ async function showQRModal(appointmentId) {
     if (modal) modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // Check if appointment already has cached QR image
-    if (appt && appt.qr_image) {
-        renderQRImage(appt.qr_image);
-    } else {
-        await fetchQRCode(appointmentId);
-    }
+    // Generate or fetch QR
+    await fetchQRCode(appointmentId);
 }
 
 async function fetchQRCode(appointmentId) {
     show('qrLoading');
-    show('qrImageWrapper');
-    const img = document.getElementById('qrImage');
-    if (img) img.src = '';
+    hide('qrImageWrapper');
 
     try {
         const data = await apiRequest('/appointments/generate-qr.php', {
@@ -804,11 +840,26 @@ async function fetchQRCode(appointmentId) {
 
         hide('qrLoading');
 
-        if (data && data.success && data.qr_image) {
-            renderQRImage(data.qr_image);
-            // Update cached appointment
+        if (data && data.success) {
+            const qrUrl = data.qr_url || '';
+            const qrImage = data.qr_image || '';
+
+            // Try client-side QR generation first (most reliable)
+            if (qrUrl && typeof QRCode !== 'undefined') {
+                renderQRCanvas(qrUrl);
+            } else if (qrImage) {
+                renderQRImage(qrImage);
+            } else {
+                showError('Failed to generate QR code.');
+                closeQRModal();
+            }
+
+            // Cache the URL for regeneration
             const cached = allAppointments.find(a => a.id == appointmentId);
-            if (cached) cached.qr_image = data.qr_image;
+            if (cached) {
+                cached.qr_url = qrUrl;
+                cached.qr_image = qrImage;
+            }
         } else {
             showError(data?.message || 'Failed to generate QR code.');
             closeQRModal();
@@ -821,58 +872,65 @@ async function fetchQRCode(appointmentId) {
     }
 }
 
+function renderQRCanvas(url) {
+    hide('qrLoading');
+    show('qrImageWrapper');
+    const canvas = document.getElementById('qrCanvas');
+    const img = document.getElementById('qrImage');
+    if (canvas) canvas.classList.remove('hidden');
+    if (img) img.classList.add('hidden');
+
+    if (canvas && typeof QRCode !== 'undefined') {
+        QRCode.toCanvas(canvas, url, {
+            width: 260,
+            margin: 2,
+            color: { dark: '#083344', light: '#ffffff' }
+        }, function(err) {
+            if (err) {
+                console.error('QR canvas error:', err);
+                // Fallback to image if canvas fails
+                if (img) { img.classList.remove('hidden'); canvas.classList.add('hidden'); }
+            }
+        });
+    }
+}
+
 function renderQRImage(src) {
     hide('qrLoading');
     show('qrImageWrapper');
+    const canvas = document.getElementById('qrCanvas');
     const img = document.getElementById('qrImage');
-    if (img) img.src = src;
+    if (canvas) canvas.classList.add('hidden');
+    if (img) { img.classList.remove('hidden'); img.src = src; }
 }
 
 async function regenerateQR() {
     if (!currentQRApptId) return;
-    // Remove cached qr
     const cached = allAppointments.find(a => a.id == currentQRApptId);
-    if (cached) cached.qr_image = null;
-
+    if (cached) { cached.qr_image = null; cached.qr_url = null; }
     await fetchQRCode(currentQRApptId);
 }
 
 function downloadQR() {
-    const img = document.getElementById('qrImage');
-    if (!img || !img.src) { showError('No QR code to download.'); return; }
-
-    try {
-        const canvas  = document.createElement('canvas');
-        canvas.width  = 300;
-        canvas.height = 300;
-        const ctx = canvas.getContext('2d');
-
-        const tempImg = new Image();
-        tempImg.crossOrigin = 'anonymous';
-        tempImg.onload = () => {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, 300, 300);
-            ctx.drawImage(tempImg, 0, 0, 300, 300);
+    // Try canvas first (client-side generated)
+    const canvas = document.getElementById('qrCanvas');
+    if (canvas && !canvas.classList.contains('hidden')) {
+        try {
             const link = document.createElement('a');
             link.download = `QR-Appointment-${currentQRApptId}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-        };
-        tempImg.onerror = () => {
-            // Fallback: direct download
-            const link = document.createElement('a');
-            link.download = `QR-Appointment-${currentQRApptId}.png`;
-            link.href = img.src;
-            link.click();
-        };
-        tempImg.src = img.src;
-    } catch (e) {
-        // Direct download fallback
-        const link = document.createElement('a');
-        link.download = `QR-Appointment-${currentQRApptId}.png`;
-        link.href = img.src;
-        link.click();
+            return;
+        } catch (e) { console.error('Canvas download error:', e); }
     }
+
+    // Fallback to img element
+    const img = document.getElementById('qrImage');
+    if (!img || !img.src) { showError('No QR code to download.'); return; }
+    const link = document.createElement('a');
+    link.download = `QR-Appointment-${currentQRApptId}.png`;
+    link.href = img.src;
+    link.click();
 }
 
 function closeQRModal() {
@@ -899,9 +957,9 @@ async function confirmLogout() {
         title: 'Sign Out?',
         text:  'Are you sure you want to log out?',
         showCancelButton:   true,
-        confirmButtonText:  'Yes, Logout',
+        confirmButtonText:  'Yes, Sign Out',
         cancelButtonText:   'Cancel',
-        confirmButtonColor: '#ef4444',
+        confirmButtonColor: '#0891B2',
         cancelButtonColor:  '#6b7280',
         reverseButtons: true
     });
@@ -1014,11 +1072,24 @@ function setLoading(btn, isLoading, originalHtml) {
     }
 }
 
+function showToast(icon, title, text = '') {
+    Swal.fire({
+        icon, title, text,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        showClass: { popup: 'animate__animated animate__slideInRight' },
+        hideClass: { popup: 'animate__animated animate__slideOutRight' }
+    });
+}
+
 function showError(message) {
     Swal.fire({
         icon: 'error',
-        title: 'Error',
+        title: 'Oops!',
         text: message,
-        confirmButtonColor: '#0d9488'
+        confirmButtonColor: '#0891B2'
     });
 }

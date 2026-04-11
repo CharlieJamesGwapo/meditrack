@@ -43,19 +43,9 @@ try {
 
     logActivity($db, $user['id'], $user['username'], 'patient', 'UPDATE', 'Auth', $user['id'], "OTP requested for password reset");
 
-    // Send OTP via email
-    $emailSent = false;
-    try {
-        require_once __DIR__ . '/../../utils/Mailer.php';
-        $mailer = new Mailer();
-        $emailSent = $mailer->sendOTP($email, $otp);
-    } catch (Exception $e) {
-        error_log("OTP email error: " . $e->getMessage());
-    }
-
     sendJSON([
         'success'    => true,
-        'message'    => $emailSent ? 'OTP sent to your email' : 'OTP generated successfully',
+        'message'    => 'OTP generated successfully',
         'otp'        => $otp,
         'expires_at' => $expires_at
     ]);

@@ -1,4 +1,4 @@
--- MediTrack Simplified Schema
+-- Internal Medicine OPD Management System Schema
 -- Single doctor, Internal Medicine clinic
 
 SET FOREIGN_KEY_CHECKS = 0;

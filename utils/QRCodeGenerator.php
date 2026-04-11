@@ -103,7 +103,7 @@ class QRCodeGenerator {
                     CURLOPT_TIMEOUT => 10,
                     CURLOPT_SSL_VERIFYPEER => false,
                     CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_USERAGENT => 'MediTrack/1.0'
+                    CURLOPT_USERAGENT => 'IM-OPD/1.0'
                 ]);
                 $imageData = curl_exec($ch);
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -134,7 +134,30 @@ class QRCodeGenerator {
             }
         }
 
-        // Fallback: return the URL directly - browser will load it as img src
+        // Fallback 2: Try Google Charts API
+        $googleUrl = "https://chart.googleapis.com/chart?cht=qr&chs={$size}x{$size}&chl={$encodedData}&choe=UTF-8";
+        if (function_exists('curl_init')) {
+            try {
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $googleUrl,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 8,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_FOLLOWLOCATION => true,
+                ]);
+                $imageData = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($httpCode === 200 && $imageData && strlen($imageData) > 100) {
+                    return 'data:image/png;base64,' . base64_encode($imageData);
+                }
+            } catch (Exception $e) {
+                error_log("QR Google Charts error: " . $e->getMessage());
+            }
+        }
+
+        // Final fallback: return the URL directly - browser will load it as img src
         return $qrUrl;
     }
     
@@ -156,7 +179,8 @@ class QRCodeGenerator {
         $token = $stmt->fetch();
         
         // Verify signature
-        $signature = hash_hmac('sha256', $token['qr_payload'], SECRET_KEY);
+        $secretKey = defined('SECRET_KEY') ? SECRET_KEY : 'meditrack_secret_2024';
+        $signature = hash_hmac('sha256', $token['qr_payload'], $secretKey);
         if (!hash_equals($signature, $token['signature'])) {
             return ['valid' => false, 'message' => 'QR code signature invalid'];
         }

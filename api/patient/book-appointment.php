@@ -39,7 +39,7 @@ try {
     $patient_id = $patient['id'];
 
     // Auto-select single active doctor
-    $stmt = $db->prepare("SELECT id, full_name FROM doctors WHERE status = 'active' LIMIT 1");
+    $stmt = $db->prepare("SELECT id, full_name, consultation_fee FROM doctors WHERE status = 'active' LIMIT 1");
     $stmt->execute();
     $doctor = $stmt->fetch();
     if (!$doctor) {
@@ -63,35 +63,38 @@ try {
         sendJSON(['success' => false, 'message' => 'Appointment time is outside doctor\'s schedule'], 400);
     }
 
-    // Check slot not taken
-    $stmt = $db->prepare("SELECT id FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND appointment_time = :time AND status NOT IN ('cancelled','no_show') LIMIT 1");
+    $db->beginTransaction();
+
+    // Check slot not taken (FOR UPDATE prevents race condition)
+    $stmt = $db->prepare("SELECT id FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND appointment_time = :time AND status NOT IN ('cancelled','no_show') LIMIT 1 FOR UPDATE");
     $stmt->execute([':did' => $doctor_id, ':date' => $appointment_date, ':time' => $appointment_time]);
     if ($stmt->rowCount() > 0) {
+        $db->rollBack();
         sendJSON(['success' => false, 'message' => 'This time slot is already booked'], 409);
     }
 
     // Patient doesn't already have appointment that day
-    $stmt = $db->prepare("SELECT id FROM appointments WHERE patient_id = :pid AND appointment_date = :date AND status NOT IN ('cancelled','no_show') LIMIT 1");
+    $stmt = $db->prepare("SELECT id FROM appointments WHERE patient_id = :pid AND appointment_date = :date AND status NOT IN ('cancelled','no_show') LIMIT 1 FOR UPDATE");
     $stmt->execute([':pid' => $patient_id, ':date' => $appointment_date]);
     if ($stmt->rowCount() > 0) {
+        $db->rollBack();
         sendJSON(['success' => false, 'message' => 'You already have an appointment on this date'], 409);
     }
 
     // Check max_patients not exceeded
-    $stmt = $db->prepare("SELECT COUNT(*) as booked FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND status NOT IN ('cancelled','no_show')");
+    $stmt = $db->prepare("SELECT COUNT(*) as booked FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND status NOT IN ('cancelled','no_show') FOR UPDATE");
     $stmt->execute([':did' => $doctor_id, ':date' => $appointment_date]);
     $booked = (int) $stmt->fetch()['booked'];
     if ($booked >= $schedule['max_patients']) {
+        $db->rollBack();
         sendJSON(['success' => false, 'message' => 'Doctor has reached maximum patients for this day'], 400);
     }
 
-    $db->beginTransaction();
-
     // Generate appointment number: APT-YYYYMMDD-XXXX
     $date_part = date('Ymd', strtotime($appointment_date));
-    $stmt = $db->prepare("SELECT COUNT(*) as cnt FROM appointments WHERE appointment_date = :date");
+    $stmt = $db->prepare("SELECT COALESCE(MAX(CAST(SUBSTRING(appointment_number, -4) AS UNSIGNED)), 0) + 1 as next_num FROM appointments WHERE appointment_date = :date FOR UPDATE");
     $stmt->execute([':date' => $appointment_date]);
-    $cnt = (int) $stmt->fetch()['cnt'] + 1;
+    $cnt = (int) $stmt->fetch()['next_num'];
     $appointment_number = 'APT-' . $date_part . '-' . str_pad($cnt, 4, '0', STR_PAD_LEFT);
 
     $stmt = $db->prepare("INSERT INTO appointments (appointment_number, patient_id, doctor_id, appointment_date, appointment_time, reason_for_visit, status) VALUES (:num, :pid, :did, :date, :time, :reason, 'scheduled')");
@@ -113,22 +116,6 @@ try {
 
     logActivity($db, $userId, $_SESSION['username'] ?? '', 'patient', 'CREATE', 'Appointments', $appointment_id, "Appointment booked: $appointment_number");
 
-    // Send confirmation email
-    try {
-        require_once __DIR__ . '/../../utils/Mailer.php';
-        $mailer = new Mailer();
-        $mailer->sendAppointmentConfirmation(
-            $_SESSION['email'] ?? '',
-            $_SESSION['full_name'] ?? '',
-            $appointment_number,
-            $appointment_date,
-            $appointment_time,
-            $doctor['full_name']
-        );
-    } catch (Exception $e) {
-        error_log("Appointment email error: " . $e->getMessage());
-    }
-
     sendJSON([
         'success'            => true,
         'message'            => 'Appointment booked successfully',
@@ -141,6 +128,7 @@ try {
             'reason_for_visit'   => $reason_for_visit,
             'status'             => 'scheduled',
             'qr_image'           => $qrData['qr_image'],
+            'qr_url'             => $qrData['qr_url'],
             'token_hash'         => $qrData['token_hash'],
             'qr_expires_at'      => $qrData['expires_at']
         ]

@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard — MediTrack</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Dashboard — Internal Medicine OPD</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -403,7 +406,7 @@
             <i class="fas fa-heartbeat text-cyan-300 text-lg"></i>
         </div>
         <div>
-            <h1 class="text-[1.05rem] font-bold font-outfit text-white leading-tight tracking-wide">MediTrack</h1>
+            <h1 class="text-[1.05rem] font-bold font-outfit text-white leading-tight tracking-wide">IM-OPD</h1>
             <p class="text-[0.65rem] font-medium" style="color:rgba(103,232,249,0.75);">Admin Panel</p>
         </div>
     </div>
@@ -430,6 +433,11 @@
 
         <p class="nav-section-label">Management</p>
 
+        <button onclick="switchTab('doctors')" data-tab="doctors"
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fas fa-user-md w-4 text-center text-sm"></i>
+            <span class="text-sm">Manage Doctors</span>
+        </button>
         <button onclick="switchTab('schedule')" data-tab="schedule"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-clock w-4 text-center text-sm"></i>
@@ -522,6 +530,9 @@
                 </div>
                 <p class="section-sub ml-3">Clinic performance at a glance</p>
             </div>
+
+            <!-- Doctor availability alert -->
+            <div id="adminDoctorAlert" class="hidden"></div>
 
             <!-- Stat cards (2 cols mobile → 3 desktop) -->
             <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -697,6 +708,99 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════
+             TAB: MANAGE DOCTORS
+        ════════════════════════════════ -->
+        <div id="tab-doctors" class="tab-panel">
+
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <div class="section-eyebrow">
+                        <div class="section-eyebrow-dot" style="background:#0891B2;"></div>
+                        <h3 class="section-title">Manage Doctors</h3>
+                    </div>
+                    <p class="section-sub ml-3">Add, edit, or remove clinic doctors</p>
+                </div>
+                <button onclick="openDoctorModal()" class="btn-primary flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl whitespace-nowrap">
+                    <i class="fas fa-plus"></i> Add Doctor
+                </button>
+            </div>
+
+            <!-- Doctor cards container -->
+            <div id="doctorsContainer">
+                <div class="text-center py-16">
+                    <i class="fas fa-spinner fa-spin text-2xl" style="color:#0891B2;"></i>
+                    <p class="text-sm text-slate-400 mt-3">Loading doctors...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Doctor Add/Edit Modal ═══ -->
+        <div id="doctorModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(8,51,68,0.6);backdrop-filter:blur(6px);">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" style="box-shadow:0 25px 60px rgba(8,51,68,0.3);">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#0891B2,#0E7490);">
+                            <i class="fas fa-user-md text-white text-sm"></i>
+                        </div>
+                        <h3 id="doctorModalTitle" class="font-bold text-gray-800 text-sm font-outfit">Add New Doctor</h3>
+                    </div>
+                    <button onclick="closeDoctorModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 transition">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <form id="doctorForm" onsubmit="saveDoctorForm(event)" class="px-6 py-5 space-y-4">
+                    <input type="hidden" id="docEditId" value="">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="filter-label">Full Name <span class="text-red-400">*</span></label>
+                            <input type="text" id="docFullName" required class="filter-input w-full" placeholder="Dr. Juan Dela Cruz">
+                        </div>
+                        <div>
+                            <label class="filter-label">Email <span class="text-red-400">*</span></label>
+                            <input type="email" id="docEmail" required class="filter-input w-full" placeholder="doctor@clinic.com">
+                        </div>
+                        <div>
+                            <label class="filter-label">Password <span id="pwdRequired" class="text-red-400">*</span></label>
+                            <input type="password" id="docPassword" class="filter-input w-full" placeholder="Min 6 characters" minlength="6">
+                        </div>
+                        <div>
+                            <label class="filter-label">Specialization</label>
+                            <input type="text" id="docSpecialization" class="filter-input w-full" value="Internal Medicine" placeholder="Internal Medicine">
+                        </div>
+                        <div>
+                            <label class="filter-label">License Number</label>
+                            <input type="text" id="docLicense" class="filter-input w-full" placeholder="PRC-IM-2024-001">
+                        </div>
+                        <div>
+                            <label class="filter-label">Consultation Fee (&#8369;)</label>
+                            <input type="number" id="docFee" class="filter-input w-full" value="500" min="0" step="0.01">
+                        </div>
+                        <div>
+                            <label class="filter-label">Experience (years)</label>
+                            <input type="number" id="docExperience" class="filter-input w-full" value="0" min="0">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="filter-label">Bio</label>
+                            <textarea id="docBio" rows="2" class="filter-input w-full" placeholder="Short professional bio..." style="resize:none;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex gap-3 pt-3 border-t border-gray-100">
+                        <button type="button" onclick="closeDoctorModal()" class="flex-1 btn-ghost py-2.5 rounded-xl text-sm">Cancel</button>
+                        <button type="submit" id="docSaveBtn" class="flex-1 btn-primary py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i> <span>Save Doctor</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -895,9 +999,9 @@
         <i class="fas fa-users"></i>
         <span>Patients</span>
     </button>
-    <button class="nav-btn" data-tab="schedule" onclick="switchTab('schedule')">
-        <i class="fas fa-clock"></i>
-        <span>Schedule</span>
+    <button class="nav-btn" data-tab="doctors" onclick="switchTab('doctors')">
+        <i class="fas fa-user-md"></i>
+        <span>Doctors</span>
     </button>
     <button class="nav-btn" id="moreBtn" onclick="toggleMoreMenu()">
         <i class="fas fa-ellipsis-h"></i>
@@ -907,6 +1011,10 @@
 
 <!-- More dropdown (mobile) -->
 <div id="moreDropdown">
+    <button data-tab="schedule" onclick="switchTab('schedule');closeMoreMenu()">
+        <i class="fas fa-clock w-5" style="color:#0891b2;"></i>
+        Doctor Schedule
+    </button>
     <button data-tab="reports" onclick="switchTab('reports');closeMoreMenu()">
         <i class="fas fa-chart-bar w-5" style="color:#f97316;"></i>
         Reports
@@ -918,7 +1026,7 @@
 </div>
 
 <!-- Scripts -->
-<script src="../js/auth.js"></script>
-<script src="../js/admin-dashboard.js"></script>
+<script src="../js/auth.js?v=3.0"></script>
+<script src="../js/admin-dashboard.js?v=3.0"></script>
 </body>
 </html>

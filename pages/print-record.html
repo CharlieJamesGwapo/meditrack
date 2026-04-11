@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Record — MediTrack</title>
+    <title>Medical Record — Internal Medicine OPD</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -205,7 +205,7 @@
             <div class="flex items-center gap-2.5">
                 <i class="fas fa-heart-pulse text-xl" style="color:#0891b2;"></i>
                 <div>
-                    <span class="outfit font-bold text-gray-800 text-sm">MediTrack</span>
+                    <span class="outfit font-bold text-gray-800 text-sm">IM-OPD</span>
                     <span class="hidden sm:inline text-gray-400 text-sm ml-1.5">— Medical Record</span>
                 </div>
             </div>
@@ -218,6 +218,14 @@
                         onmouseout="this.style.background='#0891b2'">
                     <i class="fas fa-print text-sm"></i>
                     <span>Print</span>
+                </button>
+                <button onclick="savePDF()"
+                        class="flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl min-h-[40px] transition-all"
+                        style="background:#7c3aed; font-family:'DM Sans',sans-serif;"
+                        onmouseover="this.style.background='#6d28d9'"
+                        onmouseout="this.style.background='#7c3aed'">
+                    <i class="fas fa-file-pdf text-sm"></i>
+                    <span class="hidden sm:inline">Save PDF</span>
                 </button>
                 <button onclick="history.back()"
                         class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl min-h-[40px] transition-all"
@@ -266,9 +274,9 @@
                 <div>
                     <div class="flex items-center gap-2.5 mb-1">
                         <i class="fas fa-heart-pulse text-2xl" style="color:#a5f3fc;"></i>
-                        <h1 class="text-2xl font-bold tracking-wide" style="font-family:'Outfit',sans-serif;">MediTrack</h1>
+                        <h1 class="text-2xl font-bold tracking-wide" style="font-family:'Outfit',sans-serif;">IM-OPD</h1>
                     </div>
-                    <p class="text-sm" style="color:rgba(255,255,255,0.80); font-family:'DM Sans',sans-serif;">Internal Medicine Clinic</p>
+                    <p class="text-sm" style="color:rgba(255,255,255,0.80); font-family:'DM Sans',sans-serif;">Internal Medicine OPD Management System</p>
                     <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.55); font-family:'DM Sans',sans-serif;">Official Medical Record Document</p>
                 </div>
                 <!-- Right: Appointment info -->
@@ -431,7 +439,7 @@
         <!-- Document Footer -->
         <div class="section-card" style="background:#f8fafc; text-align:center; padding-top:18px; padding-bottom:22px;">
             <p class="text-xs text-gray-400 mb-1" style="font-family:'DM Sans',sans-serif;">
-                This is a computer-generated document from MediTrack Internal Medicine Clinic.
+                This is a computer-generated document from Internal Medicine OPD Management System.
             </p>
             <p class="text-xs text-gray-400" style="font-family:'DM Sans',sans-serif;">
                 Printed on: <span id="printDate" class="font-medium text-gray-500"></span>
@@ -577,7 +585,7 @@
             }));
 
             // Update browser tab title
-            document.title = `Medical Record${r.appointment_number ? ' #' + r.appointment_number : ''} — MediTrack`;
+            document.title = `Medical Record${r.appointment_number ? ' #' + r.appointment_number : ''} — Internal Medicine OPD`;
         }
 
         // ── Helpers ──
@@ -616,6 +624,14 @@
         function capitalize(s) {
             if (!s) return s;
             return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+        }
+
+        function savePDF() {
+            // Use browser's "Save as PDF" via the print dialog
+            const originalTitle = document.title;
+            document.title = 'Medical_Record_' + (document.getElementById('hdrApptNum')?.textContent || 'Record').replace(/[^a-zA-Z0-9]/g, '_');
+            window.print();
+            setTimeout(() => { document.title = originalTitle; }, 1000);
         }
     </script>
 </body>

@@ -1,7 +1,7 @@
 <?php
 /**
- * MediTrack Application Configuration
- * Internal Medicine Clinic — Single Doctor System
+ * Internal Medicine OPD Management System — Application Configuration
+ * Single Doctor System
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -20,7 +20,7 @@ if (($env['ENVIRONMENT'] ?? 'production') === 'production') {
 
 date_default_timezone_set('Asia/Manila');
 
-define('APP_NAME', 'MediTrack');
+define('APP_NAME', 'Internal Medicine OPD');
 define('APP_URL', $env['APP_URL'] ?? 'http://localhost/meditrack');
 define('APP_VERSION', '2.0.0');
 

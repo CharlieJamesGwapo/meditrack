@@ -1,6 +1,6 @@
 /**
  * admin-dashboard.js
- * MediTrack — Internal Medicine Clinic
+ * Internal Medicine OPD Management System
  * Complete admin dashboard logic
  */
 
@@ -84,6 +84,7 @@ function switchTab(tab) {
         overview:     'Admin Dashboard',
         appointments: 'Appointments',
         patients:     'Patients',
+        doctors:      'Manage Doctors',
         schedule:     'Doctor Schedule',
         reports:      'Reports',
         activity:     'Activity Logs',
@@ -99,6 +100,7 @@ function switchTab(tab) {
         case 'overview':     loadOverview();     break;
         case 'appointments': loadAppointments(); break;
         case 'patients':     loadPatients();     break;
+        case 'doctors':      loadDoctors();      break;
         case 'schedule':     loadSchedule();     break;
         case 'reports':      loadReports();      break;
         case 'activity':     loadActivityLogs(); break;
@@ -207,9 +209,86 @@ async function loadOverview() {
                 </div>
             </div>`).join('');
 
+        // Check for active doctors
+        checkDoctorAvailability();
+
     } catch (err) {
         grid.innerHTML = `<div class="col-span-2 md:col-span-3 text-center py-10 text-red-500">
             <i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</div>`;
+    }
+}
+
+async function checkDoctorAvailability() {
+    const alertBox = document.getElementById('adminDoctorAlert');
+    if (!alertBox) return;
+
+    try {
+        const data = await apiRequest('/admin/get-doctors.php');
+        if (!data || !data.success) return;
+
+        const doctors = data.doctors || [];
+        const activeDoctors = doctors.filter(d => d.status === 'active');
+        const noDoctors = doctors.length === 0;
+        const noActive = activeDoctors.length === 0 && doctors.length > 0;
+        const noSchedule = activeDoctors.length > 0 && activeDoctors.every(d => parseInt(d.active_schedule_days) === 0);
+
+        if (noDoctors) {
+            alertBox.innerHTML = `
+                <div class="rounded-xl p-4 mb-5 border border-red-200" style="background:linear-gradient(135deg,#FEF2F2,#FFF1F2);">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-red-700 text-sm" style="font-family:'Outfit',sans-serif;">No Doctors in System</p>
+                            <p class="text-xs text-red-500 mt-0.5">Patients cannot book appointments. Add a doctor to get started.</p>
+                            <button onclick="switchTab('doctors')" class="mt-2 inline-flex items-center gap-1.5 px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition">
+                                <i class="fas fa-plus"></i> Add Doctor Now
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            alertBox.classList.remove('hidden');
+        } else if (noActive) {
+            alertBox.innerHTML = `
+                <div class="rounded-xl p-4 mb-5 border border-amber-200" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user-doctor text-amber-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-amber-700 text-sm" style="font-family:'Outfit',sans-serif;">All Doctors Inactive</p>
+                            <p class="text-xs text-amber-600 mt-0.5">All ${doctors.length} doctor(s) are deactivated. Patients cannot book appointments.</p>
+                            <button onclick="switchTab('doctors')" class="mt-2 inline-flex items-center gap-1.5 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition">
+                                <i class="fas fa-user-md"></i> Manage Doctors
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            alertBox.classList.remove('hidden');
+        } else if (noSchedule) {
+            alertBox.innerHTML = `
+                <div class="rounded-xl p-4 mb-5 border border-amber-200" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-calendar-xmark text-amber-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-amber-700 text-sm" style="font-family:'Outfit',sans-serif;">No Active Schedule</p>
+                            <p class="text-xs text-amber-600 mt-0.5">Doctor(s) exist but have no active schedule days. Patients won't see any available time slots.</p>
+                            <button onclick="switchTab('schedule')" class="mt-2 inline-flex items-center gap-1.5 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition">
+                                <i class="fas fa-clock"></i> Set Schedule
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            alertBox.classList.remove('hidden');
+        } else {
+            alertBox.innerHTML = '';
+            alertBox.classList.add('hidden');
+        }
+    } catch (err) {
+        console.error('Doctor check error:', err);
     }
 }
 
@@ -337,18 +416,11 @@ async function cancelAppointment(id, apptNo) {
 
         if (!data || !data.success) throw new Error(data?.message || 'Failed to cancel appointment');
 
-        await Swal.fire({
-            title: 'Cancelled',
-            text: 'The appointment has been cancelled.',
-            icon: 'success',
-            timer: 1800,
-            showConfirmButton: false,
-        });
-
+        showToast('success', 'Cancelled', 'The appointment has been cancelled.');
         loadAppointments();
 
     } catch (err) {
-        Swal.fire('Error', err.message, 'error');
+        showError(err.message);
     }
 }
 
@@ -450,7 +522,7 @@ async function togglePatientStatus(id, name, newStatus) {
         showCancelButton: true,
         confirmButtonText: `Yes, ${action}`,
         cancelButtonText: 'Cancel',
-        confirmButtonColor: newStatus === 'inactive' ? '#ef4444' : '#0d9488',
+        confirmButtonColor: newStatus === 'inactive' ? '#ef4444' : '#0891B2',
         cancelButtonColor: '#6b7280',
         reverseButtons: true,
     });
@@ -465,18 +537,11 @@ async function togglePatientStatus(id, name, newStatus) {
 
         if (!data || !data.success) throw new Error(data?.message || 'Update failed');
 
-        await Swal.fire({
-            title: 'Updated',
-            text: `Patient status set to ${newStatus}.`,
-            icon: 'success',
-            timer: 1600,
-            showConfirmButton: false,
-        });
-
+        showToast('success', 'Updated', `Patient status set to ${newStatus}.`);
         loadPatients();
 
     } catch (err) {
-        Swal.fire('Error', err.message, 'error');
+        showError(err.message);
     }
 }
 
@@ -499,7 +564,23 @@ async function loadSchedule() {
 
     try {
         const data = await apiRequest('/admin/get-doctor-schedule.php');
-        if (!data || !data.success) throw new Error(data?.message || 'Failed to load schedule');
+        if (!data || !data.success) {
+            form.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                        <i class="fas fa-user-doctor text-2xl text-red-400"></i>
+                    </div>
+                    <p class="font-bold text-gray-700 text-lg" style="font-family:'Outfit',sans-serif;">No Active Doctor Found</p>
+                    <p class="text-sm text-gray-400 mt-1 mb-4">Add a doctor first before setting up a schedule.</p>
+                    <button onclick="switchTab('doctors')" class="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-xl transition" style="background:#0891B2;">
+                        <i class="fas fa-plus"></i> Add Doctor
+                    </button>
+                </div>`;
+            if (nameEl) nameEl.textContent = 'No Doctor';
+            if (specEl) specEl.textContent = '';
+            if (emailEl) emailEl.textContent = '';
+            return;
+        }
 
         const doc = data.doctor || {};
         if (nameEl)  nameEl.textContent  = doc.full_name || 'Doctor';
@@ -609,18 +690,11 @@ async function saveSchedule(e) {
 
         if (!data || !data.success) throw new Error(data?.message || 'Failed to save schedule');
 
-        await Swal.fire({
-            title: 'Schedule Saved',
-            text: 'Doctor schedule has been updated successfully.',
-            icon: 'success',
-            timer: 1800,
-            showConfirmButton: false,
-        });
-
+        showToast('success', 'Schedule Saved', 'Doctor schedule has been updated successfully.');
         loadSchedule();
 
     } catch (err) {
-        Swal.fire('Error', err.message, 'error');
+        showError(err.message);
     }
 }
 
@@ -968,8 +1042,335 @@ function formatDateTime(str) {
 }
 
 /* ══════════════════════════════════════════════
+   TAB: MANAGE DOCTORS — Full CRUD
+══════════════════════════════════════════════ */
+let allDoctors = [];
+
+async function loadDoctors() {
+    const container = document.getElementById('doctorsContainer');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-16"><i class="fas fa-spinner fa-spin text-2xl" style="color:#0891B2;"></i><p class="text-sm text-slate-400 mt-3">Loading doctors...</p></div>';
+
+    try {
+        const data = await apiRequest('/admin/get-doctors.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+
+        allDoctors = data.doctors || [];
+        renderDoctorsList(allDoctors);
+    } catch (err) {
+        container.innerHTML = '<div class="text-center py-16"><i class="fas fa-exclamation-triangle text-2xl text-red-400"></i><p class="text-sm text-slate-500 mt-3">Failed to load doctors</p></div>';
+        console.error(err);
+    }
+}
+
+function renderDoctorsList(doctors) {
+    const container = document.getElementById('doctorsContainer');
+    if (!container) return;
+
+    if (!doctors || doctors.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-16">
+                <div class="w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center" style="background:linear-gradient(135deg,#ECFEFF,#CFFAFE);">
+                    <i class="fas fa-user-md text-3xl" style="color:#0891B2;"></i>
+                </div>
+                <p class="font-bold text-gray-700 text-lg font-outfit">No Doctors Yet</p>
+                <p class="text-sm text-gray-400 mt-1 mb-5">Add your first doctor to get started.</p>
+                <button onclick="openDoctorModal()" class="btn-primary px-6 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add Doctor
+                </button>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' + doctors.map(doc => {
+        const isActive = doc.status === 'active';
+        const statusBadge = isActive
+            ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"><i class="fas fa-circle text-[0.4rem]"></i> Active</span>'
+            : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600"><i class="fas fa-circle text-[0.4rem]"></i> Inactive</span>';
+
+        return `
+        <div class="card p-5 hover:shadow-lg transition-shadow" style="border-left:4px solid ${isActive ? '#0891B2' : '#cbd5e1'};">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm" style="background:linear-gradient(135deg,${isActive ? '#0891B2,#0E7490' : '#94A3B8,#64748B'});">
+                        ${getInitials(doc.full_name)}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 truncate font-outfit">${escHtml(doc.full_name)}</p>
+                        <p class="text-xs text-cyan-600 font-semibold">${escHtml(doc.specialization || 'Internal Medicine')}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">${escHtml(doc.email)}</p>
+                    </div>
+                </div>
+                ${statusBadge}
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                    <p class="text-xs text-gray-400">Fee</p>
+                    <p class="font-bold text-gray-700 text-sm">&#8369;${parseFloat(doc.consultation_fee || 0).toFixed(0)}</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                    <p class="text-xs text-gray-400">Appointments</p>
+                    <p class="font-bold text-gray-700 text-sm">${doc.total_appointments || 0}</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                    <p class="text-xs text-gray-400">Schedule</p>
+                    <p class="font-bold text-gray-700 text-sm">${doc.active_schedule_days || 0} days</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-3 border-t border-gray-100">
+                <button onclick="openDoctorModal(${doc.id})" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button onclick="toggleDoctorStatus(${doc.id}, '${doc.full_name}', '${doc.status}')" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 ${isActive ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-${isActive ? 'ban' : 'check-circle'}"></i> ${isActive ? 'Deactivate' : 'Activate'}
+                </button>
+                <button onclick="deleteDoctor(${doc.id}, '${escHtml(doc.full_name)}')" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>`;
+    }).join('') + '</div>';
+}
+
+function getInitials(name) {
+    if (!name) return 'DR';
+    const parts = name.replace(/^Dr\.?\s*/i, '').trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+}
+
+// ─── Doctor Modal ────────────────────────────────────────────────────────────
+function openDoctorModal(doctorId = null) {
+    const modal = document.getElementById('doctorModal');
+    const title = document.getElementById('doctorModalTitle');
+    const form  = document.getElementById('doctorForm');
+    const pwdInput = document.getElementById('docPassword');
+    const pwdReq = document.getElementById('pwdRequired');
+
+    form.reset();
+    document.getElementById('docEditId').value = '';
+    document.getElementById('docSpecialization').value = 'Internal Medicine';
+    document.getElementById('docFee').value = '500';
+
+    if (doctorId) {
+        // Edit mode
+        title.textContent = 'Edit Doctor';
+        document.getElementById('docEditId').value = doctorId;
+        pwdInput.removeAttribute('required');
+        pwdInput.placeholder = 'Leave blank to keep current';
+        pwdReq.textContent = '';
+
+        const doc = allDoctors.find(d => d.id == doctorId);
+        if (doc) {
+            document.getElementById('docFullName').value = doc.full_name || '';
+            document.getElementById('docEmail').value = doc.email || '';
+            document.getElementById('docSpecialization').value = doc.specialization || 'Internal Medicine';
+            document.getElementById('docLicense').value = doc.license_number || '';
+            document.getElementById('docFee').value = doc.consultation_fee || '500';
+            document.getElementById('docExperience').value = doc.experience_years || '0';
+            document.getElementById('docBio').value = doc.bio || '';
+        }
+    } else {
+        // Add mode
+        title.textContent = 'Add New Doctor';
+        pwdInput.setAttribute('required', 'required');
+        pwdInput.placeholder = 'Min 6 characters';
+        pwdReq.textContent = '*';
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDoctorModal() {
+    const modal = document.getElementById('doctorModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+async function saveDoctorForm(event) {
+    event.preventDefault();
+    const editId = document.getElementById('docEditId').value;
+    const saveBtn = document.getElementById('docSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    const payload = {
+        full_name:        document.getElementById('docFullName').value.trim(),
+        email:            document.getElementById('docEmail').value.trim(),
+        specialization:   document.getElementById('docSpecialization').value.trim(),
+        license_number:   document.getElementById('docLicense').value.trim(),
+        consultation_fee: parseFloat(document.getElementById('docFee').value) || 0,
+        experience_years: parseInt(document.getElementById('docExperience').value) || 0,
+        bio:              document.getElementById('docBio').value.trim()
+    };
+
+    const pwd = document.getElementById('docPassword').value;
+    if (pwd) payload.password = pwd;
+
+    let url, successMsg;
+    if (editId) {
+        payload.doctor_id = parseInt(editId);
+        url = '/admin/update-doctor.php';
+        successMsg = 'Doctor updated successfully';
+    } else {
+        if (!pwd || pwd.length < 6) {
+            showError('Password is required (min 6 characters).');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Doctor</span>';
+            return;
+        }
+        url = '/admin/add-doctor.php';
+        successMsg = 'Doctor added successfully';
+    }
+
+    try {
+        const data = await apiRequest(url, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        if (data && data.success) {
+            closeDoctorModal();
+            showToast('success', 'Success', successMsg);
+            loadDoctors();
+            loadOverview();
+        } else {
+            showError(data?.message || 'Failed to save doctor.');
+        }
+    } catch (err) {
+        showError('An error occurred. Please try again.');
+        console.error(err);
+    }
+
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Doctor</span>';
+}
+
+async function toggleDoctorStatus(doctorId, name, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const actionText = newStatus === 'active' ? 'activate' : 'deactivate';
+
+    const result = await Swal.fire({
+        icon: 'question',
+        title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Doctor?`,
+        html: `<p class="text-gray-600">Are you sure you want to ${actionText} <strong>${escHtml(name)}</strong>?</p>`,
+        showCancelButton: true,
+        confirmButtonText: `Yes, ${actionText}`,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: newStatus === 'active' ? '#16a34a' : '#f59e0b',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const data = await apiRequest('/admin/update-doctor.php', {
+            method: 'POST',
+            body: JSON.stringify({ doctor_id: doctorId, status: newStatus })
+        });
+
+        if (data && data.success) {
+            showToast('success', 'Done', `Doctor ${actionText}d successfully.`);
+            loadDoctors();
+        } else {
+            showError(data?.message || 'Failed to update doctor status.');
+        }
+    } catch (err) {
+        showError('An error occurred. Please try again.');
+    }
+}
+
+async function deleteDoctor(doctorId, name) {
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Delete Doctor?',
+        html: `<p class="text-gray-600">Permanently delete <strong>${escHtml(name)}</strong>?</p><p class="text-sm text-red-500 mt-2">This cannot be undone. Doctors with active appointments will be deactivated instead.</p>`,
+        showCancelButton: true,
+        confirmButtonText: 'Delete Permanently',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const data = await apiRequest('/admin/delete-doctor.php', {
+            method: 'POST',
+            body: JSON.stringify({ doctor_id: doctorId, action: 'delete' })
+        });
+
+        if (data && data.success) {
+            showToast('success', 'Deleted', data.message || 'Doctor has been removed.');
+            loadDoctors();
+            loadOverview();
+        } else {
+            // If can't delete, offer deactivation
+            if (data?.message?.includes('active appointment')) {
+                const deactivate = await Swal.fire({
+                    icon: 'info',
+                    title: 'Cannot Delete',
+                    text: data.message,
+                    showCancelButton: true,
+                    confirmButtonText: 'Deactivate Instead',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#f59e0b',
+                    reverseButtons: true
+                });
+                if (deactivate.isConfirmed) {
+                    toggleDoctorStatus(doctorId, name, 'active');
+                }
+            } else {
+                showError(data?.message || 'Failed to delete doctor.');
+            }
+        }
+    } catch (err) {
+        showError('An error occurred. Please try again.');
+    }
+}
+
+// Close doctor modal on backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('doctorModal');
+    if (modal) {
+        modal.addEventListener('click', e => {
+            if (e.target === modal) closeDoctorModal();
+        });
+    }
+});
+
+/* ══════════════════════════════════════════════
    HELPERS — MISC
 ══════════════════════════════════════════════ */
+function showToast(icon, title, text = '') {
+    Swal.fire({
+        icon, title, text,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        showClass: { popup: 'animate__animated animate__slideInRight' },
+        hideClass: { popup: 'animate__animated animate__slideOutRight' }
+    });
+}
+
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops!',
+        text: message,
+        confirmButtonColor: '#0891B2'
+    });
+}
+
 function escHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)

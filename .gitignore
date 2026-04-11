@@ -1,0 +1,18 @@
+# Environment & credentials
+env.php
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# PHP composer
+vendor/
+composer.lock
+
+# Logs
+*.log
+error_log

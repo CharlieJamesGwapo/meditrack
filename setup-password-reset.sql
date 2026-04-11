@@ -1,5 +1,5 @@
 -- ============================================
--- MediTrack Password Reset System Setup
+-- Internal Medicine OPD — Password Reset System Setup
 -- Run this in phpMyAdmin to set up the database
 -- ============================================
 

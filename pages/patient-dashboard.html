@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Patient Dashboard — MediTrack</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Patient Dashboard — Internal Medicine OPD</title>
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
 
     <!-- Tailwind CSS -->
@@ -17,6 +20,9 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- QR Code Generator (client-side, no external API needed) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
     <style>
         /* ── Base Typography ─────────────────────────────── */
@@ -221,7 +227,7 @@
                 <i class="fas fa-heartbeat text-white text-lg"></i>
             </div>
             <div>
-                <span class="text-white font-heading font-bold text-lg block leading-tight" style="font-family:'Outfit',sans-serif">MediTrack</span>
+                <span class="text-white font-heading font-bold text-base block leading-tight" style="font-family:'Outfit',sans-serif">IM-OPD</span>
                 <span class="text-cyan-200 text-xs font-medium tracking-wide">Patient Portal</span>
             </div>
         </div>
@@ -293,7 +299,7 @@
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#083344,#0891B2)">
                             <i class="fas fa-heartbeat text-white text-xs"></i>
                         </div>
-                        <span class="font-bold text-gray-900 text-sm" style="font-family:'Outfit',sans-serif">MediTrack</span>
+                        <span class="font-bold text-gray-900 text-sm" style="font-family:'Outfit',sans-serif">IM-OPD</span>
                     </div>
                     <!-- Desktop greeting -->
                     <div class="hidden md:block min-w-0">
@@ -361,7 +367,7 @@
                         <h1 class="text-xl sm:text-2xl font-bold leading-tight" style="font-family:'Outfit',sans-serif">
                             Welcome back, <span id="bannerName">Patient</span>!
                         </h1>
-                        <p class="text-cyan-100 text-xs mt-1 opacity-75">MediTrack Internal Medicine Clinic</p>
+                        <p class="text-cyan-100 text-xs mt-1 opacity-75">Internal Medicine OPD Management System</p>
                     </div>
                 </div>
                 <!-- Stats row -->
@@ -388,6 +394,9 @@
                                 <p class="text-xs text-gray-400 mt-0.5">Choose a date and available time slot</p>
                             </div>
                         </div>
+
+                        <!-- No Doctor Alert (hidden by default) -->
+                        <div id="noDoctorAlert" class="hidden"></div>
 
                         <!-- Step 1: Date Picker -->
                         <div class="mb-5">
@@ -887,8 +896,9 @@
             <div id="qrImageWrapper"
                 class="inline-flex items-center justify-center p-4 mb-4 rounded-2xl border-2"
                 style="background:#FAFAFA; border-color:#E2E8F0; box-shadow:inset 0 2px 4px rgba(0,0,0,0.04)">
+                <canvas id="qrCanvas" class="rounded-xl" style="width:208px;height:208px;"></canvas>
                 <img id="qrImage" src="" alt="QR Code"
-                    class="w-52 h-52 object-contain rounded-xl" loading="lazy">
+                    class="w-52 h-52 object-contain rounded-xl hidden" loading="lazy">
             </div>
 
             <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
@@ -977,7 +987,7 @@
         }
     });
 </script>
-<script src="../js/auth.js"></script>
-<script src="../js/patient-dashboard.js"></script>
+<script src="../js/auth.js?v=3.0"></script>
+<script src="../js/patient-dashboard.js?v=3.0"></script>
 </body>
 </html>

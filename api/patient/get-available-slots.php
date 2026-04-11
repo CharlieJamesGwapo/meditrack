@@ -19,7 +19,7 @@ try {
     $db = $database->getConnection();
 
     // Get single active doctor
-    $stmt = $db->prepare("SELECT id, full_name, specialization FROM doctors WHERE status = 'active' LIMIT 1");
+    $stmt = $db->prepare("SELECT id, full_name, specialization, consultation_fee FROM doctors WHERE status = 'active' LIMIT 1");
     $stmt->execute();
     $doctor = $stmt->fetch();
     if (!$doctor) {

@@ -12,7 +12,7 @@ $dbname = $env['DB_NAME'] ?? 'stjohnba_meditrack';
 $username = $env['DB_USERNAME'] ?? 'stjohnba_meditrack';
 $password = $env['DB_PASSWORD'] ?? 'Meditrack2026';
 
-echo "<h2>MediTrack Database Setup</h2><pre>";
+echo "<h2>Internal Medicine OPD — Database Setup</h2><pre>";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
