@@ -501,6 +501,7 @@
 
             <!-- Right: admin badge + logout -->
             <div class="flex items-center gap-2.5">
+                <div id="bell-container"></div>
                 <span class="hidden sm:flex header-admin-badge">
                     <i class="fas fa-user-shield text-[0.65rem]"></i>
                     <span id="headerAdminName">Admin</span>
@@ -1028,5 +1029,21 @@
 <!-- Scripts -->
 <script src="../js/auth.js?v=3.0"></script>
 <script src="../js/admin-dashboard.js?v=3.0"></script>
+<script src="../js/notifications-bell.js?v=1.0"></script>
+<script src="../js/weekly-schedule.js?v=1.0"></script>
+<script src="../js/day-cancel.js?v=1.0"></script>
+<script>document.addEventListener('DOMContentLoaded', () => {
+  NotificationsBell.mount('#bell-container');
+  if (document.getElementById('weekly-schedule-container')) {
+    WeeklySchedule.mount('#weekly-schedule-container', {
+      role: 'admin',
+      doctorIdGetter: () => {
+        const sel = document.querySelector('#admin-weekly-doctor');
+        return sel && sel.value ? Number(sel.value) : null;
+      },
+    });
+  }
+  if (window.DayCancel) DayCancel.init({ role: 'admin' });
+});</script>
 </body>
 </html>

@@ -288,6 +288,7 @@
 
                 <!-- Right: avatar + logout -->
                 <div class="flex items-center space-x-3 flex-shrink-0">
+                    <div id="bell-container"></div>
                     <!-- Doctor avatar chip -->
                     <div class="hidden sm:flex items-center space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-3 py-2">
                         <div class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0"
@@ -968,5 +969,15 @@
 <!-- Scripts -->
 <script src="../js/auth.js?v=3.0"></script>
 <script src="../js/doctor-dashboard.js?v=3.0"></script>
+<script src="../js/notifications-bell.js?v=1.0"></script>
+<script src="../js/weekly-schedule.js?v=1.0"></script>
+<script src="../js/day-cancel.js?v=1.0"></script>
+<script>document.addEventListener('DOMContentLoaded', () => {
+  NotificationsBell.mount('#bell-container');
+  if (document.getElementById('weekly-schedule-container')) {
+    WeeklySchedule.mount('#weekly-schedule-container', { role: 'doctor' });
+  }
+  if (window.DayCancel) DayCancel.init({ role: 'doctor' });
+});</script>
 </body>
 </html>
