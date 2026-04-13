@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/QRCodeGenerator.php';
+require_once __DIR__ . '/../../utils/Mailer.php';
+require_once __DIR__ . '/../../utils/Notifier.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
@@ -115,6 +117,32 @@ try {
     $db->commit();
 
     logActivity($db, $userId, $_SESSION['username'] ?? '', 'patient', 'CREATE', 'Appointments', $appointment_id, "Appointment booked: $appointment_number");
+
+    try {
+        $stmt = $db->prepare("SELECT email FROM users WHERE id = :uid LIMIT 1");
+        $stmt->execute([':uid' => $userId]);
+        $patientEmail = $stmt->fetchColumn() ?: null;
+
+        Notifier::notify(
+            $db, $userId, 'booking_confirmed',
+            'Appointment booked',
+            "Your appointment #{$appointment_number} on {$appointment_date} at {$appointment_time} is confirmed. You can cancel up to 2 hours before your scheduled time.",
+            'patient-dashboard.html'
+        );
+
+        if ($patientEmail) {
+            (new Mailer())->sendAppointmentConfirmation(
+                $patientEmail,
+                $patient['full_name'],
+                $appointment_number,
+                $appointment_date,
+                $appointment_time,
+                $doctor['full_name']
+            );
+        }
+    } catch (Exception $e) {
+        error_log("book-appointment notify/email error: " . $e->getMessage());
+    }
 
     sendJSON([
         'success'            => true,
