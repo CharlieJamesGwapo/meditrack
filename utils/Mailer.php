@@ -118,6 +118,39 @@ class Mailer {
     }
 
     /**
+     * Send welcome email to newly registered patient
+     */
+    public function sendWelcomeEmail($to, $patientName, $username) {
+        $subject = "Welcome to IM-OPD, {$patientName}!";
+        $safeName = htmlspecialchars($patientName, ENT_QUOTES, 'UTF-8');
+        $safeUser = htmlspecialchars($username, ENT_QUOTES, 'UTF-8');
+        $body = "
+        <div style='font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;'>
+            <div style='text-align:center;padding:20px;background:linear-gradient(135deg,#0f766e,#0284c7);border-radius:12px 12px 0 0;'>
+                <h1 style='color:#fff;margin:0;font-size:24px;'>Welcome to IM-OPD</h1>
+                <p style='color:#ccfbf1;margin:5px 0 0;'>Internal Medicine OPD Management System</p>
+            </div>
+            <div style='padding:30px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;'>
+                <p style='color:#374151;font-size:16px;'>Hi <strong>{$safeName}</strong>,</p>
+                <p style='color:#374151;'>Your account has been successfully created. You can now log in and book appointments with our Internal Medicine specialist.</p>
+                <div style='background:#f0fdfa;border:1px solid #a7f3d0;border-radius:8px;padding:15px;margin:20px 0;'>
+                    <p style='margin:0;color:#0f766e;font-size:14px;'><strong>Your username:</strong> {$safeUser}</p>
+                </div>
+                <p style='color:#374151;font-size:14px;'><strong>What you can do:</strong></p>
+                <ul style='color:#6b7280;font-size:14px;padding-left:20px;'>
+                    <li>Book appointments online</li>
+                    <li>Receive a QR code for quick check-in</li>
+                    <li>View your medical records and history</li>
+                    <li>Cancel appointments up to 2 hours before your scheduled time</li>
+                </ul>
+                <p style='color:#6b7280;font-size:14px;margin-top:20px;'>If you did not create this account, please contact the clinic immediately.</p>
+            </div>
+            <p style='text-align:center;color:#9ca3af;font-size:12px;margin-top:15px;'>Internal Medicine OPD Management System</p>
+        </div>";
+        return $this->send($to, $subject, $body);
+    }
+
+    /**
      * Send patient self-cancellation confirmation
      */
     public function sendCancellationConfirmation($to, $patientName, $appointmentNumber, $date, $time) {

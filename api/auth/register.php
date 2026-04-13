@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/Mailer.php';
+require_once __DIR__ . '/../../utils/Notifier.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
@@ -84,6 +86,19 @@ try {
     $db->commit();
 
     logActivity($db, $user_id, $username, 'patient', 'CREATE', 'Auth', $user_id, "New patient registered: $full_name");
+
+    // Welcome notification + email (best-effort, non-blocking)
+    try {
+        Notifier::notify(
+            $db, (int) $user_id, 'welcome',
+            'Welcome to IM-OPD',
+            "Hi {$full_name}, your account is ready. Book your first appointment from the dashboard.",
+            'patient-dashboard.html'
+        );
+        (new Mailer())->sendWelcomeEmail($email, $full_name, $username);
+    } catch (Exception $e) {
+        error_log("register welcome email error: " . $e->getMessage());
+    }
 
     sendJSON([
         'success'    => true,

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/Notifier.php';
 require_once __DIR__ . '/../../utils/Mailer.php';
 
-const CANCEL_CUTOFF_HOURS = 2;
+$CANCEL_CUTOFF_HOURS = 2;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
@@ -52,7 +52,7 @@ try {
 
     // Cutoff enforcement: must be at least CANCEL_CUTOFF_HOURS before appointment
     $apptTs   = strtotime($appt['appointment_date'] . ' ' . $appt['appointment_time']);
-    $cutoffTs = $apptTs - (CANCEL_CUTOFF_HOURS * 3600);
+    $cutoffTs = $apptTs - ($CANCEL_CUTOFF_HOURS * 3600);
     if (time() > $cutoffTs) {
         sendJSON([
             'success' => false,
