@@ -117,6 +117,55 @@ class Mailer {
         return $this->send($to, $subject, $body);
     }
 
+    /**
+     * Send patient self-cancellation confirmation
+     */
+    public function sendCancellationConfirmation($to, $patientName, $appointmentNumber, $date, $time) {
+        $subject = "IM-OPD - Appointment Cancelled #{$appointmentNumber}";
+        $formattedDate = date('F j, Y', strtotime($date));
+        $formattedTime = date('g:i A', strtotime($time));
+        $body = "
+        <div style='font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;'>
+            <div style='text-align:center;padding:20px;background:linear-gradient(135deg,#0f766e,#0284c7);border-radius:12px 12px 0 0;'>
+                <h1 style='color:#fff;margin:0;font-size:24px;'>IM-OPD</h1>
+            </div>
+            <div style='padding:30px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;'>
+                <p style='color:#374151;'>Hi <strong>{$patientName}</strong>,</p>
+                <p style='color:#374151;'>Your appointment has been cancelled as requested.</p>
+                <table style='width:100%;margin:20px 0;border-collapse:collapse;'>
+                    <tr><td style='padding:8px;color:#6b7280;'>Appointment #</td><td style='padding:8px;font-weight:bold;color:#374151;'>{$appointmentNumber}</td></tr>
+                    <tr style='background:#f9fafb;'><td style='padding:8px;color:#6b7280;'>Date</td><td style='padding:8px;font-weight:bold;color:#374151;'>{$formattedDate}</td></tr>
+                    <tr><td style='padding:8px;color:#6b7280;'>Time</td><td style='padding:8px;font-weight:bold;color:#374151;'>{$formattedTime}</td></tr>
+                </table>
+                <p style='color:#6b7280;font-size:14px;'>You may book a new appointment anytime from your dashboard.</p>
+            </div>
+        </div>";
+        return $this->send($to, $subject, $body);
+    }
+
+    /**
+     * Send doctor day-cancelled notification
+     */
+    public function sendDayCancelled($to, $patientName, $appointmentNumber, $date, $time, $reason) {
+        $subject = "IM-OPD - Appointment Cancelled (Doctor Unavailable) #{$appointmentNumber}";
+        $formattedDate = date('F j, Y', strtotime($date));
+        $formattedTime = date('g:i A', strtotime($time));
+        $safeReason = htmlspecialchars($reason, ENT_QUOTES, 'UTF-8');
+        $body = "
+        <div style='font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;'>
+            <div style='text-align:center;padding:20px;background:linear-gradient(135deg,#b91c1c,#ea580c);border-radius:12px 12px 0 0;'>
+                <h1 style='color:#fff;margin:0;font-size:24px;'>IM-OPD</h1>
+            </div>
+            <div style='padding:30px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;'>
+                <p style='color:#374151;'>Hi <strong>{$patientName}</strong>,</p>
+                <p style='color:#374151;'>We regret to inform you that your appointment on <strong>{$formattedDate}</strong> at <strong>{$formattedTime}</strong> (#{$appointmentNumber}) has been cancelled because the doctor is unavailable.</p>
+                <p style='color:#374151;'><strong>Reason:</strong> {$safeReason}</p>
+                <p style='color:#6b7280;font-size:14px;'>Please do not come to the clinic on this date. You may rebook an appointment from your dashboard at your earliest convenience.</p>
+            </div>
+        </div>";
+        return $this->send($to, $subject, $body);
+    }
+
     private function sendCommand($socket, $command) {
         @fwrite($socket, $command . "\r\n");
         return $this->getResponse($socket);
