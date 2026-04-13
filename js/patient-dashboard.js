@@ -417,18 +417,24 @@ function renderAppointments(appointments) {
         const isScheduled = appt.status === 'scheduled' || appt.status === 'confirmed' || appt.status === 'pending';
         const isCompleted = appt.status === 'completed';
         const isCancelled = appt.status === 'cancelled';
+        const canCancel   = isScheduled && canCancelAppointment(appt);
 
         let actionBtns = '';
         if (isScheduled) {
+            const cancelCtrl = canCancel
+                ? `<button onclick="cancelAppointment(${appt.id}, '${apptNum}')"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </button>`
+                : `<span class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-500 border border-gray-200 rounded-lg text-xs italic">
+                    <i class="fas fa-lock"></i> Cancellation window closed
+                </span>`;
             actionBtns = `
                 <button onclick="showQRModal(${appt.id})"
                     class="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-lg text-xs font-semibold transition">
                     <i class="fas fa-qrcode"></i> View QR
                 </button>
-                <button onclick="cancelAppointment(${appt.id}, '${apptNum}')"
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold transition">
-                    <i class="fas fa-times-circle"></i> Cancel
-                </button>`;
+                ${cancelCtrl}`;
         } else if (isCompleted) {
             actionBtns = `
                 <button onclick="switchTab('records')"
@@ -474,6 +480,14 @@ function renderAppointments(appointments) {
             ${actionBtns ? `<div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">${actionBtns}</div>` : ''}
         </div>`;
     }).join('');
+}
+
+const CANCEL_CUTOFF_HOURS = 2;
+function canCancelAppointment(appt) {
+    if (!appt || !appt.appointment_date || !appt.appointment_time) return false;
+    const apptTs = new Date(`${appt.appointment_date}T${appt.appointment_time}`).getTime();
+    if (Number.isNaN(apptTs)) return false;
+    return Date.now() <= apptTs - CANCEL_CUTOFF_HOURS * 3600 * 1000;
 }
 
 async function cancelAppointment(appointmentId, apptNumber) {
