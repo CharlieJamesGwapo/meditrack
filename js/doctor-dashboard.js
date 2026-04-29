@@ -389,6 +389,12 @@ function openQRScanner(appointment) {
     document.getElementById('manual-token').value = '';
     document.getElementById('qr-status-text').textContent = 'Allow camera access to scan';
 
+    // Reset manual-entry fallback to hidden so each open shows camera as primary path
+    const manualBlock  = document.getElementById('manual-block');
+    const manualToggle = document.getElementById('manual-toggle');
+    if (manualBlock)  manualBlock.classList.add('hidden');
+    if (manualToggle) manualToggle.classList.remove('hidden');
+
     // Initialize scanner after a short delay to let the modal render
     setTimeout(() => initQRScanner(), 300);
 }

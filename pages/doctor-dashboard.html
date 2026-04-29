@@ -748,29 +748,37 @@
                     <span id="qr-status-text">Allow camera access to scan</span>
                 </p>
 
-                <!-- Divider -->
-                <div class="flex items-center mb-4">
-                    <div class="flex-1 border-t border-gray-100"></div>
-                    <span class="px-3 text-xs text-slate-400 font-medium bg-white">or enter manually</span>
-                    <div class="flex-1 border-t border-gray-100"></div>
-                </div>
+                <!-- Manual entry toggle (hidden by default; shown when camera unavailable) -->
+                <button type="button" id="manual-toggle"
+                    onclick="document.getElementById('manual-block').classList.remove('hidden'); this.classList.add('hidden');"
+                    class="block w-full text-center text-xs text-cyan-700 hover:text-cyan-800 underline mt-2">
+                    Camera not working? Enter code manually
+                </button>
 
-                <!-- Manual token input -->
-                <div class="flex space-x-2">
-                    <input type="text" id="manual-token"
-                        placeholder="Paste QR token here…"
-                        class="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
-                        onkeypress="if(event.key==='Enter') checkInManual()">
-                    <button onclick="checkInManual()"
-                        class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-md active:scale-95 flex items-center space-x-1.5 whitespace-nowrap"
-                        style="background:linear-gradient(135deg,#083344,#0891B2)">
-                        <i class="fas fa-sign-in-alt text-xs"></i>
-                        <span>Check In</span>
-                    </button>
+                <!-- Manual token input — camera-failure fallback -->
+                <div id="manual-block" class="hidden">
+                    <!-- Divider -->
+                    <div class="flex items-center mb-4 mt-3">
+                        <div class="flex-1 border-t border-gray-100"></div>
+                        <span class="px-3 text-xs text-slate-400 font-medium bg-white">enter code manually</span>
+                        <div class="flex-1 border-t border-gray-100"></div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="manual-token"
+                            placeholder="Type the appointment code from the QR"
+                            class="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
+                            onkeypress="if(event.key==='Enter') checkInManual()">
+                        <button onclick="checkInManual()"
+                            class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-md active:scale-95 flex items-center space-x-1.5 whitespace-nowrap"
+                            style="background:linear-gradient(135deg,#083344,#0891B2)">
+                            <i class="fas fa-sign-in-alt text-xs"></i>
+                            <span>Check In</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2.5">
+                        Use this only if the camera will not start. Ask the patient to read out their appointment code.
+                    </p>
                 </div>
-                <p class="text-xs text-slate-400 mt-2.5">
-                    Token is the part after <code class="bg-gray-100 text-slate-600 px-1.5 py-0.5 rounded-md">?token=</code> in the QR URL
-                </p>
             </div>
         </div>
     </div>
