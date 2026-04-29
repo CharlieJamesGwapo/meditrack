@@ -1,27 +1,31 @@
-# Batch B — UI Fixes (Register / Admin Sidebar / Doctor Scanner / Doctor Mobile / Landing Hero / QR Download / Dr. Prefix)
+# Batch B — UI Fixes (Register / Admin Sidebar / Doctor Scanner / Doctor Mobile / Landing Hero / QR Download / Dr. Prefix / System Rename / Visit Consultation / Manual Token UI)
 
-**Date:** 2026-04-29
+**Date:** 2026-04-29 (extended 2026-04-30)
 **Branch:** feature/batch-a-appointments-notifications (work continues here, or a new branch if preferred)
-**Scope:** Seven independent, frontend-only UI fixes reported via screenshots.
+**Scope:** Ten independent, frontend-only UI fixes — small, low-risk, no DB changes. Larger items (booking flow, medical history, doctor profile pictures, reception desk role, auth session persistence, View-Record cleanup) are split into follow-up batches C–H.
 
-## User-provided inputs
+## Resolved inputs
 
-Two values must be supplied by the user before implementation runs. These are the only blockers.
+The following values were unknown when the spec was first drafted and are now resolved.
 
-- **`<HOSPITAL_NAME>`** — the real hospital name shown in the landing hero (e.g. "St. John Bautista District Hospital"). Replaces the existing eyebrow line "INTERNAL MEDICINE OPD MANAGEMENT SYSTEM" in the hero badge, or appears as a new heading line above the system name. *Pending — user has deferred this decision; implementation must not proceed for Fix 5 without it.*
-- **`<HOSPITAL_PHOTO_PATH>`** — path to the building photo to use as the hero background. Recommended location: `assets/images/hospital.jpg`. The user must save the photo at this path (or tell the implementer the actual path) before implementation runs.
+- **Hospital name:** **Bislig District Hospital** (Bislig City, Province of Surigao del Sur, Republic of the Philippines). Used in the landing hero and any other "real-world" hospital-name placement.
+- **Hospital photo:** to be saved at `assets/images/hospital.jpg`. The user must save the photo at this path before implementation runs. The path is no longer a placeholder; the file is.
+- **System rename target:** "Internal Medicine OPD Management System" → **"Consultation OPD Management System"**. Short brand "IM-OPD" → **"OPD"** for tight UI spaces.
 
 ## Problem summary
 
-Seven small but visible issues in the current build:
+Ten small but visible issues in the current build:
 
 1. **Register page** — On laptop/desktop view the *Password* and *Confirm Password* fields look unequal because the password-strength bar makes the Password column taller than the Confirm Password column. On mobile the grid collapses to one column, so the issue is invisible there.
 2. **Admin sidebar** — The label "Doctor Schedule" should read "OPD Schedule" so it matches the clinic's terminology.
 3. **Doctor dashboard** — The QR scanner button is missing whenever the doctor has no appointments scheduled for today. The scan modal and check-in flow still work, but there is no UI entry point to open them.
 4. **Doctor dashboard mobile** — On phone, the entire left sidebar is hidden and the doctor's profile info (name, specialization, on-duty status) is not surfaced anywhere. Only a tiny brand icon and the page title are visible at the top, plus a 3-button bottom nav. The doctor can navigate but cannot see who they are logged in as.
-5. **Landing page hero** — The hero currently uses an abstract cyan/teal gradient. It should use a photo of the actual hospital as the background and display the real hospital name, so visitors recognise the place they need to go.
-6. **QR download** — When a patient downloads the appointment QR, the saved file is just the bare QR pixels with no surrounding context. The user wants the downloaded image to match what is shown on screen — appointment number, doctor name and date/time above the QR, and the "Show this QR code at the clinic" hint below — so the patient (or whoever they share it with) can identify the appointment at a glance.
+5. **Landing page hero** — The hero currently uses an abstract cyan/teal gradient. It should use a photo of the actual hospital (Bislig District Hospital) as the background and display the real hospital name, so visitors recognise the place they need to go.
+6. **QR download** — When a patient downloads the appointment QR, the saved file is just the bare QR pixels with no surrounding context. The downloaded image should match what is shown on screen — appointment number, doctor name and date/time above the QR, and the "Show this QR code at the clinic" hint below — so the patient (or whoever they share it with) can identify the appointment at a glance.
 7. **"Dr. Dr." duplicated prefix** — The QR modal's appointment line reads "Dr. Dr. Maria Santos" because the JS hardcodes a `Dr. ` prefix in front of `appt.doctor_name`, but the DB already stores the title in the name. Drop the hardcoded prefix so the title appears once.
+8. **System rename** — The product is rebranded from "Internal Medicine OPD Management System" to "Consultation OPD Management System". The "Internal Medicine" specialization is being dropped from the system name; the system is now framed as a generic outpatient consultation system. ~30 occurrences across page titles, sidebar branding, footer copyright lines, hero text, email templates, and JS file header comments need to change.
+9. **"Visit Clinic" → "Visit Consultation"** — Step three of the landing-page "How It Works" flow currently reads "Visit Clinic". Change to "Visit Consultation" to match clinic terminology.
+10. **Manual QR token field is too technical** — The doctor's QR scanner modal includes a manual fallback input labelled "Paste QR token here…" with a help line referencing `?token=` URL syntax. Clinic staff have asked "where do we find the QR token", which means the affordance reads as a primary input rather than a camera-failure fallback. Reframe the field so its purpose is obvious, and make it secondary to the camera flow.
 
 ## Architecture
 
@@ -33,9 +37,12 @@ Files touched:
 - `pages/admin-dashboard.html` — text rename only.
 - `pages/doctor-dashboard.html` — add one button in the header (Fix 3) + relax mobile-hiding on the existing avatar chip (Fix 4).
 - `js/doctor-dashboard.js` — no code changes required (existing `openQRScanner` accepts `null`; existing `performCheckIn` is appointment-agnostic).
-- `index.html` — hero CSS + hero markup (Fix 5).
+- `index.html` — hero CSS + hero markup (Fix 5); meta description and "How It Works" step text (Fix 8, Fix 9).
 - `assets/images/hospital.jpg` — new image asset (user-provided photo).
 - `js/patient-dashboard.js` — replace `downloadQR()` body with a composited canvas that renders header text + QR + footer text (Fix 6); remove the hardcoded `Dr. ` prefix on line 833 (Fix 7).
+- `pages/forgot-password.html`, `pages/login.html`, `pages/register.html`, `pages/reset-password.html`, `pages/admin-dashboard.html`, `pages/print-record.html`, `pages/patient-dashboard.html`, `pages/qr-booking.html`, `pages/qr-checkin.html` — system-name string replacements (Fix 8). `pages/doctor-dashboard.html` already in scope for Fix 3 / 4 — adds Fix 8 strings + Fix 10 manual-token UI changes.
+- `js/auth.js`, `js/patient-dashboard.js`, `js/admin-dashboard.js`, `js/doctor-dashboard.js` — file-header comment renames only (Fix 8, cosmetic; not user-visible but good hygiene).
+- `utils/Mailer.php` — verified to already say "2 hours" (Fix audit only); no change.
 
 ## Fix 1 — Register: equalize password row heights on desktop
 
@@ -239,11 +246,71 @@ This matches the convention used elsewhere in the project where the title is par
 - The DB schema and stored values are unchanged. No migration.
 - No other display location is touched in this fix; if other pages have the same doubled prefix, they will be addressed in a future batch when surfaced. The `Dr. Dr. Maria Santos` text in the doctor dashboard sidebar (sidebar-name) is a separate location — it is NOT in scope for this fix unless the user reports it. Keep this fix scoped to the QR modal info line in patient-dashboard.js only.
 
+## Fix 8 — System rename: Internal Medicine OPD → Consultation OPD
+
+### Why
+
+Clinic terminology and product framing are shifting from "Internal Medicine" specialization to a generic outpatient "Consultation" model. The current product name "Internal Medicine OPD Management System" no longer matches how staff describe the system internally.
+
+### Change
+
+Replace strings everywhere they appear in user-facing UI, page metadata, and email copy.
+
+- **Full name:** `Internal Medicine OPD Management System` → `Consultation OPD Management System`. Used in page subtitles, footer copyright lines, hero descriptions, email signatures.
+- **Page-title suffix:** `… — Internal Medicine OPD` → `… — Consultation OPD`. Used in `<title>` tags across all pages and dynamically in `print-record.html` JS.
+- **Short brand mark:** `IM-OPD` → `OPD`. Used in sidebar logo text and small chip labels.
+- **Meta description on `index.html`:** the lead phrase "Internal Medicine OPD Management System" becomes "Consultation OPD Management System".
+- **Welcome SweetAlert in `pages/register.html`:** "Welcome to IM-OPD" → "Welcome to OPD".
+- **JS file header comments** (`js/auth.js`, `js/patient-dashboard.js`, `js/admin-dashboard.js`, `js/doctor-dashboard.js`): rename for hygiene; not user-visible.
+
+The implementer should run a final repo-wide grep for `Internal Medicine OPD`, `IM-OPD`, and "Internal Medicine OPD Management" after changes are applied; the only remaining hits should be inside committed git history files (`.git/`), prior plan/spec files in `docs/superpowers/`, and SQL dumps which are not in scope.
+
+### What stays the same
+
+- "Internal Medicine" as a doctor's *specialization* (data field) — that is real medical terminology and is **not** the system name; do not replace it.
+- The folder name `meditrack`, the database name `stjohnba_meditrack`, environment variables, and the favicon — out of scope for a name-change pass.
+- Existing "Internal Medicine OPD Management System" strings in older spec/plan files in `docs/superpowers/` are historical records and stay as-is.
+
+## Fix 9 — "Visit Clinic" → "Visit Consultation"
+
+### Change
+
+Single occurrence in `index.html` line 367 (inside the "How It Works" section, third step heading). Update the heading from "Visit Clinic" to "Visit Consultation". The icon, surrounding markup, and step-number badge are unchanged.
+
+## Fix 10 — Manual QR token field reframed as a camera-failure fallback
+
+### Why
+
+In the doctor's Scan QR modal, below the live camera region, there is a text input labelled "Paste QR token here…" with a help line that explains "Token is the part after `?token=` in the QR URL". To non-technical staff this reads as "I need to find a QR token first" — which they cannot do. The field's actual purpose is to manually type the value embedded in the QR code when the camera fails or is unavailable.
+
+### Change
+
+Reframe the input so its conditional / fallback nature is obvious. Two parts:
+
+**a) Visual hierarchy.** Hide the manual input behind a small "Camera not working? Enter code manually" link/button that, when clicked, expands to reveal the input. This signals that the camera is the primary path and manual entry is for failure cases. The link sits below the camera region; clicking it adds an `expanded` state to a wrapper div (or removes a `hidden` class on the input + submit button).
+
+**b) Plain-language label and help text.** Replace:
+
+- Placeholder `Paste QR token here…` → `Type the appointment code from the QR`.
+- Help line `Token is the part after ?token= in the QR URL` → `Use this only if the camera will not start. Ask the patient to read out their appointment code.`
+
+The submit button next to the input is unchanged in behaviour (still calls `checkInManual()`); only its visibility timing changes.
+
+### What stays the same
+
+- The HTML id `manual-token` — referenced from `js/doctor-dashboard.js` `checkInManual()`. Do not rename.
+- The `checkInManual()` JS handler and its server-side check-in flow.
+- The camera flow, QR reader, modal opening/closing logic.
+
 ## Cross-cutting concerns
+
+### Audit-only items (no fix needed)
+
+- **Cancel cutoff prompt (originally reported as "you can't cancel after 5hrs").** A repo-wide grep confirms there is no "5 hours" string anywhere — every reference (JS const `CANCEL_CUTOFF_HOURS = 2`, API const, mailer template, book-appointment confirmation message) consistently says "2 hours". The user's reported "5hrs" prompt does not exist. **Verification step only**: implementer should re-run `grep -rn "5 hour\|5hrs\|5-hour"` against the repo (excluding `.git/`, `*.sql`, `meditrack.zip`) and confirm zero hits.
 
 ### Error handling
 
-All seven fixes rely on existing error paths:
+All ten fixes rely on existing error paths:
 
 - Register CSS: no runtime behaviour added; nothing to fail.
 - Admin sidebar rename: text only; no runtime behaviour changed.
@@ -252,6 +319,9 @@ All seven fixes rely on existing error paths:
 - Landing hero: background image fallback — if the photo fails to load (404, broken file), the underlying overlay gradient still renders and the hero remains usable; CSS handles this implicitly because the gradient is layered on top of the URL.
 - QR download composite: if `ctx.measureText()` or `drawImage` throws (extremely unlikely on modern browsers), fall through to the existing `img.src` fallback path that downloads the bare image. SweetAlert error message remains for the "no QR to download" case.
 - Dr. prefix: pure string concatenation change; nothing to fail.
+- System rename: pure string replacement; nothing to fail. Risk is missed strings, addressed by the post-change repo-wide grep.
+- Visit Consultation: pure string replacement; nothing to fail.
+- Manual QR token UI: the toggle uses a CSS-class-flip pattern (add/remove `hidden`); the underlying handler `checkInManual()` is unchanged, so submission works whether the input is shown by default or revealed by the toggle.
 
 ### Testing
 
@@ -264,6 +334,9 @@ Manual visual verification (no automated tests):
 - **Landing hero:** Open `index.html` on desktop. Confirm the hospital photo is visible behind the dark teal overlay; the eyebrow shows the real hospital name; the headline, sub-text, and CTAs are still legible. Resize to mobile (375px) and confirm the photo still covers the hero, no awkward cropping cuts off important elements (e.g. the building entrance), and text remains readable.
 - **QR download:** Open `pages/patient-dashboard.html` as a logged-in patient with at least one appointment. Open the QR modal, then click Download. Open the downloaded `QR-Appointment-<id>.png` in a viewer and confirm: the appointment number is shown above the QR, the doctor name + date + time line follows, the QR is the same one as on screen, and the "Show this QR code at the clinic for check-in" footer is at the bottom. Verify both desktop and mobile flows.
 - **Dr. prefix:** In the same QR modal, confirm the title line reads "Dr. Maria Santos • …" (one "Dr.", not two). Confirm the downloaded PNG (Fix 6) shows the same single-prefix line.
+- **System rename:** Open each affected page (`index.html`, all `pages/*.html`) and confirm: page title in the browser tab reads "<page> — Consultation OPD"; sidebar logo shows "OPD" not "IM-OPD"; footer copyright reads "© 2026 OPD — Consultation OPD Management System"; landing-page meta description (right-click View Source) starts with "Consultation OPD Management System". Search the repo with `grep -rn "Internal Medicine OPD\|IM-OPD"` excluding `.git/`, `*.sql`, `meditrack.zip`, and `docs/superpowers/` — zero hits expected.
+- **Visit Consultation:** Open `index.html`, scroll to "How It Works", confirm step three reads "Visit Consultation".
+- **Manual QR token UI:** Open the doctor dashboard, click Scan QR. Confirm the manual input field is **not** shown by default (only the camera region + status text). A small link or button "Camera not working? Enter code manually" sits below. Click it; the input plus submit button appear with the new placeholder text. Type a valid token, confirm check-in still works. Re-open the modal; confirm the input is hidden again.
 
 ### Out of scope
 
@@ -278,6 +351,10 @@ Manual visual verification (no automated tests):
 - No new client-side image library (no html2canvas, no dom-to-image). The composited QR download uses only the Canvas 2D API.
 - No data fix or migration for doctor names. The "Dr." prefix fix is display-only.
 - No update to the doctor dashboard sidebar's `sidebar-name` if it has the same doubled prefix. This batch handles the QR modal occurrence only.
+- No DB schema or column renames for the system rename (Fix 8) — table names, column names, and stored data keep referring to "meditrack" and any "internal_medicine" enum values.
+- No favicon, logo image, or branded asset re-design.
+- No change to the cancel cutoff hours (the prompt audit confirmed all text already says 2 hours, matching the code).
+- No introduction of doctor selection during booking, doctor profile pictures, medical-history view in the record modal, reception-desk staff role, auth-session persistence across tabs, or read-only View-Record placeholder cleanup. These are scoped to follow-up batches C–H per the brainstorming decomposition.
 
 ## Risks
 
@@ -288,3 +365,18 @@ Manual visual verification (no automated tests):
 - **Hospital name unspecified.** Fix 5 cannot proceed without `<HOSPITAL_NAME>`. Mitigation: implementation plan must block on this input and refuse to write a placeholder string into `index.html`.
 - **Composited canvas font availability.** Custom web fonts (Outfit, DM Sans) may not be loaded yet when `downloadQR()` runs, especially on first paint. Mitigation: the font stack falls back to `system-ui, sans-serif` so the text always renders. The downloaded image may use system fonts on first download — acceptable.
 - **Stripping "Dr." breaks doctors stored without a title.** If any doctor name in the DB lacks the "Dr." prefix, removing the hardcoded prefix means their name appears without a title in the QR modal. Mitigation: the user has confirmed (via the screenshot showing "Dr. Dr. …") that names are stored with the title. If a counter-example is found later, the fix is a one-line conditional `(/^Dr\.?\s/i.test(name) ? name : 'Dr. ' + name)`. Out of scope for this batch.
+- **System rename misses a string.** With ~30 occurrences across 14 files, it is easy to forget one. Mitigation: post-change repo-wide grep, captured as a verification step.
+- **System rename hits an unintended location.** Replacing "Internal Medicine" naively could overwrite legitimate uses (specialization labels, doctor profile data). Mitigation: only replace the full phrase "Internal Medicine OPD Management System" or the brand "Internal Medicine OPD" / "IM-OPD". Do **not** replace "Internal Medicine" as a standalone string; doctor specializations remain.
+
+## Deferred to follow-up batches
+
+These items came in alongside Batch B but are out of scope here. Each gets its own spec → plan → implementation cycle.
+
+- **Batch C — Booking flow.** Patients pick a doctor from the list when booking; doctor-marked unavailable days block new bookings (currently only existing bookings get notified).
+- **Batch D — Doctor: medical history continuity.** When a doctor opens a returning patient's record, show their previous diagnoses, prescriptions, and notes.
+- **Batch E — Admin: doctor profile pictures.** Upload, store, and surface a doctor profile photo in sidebar avatars and chips.
+- **Batch F — Reception Desk role.** New staff role per the hospital flow chart (Medical Records → OPD → Consultation → …). New dashboard, new permissions, lookup-by-QR flow.
+- **Batch G — Auth session persistence.** Stop forcing re-login when the user opens a new tab. Security-sensitive; needs careful design.
+- **Batch H — View-Record read-only cleanup.** Empty fields in the read-only View Record modal currently show input placeholders ("List symptoms…", "kg", "cm"). Replace with "—" or hide empty fields. Also confirm vital-sign values populate correctly when present.
+
+Recommended ordering: B (this batch) → C → H → G → D → E → F.
