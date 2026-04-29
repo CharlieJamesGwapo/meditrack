@@ -54,9 +54,11 @@
     }
     .grain > * { position: relative; z-index: 2; }
 
-    /* ── Hero gradient ── */
+    /* ── Hero background: Bislig District Hospital photo with overlay ── */
     .hero-gradient {
-      background: linear-gradient(135deg, #083344 0%, #0891B2 55%, #22D3EE 100%);
+      background:
+        linear-gradient(135deg, rgba(8,51,68,0.72) 0%, rgba(8,145,178,0.55) 55%, rgba(34,211,238,0.40) 100%),
+        url('assets/images/hospital.jpg') center/cover no-repeat;
     }
 
     /* ── Stagger fade-in animations ── */
@@ -276,8 +278,8 @@
 
       <div class="anim-0">
         <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-5 py-2 rounded-full border border-white/25 mb-7" style="background:rgba(255,255,255,0.12);font-family:'DM Sans',sans-serif;">
-          <i class="fa-solid fa-stethoscope" style="color:#22D3EE;"></i>
-          Consultation OPD Management System
+          <i class="fa-solid fa-hospital" style="color:#22D3EE;"></i>
+          Bislig District Hospital
         </span>
       </div>
 
