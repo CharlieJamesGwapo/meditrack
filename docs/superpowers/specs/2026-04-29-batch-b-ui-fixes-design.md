@@ -33,12 +33,19 @@ The widths are already equal (1fr 1fr); only the perceived height/balance is off
 
 ### Change
 
-Reserve equal vertical space below both inputs.
+Reserve equal vertical space below both inputs so the row stays steady in every state.
 
-- Add a fixed `min-height` to `.str-wrap` so the strength bar always reserves the same height whether or not it has rendered segments.
-- Add the same `min-height` to `.match-hint` so the Confirm Password column reserves matching space, even when the match hint is empty.
+Measured heights of the existing helpers:
 
-The exact value will be the rendered height of the filled strength bar (a small number of pixels — to be measured during implementation, expected to be around 12–16px including its own margin). Both selectors must end up with identical `min-height` values.
+- `.str-wrap`: `margin-top: 6px` + segment `height: 3px` = **9px** total. Always present once the strength bar renders.
+- `.match-hint`: `margin-top: 4px` + line-height ≈ **~20px** when text is shown. **0px** when empty (initial state, before the user types in Confirm Password).
+
+The imbalance therefore flips: initially the Password column is ~9px taller (strength bar present, match-hint empty); after typing into Confirm Password, the Confirm column becomes ~11px taller (match-hint text exceeds strength bar).
+
+Fix:
+
+- Set the same `min-height` on both `.str-wrap` and `.match-hint`, sized to the larger of the two (~20px — the implementer should measure the rendered match-hint line in DevTools and use that value, rounded up).
+- Add a CSS comment beside the rule noting that both selectors must stay in sync if either helper is restyled.
 
 Mobile view (single column) is unaffected because each field already lives on its own row.
 
@@ -76,12 +83,13 @@ After the rename, opening the admin dashboard and clicking the renamed sidebar i
 
 ### Change
 
-Add a permanent "Scan QR" button to the doctor dashboard header (the row that currently shows the doctor's name and primary actions). The button:
+Add a permanent "Scan QR" button to the doctor dashboard header. Placement and behaviour:
 
-- Uses the existing primary action styling (cyan/teal solid, `<i class="fas fa-qrcode"></i> Scan QR`) so it visually matches existing buttons.
-- Sits at the top of the dashboard, always visible, regardless of today's appointment list.
-- On click calls `openQRScanner(null)` directly — no JavaScript signature changes needed.
-- On mobile, the button stacks below the dashboard header rather than crowding the line, following the existing responsive pattern on this page.
+- **Location:** right-side action cluster of the existing `<header>` (around `pages/doctor-dashboard.html` line 288), inserted immediately before `#bell-container` so it sits with the other primary actions (notifications bell, avatar chip, logout).
+- **Styling:** cyan/teal solid using the same Tailwind classes as the existing per-row Scan QR button — `bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-semibold` (or the cyan equivalent if a darker accent is preferred), with `<i class="fas fa-qrcode"></i>` and the label "Scan QR".
+- **Mobile responsiveness:** label hidden below `sm` (icon-only on small screens) using `hidden sm:inline` on the text span — same pattern as the Logout button next to it.
+- **Click handler:** inline `onclick="openQRScanner(null)"`. No JavaScript signature changes; `currentAppointment = null` is the existing initial state.
+- Always visible — independent of today's appointment list.
 
 The per-appointment "Scan QR" buttons in today's list remain unchanged — they continue to provide a row-level shortcut when appointments are listed.
 
@@ -118,6 +126,6 @@ Manual visual verification (no automated tests):
 
 ## Risks
 
-- **Strength-bar height assumption.** The `min-height` value chosen for `.str-wrap` and `.match-hint` must match the actual rendered strength bar height. If the bar is later restyled with a different segment height, the rows could go uneven again. Mitigation: add a brief CSS comment beside the `min-height` rule explaining that both selectors must stay in sync.
+- **Helper-row height drift.** The shared `min-height` value for `.str-wrap` and `.match-hint` is sized to today's rendered match-hint line. If the strength bar is later thickened (more segments / taller segments) or the match-hint font-size changes, the rows could go uneven again. Mitigation: add a CSS comment beside the rule explaining that both selectors must stay in sync, and that the value must be at least as tall as the largest of the two helpers.
 - **Sidebar id coupling.** If the rename accidentally changes a tab id or data attribute, the schedule tab will fail to load. Mitigation: rename only the text content inside elements, never element ids or attributes.
 - **Header layout overflow on mobile.** Adding a button to the doctor dashboard header could crowd the line on small screens. Mitigation: use the existing responsive flex/wrap pattern already on the page; verify on a 360px viewport.
