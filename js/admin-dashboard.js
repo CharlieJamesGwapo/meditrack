@@ -85,7 +85,7 @@ function switchTab(tab) {
         appointments: 'Appointments',
         patients:     'Patients',
         doctors:      'Manage Doctors',
-        schedule:     'Doctor Schedule',
+        schedule:     'OPD Schedule',
         reports:      'Reports',
         activity:     'Activity Logs',
     };
@@ -546,7 +546,7 @@ async function togglePatientStatus(id, name, newStatus) {
 }
 
 /* ══════════════════════════════════════════════
-   DOCTOR SCHEDULE TAB
+   OPD SCHEDULE TAB
 ══════════════════════════════════════════════ */
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -690,7 +690,7 @@ async function saveSchedule(e) {
 
         if (!data || !data.success) throw new Error(data?.message || 'Failed to save schedule');
 
-        showToast('success', 'Schedule Saved', 'Doctor schedule has been updated successfully.');
+        showToast('success', 'Schedule Saved', 'OPD schedule has been updated successfully.');
         loadSchedule();
 
     } catch (err) {
