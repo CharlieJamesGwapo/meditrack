@@ -136,7 +136,9 @@
     .pw-tog:hover { color: #0891B2; }
 
     /* Strength */
-    .str-wrap { display: flex; gap: 4px; margin-top: 6px; }
+    /* Helper-row height: keep .str-wrap and .match-hint min-height in sync so the */
+    /* 2-column form-grid row stays balanced regardless of strength bar / hint state. */
+    .str-wrap { display: flex; gap: 4px; margin-top: 6px; min-height: 20px; }
     .str-seg { flex: 1; height: 3px; background: #e5e7eb; border-radius: 2px; transition: background 0.3s; }
 
     /* Gender radios */
@@ -146,7 +148,7 @@
     .radio-item label { font-size: 13px; color: #374151; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
     /* Match hint */
-    .match-hint { font-size: 12px; margin-top: 4px; font-family: 'DM Sans', sans-serif; }
+    .match-hint { font-size: 12px; margin-top: 4px; min-height: 20px; font-family: 'DM Sans', sans-serif; }
     .match-ok { color: #0891B2; }
     .match-err { color: #ef4444; }
 
