@@ -291,7 +291,7 @@ async function bookAppointment() {
             let htmlContent = `<p class="text-gray-600 mb-3">Your appointment has been confirmed!</p>
                 <div class="text-left bg-gray-50 rounded-lg p-3 text-sm space-y-1">
                     <p><span class="font-semibold">Number:</span> ${escHtml(appt.appointment_number || '')}</p>
-                    <p><span class="font-semibold">Doctor:</span> ${escHtml(appt.doctor_name ? 'Dr. ' + appt.doctor_name : 'Doctor')}</p>
+                    <p><span class="font-semibold">Doctor:</span> ${escHtml(appt.doctor_name || 'Doctor')}</p>
                     <p><span class="font-semibold">Date:</span> ${appt.appointment_date ? formatDate(appt.appointment_date) : ''}</p>
                     <p><span class="font-semibold">Time:</span> ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}</p>
                 </div>
