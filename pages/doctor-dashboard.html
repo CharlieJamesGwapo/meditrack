@@ -286,6 +286,13 @@
 
                 <!-- Right: avatar + logout -->
                 <div class="flex items-center space-x-3 flex-shrink-0">
+                    <!-- Global Scan QR — opens scanner without a specific appointment.
+                         performCheckIn() resolves the appointment from the QR token server-side. -->
+                    <button type="button" onclick="openQRScanner(null)"
+                        class="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                        <i class="fas fa-qrcode"></i>
+                        <span class="hidden sm:inline">Scan QR</span>
+                    </button>
                     <div id="bell-container"></div>
                     <!-- Doctor avatar chip -->
                     <div class="hidden sm:flex items-center space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-3 py-2">
