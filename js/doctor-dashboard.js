@@ -688,7 +688,6 @@ async function submitMedicalRecord(event) {
                 chief_complaint: chiefComplaint,
                 symptoms,
                 vital_signs: { bp, temperature: temp, heart_rate: hr, weight, height },
-                bp, temperature: temp, heart_rate: hr, weight, height,
                 diagnosis,
                 prescription,
                 lab_tests_ordered: labTests,

@@ -69,7 +69,7 @@
       list.forEach(a => {
         const chip = document.createElement('div');
         chip.className = `text-[11px] rounded px-1.5 py-1 mb-1 ${STATUS_COLORS[a.status] || 'bg-gray-100'}`;
-        chip.innerHTML = `<div class="font-semibold">${esc(a.appointment_time).slice(0,5)}</div><div>${esc(a.patient_name)}</div>`;
+        chip.innerHTML = `<div class="font-semibold">${esc(a.appointment_time || '').slice(0,5)}</div><div>${esc(a.patient_name || 'Unknown')}</div>`;
         col.appendChild(chip);
       });
       if (list.length === 0) {

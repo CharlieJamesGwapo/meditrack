@@ -24,6 +24,7 @@ try {
     if (!$user) {
         // Don't reveal whether email exists
         sendJSON(['success' => true, 'message' => 'If this email is registered, an OTP has been sent']);
+        return; // stop execution — $user is null beyond this point
     }
 
     // Delete old OTPs for this email
@@ -41,7 +42,7 @@ try {
         ':expires_at' => $expires_at
     ]);
 
-    logActivity($db, $user['id'], $user['username'], 'patient', 'UPDATE', 'Auth', $user['id'], "OTP requested for password reset");
+    logActivity($db, $user['id'], $user['username'], $user['role'] ?? 'patient', 'UPDATE', 'Auth', $user['id'], "OTP requested for password reset");
 
     sendJSON([
         'success'    => true,
