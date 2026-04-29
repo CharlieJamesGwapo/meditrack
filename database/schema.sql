@@ -63,6 +63,7 @@ CREATE TABLE doctors (
     consultation_fee DECIMAL(10,2) DEFAULT 0.00,
     experience_years INT DEFAULT 0,
     bio TEXT NULL,
+    profile_picture VARCHAR(255) NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

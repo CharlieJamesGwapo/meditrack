@@ -1088,12 +1088,16 @@ function renderDoctorsList(doctors) {
             ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"><i class="fas fa-circle text-[0.4rem]"></i> Active</span>'
             : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600"><i class="fas fa-circle text-[0.4rem]"></i> Inactive</span>';
 
+        const photoHtml = doc.profile_picture
+            ? `<img src="/meditrack/uploads/${escHtml(doc.profile_picture)}" alt="${escHtml(doc.full_name)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${getInitials(doc.full_name)}';this.parentElement.style.color='#fff';">`
+            : getInitials(doc.full_name);
+
         return `
         <div class="card p-5 hover:shadow-lg transition-shadow" style="border-left:4px solid ${isActive ? '#0891B2' : '#cbd5e1'};">
             <div class="flex items-start justify-between gap-3 mb-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm" style="background:linear-gradient(135deg,${isActive ? '#0891B2,#0E7490' : '#94A3B8,#64748B'});">
-                        ${getInitials(doc.full_name)}
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm overflow-hidden" style="background:linear-gradient(135deg,${isActive ? '#0891B2,#0E7490' : '#94A3B8,#64748B'});">
+                        ${photoHtml}
                     </div>
                     <div class="min-w-0">
                         <p class="font-bold text-gray-800 truncate font-outfit">${escHtml(doc.full_name)}</p>
@@ -1151,8 +1155,10 @@ function openDoctorModal(doctorId = null) {
 
     form.reset();
     document.getElementById('docEditId').value = '';
+    document.getElementById('docProfilePicture').value = '';
     document.getElementById('docSpecialization').value = 'Internal Medicine';
     document.getElementById('docFee').value = '500';
+    resetDocPhotoPreview();
 
     if (doctorId) {
         // Edit mode
@@ -1171,6 +1177,10 @@ function openDoctorModal(doctorId = null) {
             document.getElementById('docFee').value = doc.consultation_fee || '500';
             document.getElementById('docExperience').value = doc.experience_years || '0';
             document.getElementById('docBio').value = doc.bio || '';
+            if (doc.profile_picture) {
+                document.getElementById('docProfilePicture').value = doc.profile_picture;
+                showDocPhotoPreview('/meditrack/uploads/' + doc.profile_picture);
+            }
         }
     } else {
         // Add mode
@@ -1183,6 +1193,67 @@ function openDoctorModal(doctorId = null) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     document.body.style.overflow = 'hidden';
+}
+
+// ─── Doctor photo helpers ────────────────────────────────────────────────────
+function resetDocPhotoPreview() {
+    const preview = document.getElementById('docPhotoPreview');
+    if (preview) {
+        preview.innerHTML = '<i class="fas fa-user-md text-2xl"></i>';
+        preview.style.background = '#ECFEFF';
+    }
+    const fileInput = document.getElementById('docPhotoInput');
+    if (fileInput) fileInput.value = '';
+}
+
+function showDocPhotoPreview(src) {
+    const preview = document.getElementById('docPhotoPreview');
+    if (!preview) return;
+    preview.innerHTML = `<img src="${src}" alt="Doctor photo" style="width:100%;height:100%;object-fit:cover;">`;
+    preview.style.background = '#fff';
+}
+
+// Wire up the file input once on DOM ready (preview locally before upload)
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('docPhotoInput');
+    if (!fileInput) return;
+    fileInput.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        if (f.size > 5 * 1024 * 1024) {
+            showError('Photo too large (max 5 MB).');
+            fileInput.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = ev => showDocPhotoPreview(ev.target.result);
+        reader.readAsDataURL(f);
+    });
+});
+
+async function uploadDoctorPhoto(doctorId) {
+    const fileInput = document.getElementById('docPhotoInput');
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) return null;
+    const fd = new FormData();
+    fd.append('photo', file);
+    if (doctorId) fd.append('doctor_id', String(doctorId));
+    // apiRequest sets JSON Content-Type — for multipart, fetch directly.
+    try {
+        const res = await fetch(API_BASE + '/admin/upload-doctor-photo.php', {
+            method: 'POST',
+            credentials: 'include',
+            body: fd
+        });
+        const data = await res.json().catch(() => null);
+        if (data && data.success) return data.filename;
+        showError(data?.message || 'Photo upload failed.');
+        return null;
+    } catch (err) {
+        console.error('upload photo error', err);
+        showError('Photo upload failed (network error).');
+        return null;
+    }
 }
 
 function closeDoctorModal() {
@@ -1206,7 +1277,9 @@ async function saveDoctorForm(event) {
         license_number:   document.getElementById('docLicense').value.trim(),
         consultation_fee: parseFloat(document.getElementById('docFee').value) || 0,
         experience_years: parseInt(document.getElementById('docExperience').value) || 0,
-        bio:              document.getElementById('docBio').value.trim()
+        bio:              document.getElementById('docBio').value.trim(),
+        // Existing filename from edit mode (preserved unless a new photo is uploaded below)
+        profile_picture:  document.getElementById('docProfilePicture').value || null
     };
 
     const pwd = document.getElementById('docPassword').value;
@@ -1229,12 +1302,31 @@ async function saveDoctorForm(event) {
     }
 
     try {
+        // If editing and a new photo was picked, upload first so we can pass the new filename in the payload.
+        if (editId) {
+            const newPic = await uploadDoctorPhoto(parseInt(editId));
+            if (newPic) payload.profile_picture = newPic;
+        }
+        // Otherwise (add mode) we upload after creating the doctor so we have a doctor_id to associate.
+
         const data = await apiRequest(url, {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
         if (data && data.success) {
+            // Add mode: now that we have a doctor_id, upload the photo if one was selected.
+            if (!editId && data.doctor_id) {
+                const newPic = await uploadDoctorPhoto(parseInt(data.doctor_id));
+                if (newPic) {
+                    // Re-call update-doctor so the doctors row carries the filename even if upload-doctor-photo
+                    // already wrote it directly to the DB. Ensures consistency on retry/idempotency.
+                    await apiRequest('/admin/update-doctor.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ doctor_id: data.doctor_id, profile_picture: newPic })
+                    });
+                }
+            }
             closeDoctorModal();
             showToast('success', 'Success', successMsg);
             loadDoctors();

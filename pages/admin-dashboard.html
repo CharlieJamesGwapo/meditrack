@@ -771,6 +771,20 @@
                 <!-- Modal Body -->
                 <form id="doctorForm" onsubmit="saveDoctorForm(event)" class="px-6 py-5 space-y-4">
                     <input type="hidden" id="docEditId" value="">
+                    <!-- Hidden field — set after a successful upload-doctor-photo.php call -->
+                    <input type="hidden" id="docProfilePicture" value="">
+
+                    <!-- Profile photo picker -->
+                    <div class="flex items-center gap-4">
+                        <div id="docPhotoPreview" class="w-20 h-20 rounded-2xl bg-cyan-50 border-2 border-dashed border-cyan-200 flex items-center justify-center text-cyan-400 overflow-hidden flex-shrink-0">
+                            <i class="fas fa-user-md text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <label class="filter-label">Profile Photo</label>
+                            <input type="file" id="docPhotoInput" accept="image/jpeg,image/png,image/webp" class="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer">
+                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, or WEBP. Max 5 MB. Optional.</p>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="sm:col-span-2">

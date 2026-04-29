@@ -31,7 +31,7 @@ try {
     $db->beginTransaction();
 
     // Update doctor profile fields
-    $fields = ['full_name', 'specialization', 'license_number', 'consultation_fee', 'experience_years', 'bio', 'status'];
+    $fields = ['full_name', 'specialization', 'license_number', 'consultation_fee', 'experience_years', 'bio', 'status', 'profile_picture'];
     $sets = [];
     $params = [':did' => $doctor_id];
 
@@ -42,6 +42,9 @@ try {
                 $params[":$f"] = floatval($input[$f]);
             } elseif ($f === 'experience_years') {
                 $params[":$f"] = intval($input[$f]);
+            } elseif ($f === 'profile_picture') {
+                $val = $input[$f];
+                $params[":$f"] = $val ? basename(sanitizeInput($val)) : null;
             } else {
                 $params[":$f"] = sanitizeInput($input[$f]);
             }

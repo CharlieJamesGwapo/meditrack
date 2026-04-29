@@ -931,6 +931,7 @@ function downloadQR() {
     const apptInfoEl   = document.getElementById('qrApptInfo');
 
     // Composite path: works when the QR was rendered to <canvas>.
+    // Mirrors the on-screen card so the saved PNG matches what the patient saw on the modal.
     if (sourceCanvas && !sourceCanvas.classList.contains('hidden')) {
         try {
             const eyebrow = (apptNumberEl?.textContent || '').trim();
@@ -941,15 +942,32 @@ function downloadQR() {
             const eyebrowSize = 14;
             const titleSize   = 22;
             const footerSize  = 13;
-            const gapBeforeQR = 24;
-            const gapAfterQR  = 20;
             const qrSize      = 320;
+            const cardPad     = 18;            // padding inside the QR card around the QR
+            const cardSize    = qrSize + cardPad * 2;
             const padTop      = 36;
             const padBottom   = 36;
-            const titleSpace  = 32;
+            const titleSpace  = 32;            // space below title
+            const gapBeforeQR = 24;            // space between title and QR card
+            const gapAfterQR  = 24;            // space between QR card and footer
+
+            // Helper to draw a rounded rectangle path.
+            function roundRect(c, x, y, w, h, r) {
+                c.beginPath();
+                c.moveTo(x + r, y);
+                c.lineTo(x + w - r, y);
+                c.quadraticCurveTo(x + w, y, x + w, y + r);
+                c.lineTo(x + w, y + h - r);
+                c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                c.lineTo(x + r, y + h);
+                c.quadraticCurveTo(x, y + h, x, y + h - r);
+                c.lineTo(x, y + r);
+                c.quadraticCurveTo(x, y, x + r, y);
+                c.closePath();
+            }
 
             const H = padTop + eyebrowSize + 14 + titleSize + titleSpace
-                      + gapBeforeQR + qrSize + gapAfterQR
+                      + gapBeforeQR + cardSize + gapAfterQR
                       + footerSize + padBottom;
 
             const out = document.createElement('canvas');
@@ -963,25 +981,57 @@ function downloadQR() {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
 
-            // Eyebrow (uppercase, gray)
+            // Eyebrow (uppercase, gray) — "APPOINTMENT: APT-..."
             ctx.fillStyle = '#9CA3AF';
             ctx.font = `600 ${eyebrowSize}px 'Outfit', system-ui, sans-serif`;
             ctx.fillText(eyebrow.toUpperCase(), W / 2, padTop);
 
-            // Title (bold, dark)
+            // Title (bold, dark) — "Dr. <name> • <date> • <time>"
             ctx.fillStyle = '#1F2937';
             ctx.font = `700 ${titleSize}px 'Outfit', system-ui, sans-serif`;
             ctx.fillText(title, W / 2, padTop + eyebrowSize + 14);
 
-            // QR (drawn from existing canvas, scaled up)
-            const qrX = (W - qrSize) / 2;
-            const qrY = padTop + eyebrowSize + 14 + titleSize + titleSpace + gapBeforeQR;
+            // QR card backdrop — light grey rounded rectangle (matches the on-screen card)
+            const cardX = (W - cardSize) / 2;
+            const cardY = padTop + eyebrowSize + 14 + titleSize + titleSpace + gapBeforeQR;
+            ctx.fillStyle = '#FAFAFA';
+            roundRect(ctx, cardX, cardY, cardSize, cardSize, 16);
+            ctx.fill();
+            ctx.strokeStyle = '#E2E8F0';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // QR pixels, drawn inside the card padding
+            const qrX = cardX + cardPad;
+            const qrY = cardY + cardPad;
             ctx.drawImage(sourceCanvas, qrX, qrY, qrSize, qrSize);
 
-            // Footer (small, gray)
+            // Footer with leading info icon (matches the small blue circle on the modal)
+            ctx.font = `400 ${footerSize}px 'DM Sans', system-ui, sans-serif`;
+            const footerY = cardY + cardSize + gapAfterQR;
+            const textW   = ctx.measureText(footer).width;
+            const iconR   = 7;                                   // info circle radius
+            const iconGap = 8;                                   // gap between icon and text
+            const totalW  = iconR * 2 + iconGap + textW;
+            const iconX   = (W - totalW) / 2 + iconR;            // circle center x
+            const iconY   = footerY + footerSize / 2;            // circle center y (mid-line)
+
+            ctx.fillStyle = '#22D3EE';
+            ctx.beginPath();
+            ctx.arc(iconX, iconY, iconR, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `700 ${footerSize - 2}px 'Outfit', system-ui, sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.fillText('i', iconX, iconY + 0.5);
+            ctx.textBaseline = 'top';
+
+            // Footer text, left-aligned to the right of the icon
             ctx.fillStyle = '#6B7280';
             ctx.font = `400 ${footerSize}px 'DM Sans', system-ui, sans-serif`;
-            ctx.fillText(footer, W / 2, qrY + qrSize + gapAfterQR);
+            ctx.textAlign = 'left';
+            ctx.fillText(footer, iconX + iconR + iconGap, footerY);
 
             const link = document.createElement('a');
             link.download = `QR-Appointment-${currentQRApptId}.png`;

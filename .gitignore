@@ -6,7 +6,6 @@ env.php
 Thumbs.db
 
 # Editor files
-.vscode/
 .idea/
 
 # PHP composer
@@ -16,3 +15,5 @@ composer.lock
 # Logs
 *.log
 error_log
+config.bat
+node_modules
