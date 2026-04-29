@@ -103,6 +103,19 @@ if ($action && $pdo) {
                 $flashOk = true;
                 break;
             }
+            case 'add_doctor_pic_column': {
+                // Idempotent: add doctors.profile_picture if missing.
+                $exists = $pdo->query("SHOW COLUMNS FROM doctors LIKE 'profile_picture'")->fetch();
+                if ($exists) {
+                    $flash = 'doctors.profile_picture already exists. Nothing to do.';
+                    $flashOk = true;
+                } else {
+                    $pdo->exec("ALTER TABLE doctors ADD COLUMN profile_picture VARCHAR(255) NULL AFTER bio");
+                    $flash = 'Added column doctors.profile_picture (VARCHAR(255) NULL).';
+                    $flashOk = true;
+                }
+                break;
+            }
             case 'run_schema': {
                 $schemaFile = __DIR__ . '/database/schema.sql';
                 if (!file_exists($schemaFile)) throw new RuntimeException("schema.sql not found at $schemaFile");
@@ -310,6 +323,16 @@ function h(?string $s): string {
     </div>
   </div>
 <?php endif; ?>
+
+  <div class="card">
+    <h2>Migration · doctors.profile_picture</h2>
+    <p style="font-size:13px;color:#94a3b8;">Adds the <code>profile_picture</code> column to the <code>doctors</code> table so the admin "Add/Edit Doctor" form can save uploaded photos. Safe to run more than once.</p>
+    <form method="post">
+      <input type="hidden" name="token" value="<?= h(SETUP_TOKEN) ?>">
+      <input type="hidden" name="action" value="add_doctor_pic_column">
+      <button type="submit">Run migration</button>
+    </form>
+  </div>
 
   <div class="card">
     <h2>Create a user</h2>

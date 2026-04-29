@@ -20,6 +20,8 @@ $license_number = sanitizeInput($input['license_number'] ?? '');
 $consultation_fee = floatval($input['consultation_fee'] ?? 0);
 $experience_years = intval($input['experience_years'] ?? 0);
 $bio            = sanitizeInput($input['bio'] ?? '');
+// profile_picture is the filename returned by upload-doctor-photo.php; null if no photo was uploaded.
+$profile_picture = !empty($input['profile_picture']) ? basename(sanitizeInput($input['profile_picture'])) : null;
 
 if (empty($full_name) || empty($email) || empty($password)) {
     sendJSON(['success' => false, 'message' => 'Full name, email, and password are required'], 400);
@@ -67,7 +69,7 @@ try {
     $user_id = (int) $db->lastInsertId();
 
     // Create doctor profile
-    $stmt = $db->prepare("INSERT INTO doctors (user_id, full_name, specialization, license_number, consultation_fee, experience_years, bio, status) VALUES (:uid, :name, :spec, :license, :fee, :exp, :bio, 'active')");
+    $stmt = $db->prepare("INSERT INTO doctors (user_id, full_name, specialization, license_number, consultation_fee, experience_years, bio, profile_picture, status) VALUES (:uid, :name, :spec, :license, :fee, :exp, :bio, :pic, 'active')");
     $stmt->execute([
         ':uid'     => $user_id,
         ':name'    => $full_name,
@@ -75,7 +77,8 @@ try {
         ':license' => $license_number,
         ':fee'     => $consultation_fee,
         ':exp'     => $experience_years,
-        ':bio'     => $bio
+        ':bio'     => $bio,
+        ':pic'     => $profile_picture
     ]);
     $doctor_id = (int) $db->lastInsertId();
 
