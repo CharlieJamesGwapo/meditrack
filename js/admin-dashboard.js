@@ -1,6 +1,6 @@
 /**
  * admin-dashboard.js
- * Internal Medicine OPD Management System
+ * Consultation OPD Management System
  * Complete admin dashboard logic
  */
 

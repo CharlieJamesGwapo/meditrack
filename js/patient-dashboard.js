@@ -1,5 +1,5 @@
 /**
- * patient-dashboard.js — Internal Medicine OPD Management System
+ * patient-dashboard.js — Consultation OPD Management System
  * Patient Portal
  */
 

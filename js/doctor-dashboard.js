@@ -1,6 +1,6 @@
 /**
  * doctor-dashboard.js
- * Internal Medicine OPD Management System
+ * Consultation OPD Management System
  * Doctor Portal — fully functional dashboard with QR check-in and medical records
  */
 
