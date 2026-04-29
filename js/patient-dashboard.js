@@ -830,7 +830,7 @@ async function showQRModal(appointmentId) {
     // Populate modal header info
     setTextContent('qrApptNumber', appt ? `Appointment: ${appt.appointment_number || '#' + appointmentId}` : '');
     setTextContent('qrApptInfo', appt
-        ? `Dr. ${appt.doctor_name || ''} \u2022 ${appt.appointment_date ? formatDate(appt.appointment_date) : ''} ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}`
+        ? `${appt.doctor_name || ''} \u2022 ${appt.appointment_date ? formatDate(appt.appointment_date) : ''} ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}`
         : '');
 
     // Open modal
@@ -926,19 +926,75 @@ async function regenerateQR() {
 }
 
 function downloadQR() {
-    // Try canvas first (client-side generated)
-    const canvas = document.getElementById('qrCanvas');
-    if (canvas && !canvas.classList.contains('hidden')) {
+    const sourceCanvas = document.getElementById('qrCanvas');
+    const apptNumberEl = document.getElementById('qrApptNumber');
+    const apptInfoEl   = document.getElementById('qrApptInfo');
+
+    // Composite path: works when the QR was rendered to <canvas>.
+    if (sourceCanvas && !sourceCanvas.classList.contains('hidden')) {
         try {
+            const eyebrow = (apptNumberEl?.textContent || '').trim();
+            const title   = (apptInfoEl?.textContent || '').trim();
+            const footer  = 'Show this QR code at the clinic for check-in';
+
+            const W = 520;
+            const eyebrowSize = 14;
+            const titleSize   = 22;
+            const footerSize  = 13;
+            const gapBeforeQR = 24;
+            const gapAfterQR  = 20;
+            const qrSize      = 320;
+            const padTop      = 36;
+            const padBottom   = 36;
+            const titleSpace  = 32;
+
+            const H = padTop + eyebrowSize + 14 + titleSize + titleSpace
+                      + gapBeforeQR + qrSize + gapAfterQR
+                      + footerSize + padBottom;
+
+            const out = document.createElement('canvas');
+            out.width  = W;
+            out.height = H;
+            const ctx = out.getContext('2d');
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Eyebrow (uppercase, gray)
+            ctx.fillStyle = '#9CA3AF';
+            ctx.font = `600 ${eyebrowSize}px 'Outfit', system-ui, sans-serif`;
+            ctx.fillText(eyebrow.toUpperCase(), W / 2, padTop);
+
+            // Title (bold, dark)
+            ctx.fillStyle = '#1F2937';
+            ctx.font = `700 ${titleSize}px 'Outfit', system-ui, sans-serif`;
+            ctx.fillText(title, W / 2, padTop + eyebrowSize + 14);
+
+            // QR (drawn from existing canvas, scaled up)
+            const qrX = (W - qrSize) / 2;
+            const qrY = padTop + eyebrowSize + 14 + titleSize + titleSpace + gapBeforeQR;
+            ctx.drawImage(sourceCanvas, qrX, qrY, qrSize, qrSize);
+
+            // Footer (small, gray)
+            ctx.fillStyle = '#6B7280';
+            ctx.font = `400 ${footerSize}px 'DM Sans', system-ui, sans-serif`;
+            ctx.fillText(footer, W / 2, qrY + qrSize + gapAfterQR);
+
             const link = document.createElement('a');
             link.download = `QR-Appointment-${currentQRApptId}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = out.toDataURL('image/png');
             link.click();
             return;
-        } catch (e) { console.error('Canvas download error:', e); }
+        } catch (e) {
+            console.error('Composite QR download error:', e);
+            // fall through to img fallback below
+        }
     }
 
-    // Fallback to img element
+    // Fallback path: server-provided image, no canvas to composite.
     const img = document.getElementById('qrImage');
     if (!img || !img.src) { showError('No QR code to download.'); return; }
     const link = document.createElement('a');
