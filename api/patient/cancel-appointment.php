@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/Notifier.php';
 require_once __DIR__ . '/../../utils/Mailer.php';
+require_once __DIR__ . '/../../utils/CancelBroadcaster.php';
 
 $CANCEL_CUTOFF_HOURS = 2;
 
@@ -33,6 +34,7 @@ try {
 
     $stmt = $db->prepare("
         SELECT a.id, a.status, a.appointment_number, a.appointment_date, a.appointment_time,
+               a.doctor_id,
                u.email AS patient_email
         FROM appointments a
         JOIN patients p ON p.id = a.patient_id
@@ -75,6 +77,20 @@ try {
         "Your appointment #{$appt['appointment_number']} on {$appt['appointment_date']} has been cancelled.",
         'patient-dashboard.html'
     );
+
+    // Broadcast the freed slot to other eligible patients (best-effort; never blocks the cancel).
+    try {
+        CancelBroadcaster::broadcast($db, $appointment_id, [
+            'doctor_id'             => (int) $appt['doctor_id'],
+            'appointment_date'      => $appt['appointment_date'],
+            'appointment_time'      => $appt['appointment_time'],
+            'appointment_number'    => $appt['appointment_number'],
+            'cancelling_patient_id' => (int) $patient['id'],
+            'cancelling_user_id'    => (int) $userId,
+        ]);
+    } catch (Exception $e) {
+        error_log("cancel-appointment broadcast error: " . $e->getMessage());
+    }
 
     try {
         if (!empty($appt['patient_email'])) {

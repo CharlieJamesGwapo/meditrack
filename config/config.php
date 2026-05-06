@@ -39,6 +39,7 @@ define('MAX_FILE_SIZE', 5242880);
 define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png']);
 
 define('ITEMS_PER_PAGE', 20);
+define('CANCEL_BROADCAST_LIMIT', 20);
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');

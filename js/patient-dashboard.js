@@ -220,6 +220,7 @@ function renderSlots(slots, dateValue) {
         btn.type = 'button';
         btn.textContent = slot.display;
         btn.className = 'slot-btn px-2 py-2 rounded-lg text-sm font-medium text-center';
+        if (slot.time) btn.dataset.slotTime = slot.time;
 
         if (slot.booked) {
             btn.classList.add('booked');
@@ -239,7 +240,46 @@ function renderSlots(slots, dateValue) {
 
         grid.appendChild(btn);
     });
+
+    // Honor a pending deep-link slot (set by handleBookingDeepLink on page load)
+    if (window.__pendingBookSlot) {
+        const wantTime = window.__pendingBookSlot;
+        window.__pendingBookSlot = null;
+        const target = grid.querySelector(`button[data-slot-time="${wantTime}"]`);
+        if (target && target.classList.contains('available')) {
+            const slot = slots.find(s => s.time === wantTime);
+            if (slot) selectSlot(slot, target);
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'Slot taken',
+                text: 'That slot was just taken — pick another one below.',
+                confirmButtonColor: '#0891B2',
+                timer: 4000
+            });
+        }
+    }
 }
+
+// Apply ?book_date=&book_time= deep-link from a slot-broadcast notification.
+// Triggered once at page load — sets the date input and stashes the desired
+// time in window.__pendingBookSlot, which renderSlots() consumes after
+// the slot list arrives from the server.
+function handleBookingDeepLink() {
+    const params = new URLSearchParams(location.search);
+    const date = params.get('book_date');
+    const time = params.get('book_time');
+    if (!date) return;
+    const dateInput = document.getElementById('appointmentDate');
+    if (!dateInput) return;
+    dateInput.value = date;
+    if (time) window.__pendingBookSlot = time;
+    if (typeof onDateChange === 'function') onDateChange(date);
+    // Switch to the booking tab if the dashboard uses tabs (best-effort).
+    const bookTab = document.querySelector('[data-tab="book"], a[href="#book"]');
+    if (bookTab && typeof bookTab.click === 'function') bookTab.click();
+}
+window.addEventListener('load', handleBookingDeepLink);
 
 function selectSlot(slot, btnEl) {
     // Deselect previous
