@@ -439,6 +439,11 @@
             <i class="fas fa-user-md w-4 text-center text-sm"></i>
             <span class="text-sm">Manage Doctors</span>
         </button>
+        <button onclick="switchTab('staff')" data-tab="staff"
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fa-solid fa-user-nurse w-4 text-center text-sm"></i>
+            <span class="text-sm">Manage Staff</span>
+        </button>
         <button onclick="switchTab('schedule')" data-tab="schedule"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-clock w-4 text-center text-sm"></i>
@@ -752,6 +757,52 @@
             </div>
         </div>
 
+        <!-- ════════════════════════════════
+             TAB: MANAGE STAFF
+        ════════════════════════════════ -->
+        <div id="tab-staff" class="tab-panel">
+
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <div class="section-eyebrow">
+                        <div class="section-eyebrow-dot" style="background:#0891B2;"></div>
+                        <h3 class="section-title">Manage Staff</h3>
+                    </div>
+                    <p class="section-sub ml-3">Add, view, or deactivate clinic staff members</p>
+                </div>
+                <button id="btn-add-staff" class="btn-primary flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl whitespace-nowrap">
+                    <i class="fas fa-user-plus"></i> Add Staff
+                </button>
+            </div>
+
+            <!-- Table card -->
+            <div class="card">
+                <div class="overflow-x-auto">
+                    <table class="data-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Username</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-tbody">
+                            <tr>
+                                <td colspan="7" class="text-center py-14 text-slate-400">
+                                    <i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>
+                                    Loading staff…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ═══ Doctor Add/Edit Modal ═══ -->
         <div id="doctorModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(8,51,68,0.6);backdrop-filter:blur(6px);">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" style="box-shadow:0 25px 60px rgba(8,51,68,0.3);">
@@ -826,6 +877,58 @@
                         <button type="button" onclick="closeDoctorModal()" class="flex-1 btn-ghost py-2.5 rounded-xl text-sm">Cancel</button>
                         <button type="submit" id="docSaveBtn" class="flex-1 btn-primary py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                             <i class="fas fa-save"></i> <span>Save Doctor</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ═══ Add Staff Modal ═══ -->
+        <div id="modal-add-staff" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(8,51,68,0.6);backdrop-filter:blur(6px);">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" style="box-shadow:0 25px 60px rgba(8,51,68,0.3);">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#0891B2,#0E7490);">
+                            <i class="fa-solid fa-user-nurse text-white text-sm"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-sm font-outfit">Add Staff Member</h3>
+                    </div>
+                    <button id="btn-close-staff-modal" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 transition">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <form id="form-add-staff" class="px-6 py-5 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="filter-label">Full Name <span class="text-red-400">*</span></label>
+                            <input type="text" name="full_name" required class="filter-input w-full" placeholder="Juan Dela Cruz">
+                        </div>
+                        <div>
+                            <label class="filter-label">Email <span class="text-red-400">*</span></label>
+                            <input type="email" name="email" required class="filter-input w-full" placeholder="staff@clinic.com">
+                        </div>
+                        <div>
+                            <label class="filter-label">Username <span class="text-xs text-gray-400 normal-case">(optional, auto-generated)</span></label>
+                            <input type="text" name="username" class="filter-input w-full" placeholder="Auto-generated if blank">
+                        </div>
+                        <div>
+                            <label class="filter-label">Contact Number</label>
+                            <input type="text" name="contact_number" class="filter-input w-full" placeholder="09xxxxxxxxx">
+                        </div>
+                        <div>
+                            <label class="filter-label">Password <span class="text-red-400">*</span></label>
+                            <input type="password" name="password" minlength="6" required class="filter-input w-full" placeholder="Min 6 characters">
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex gap-3 pt-3 border-t border-gray-100">
+                        <button type="button" id="btn-cancel-staff-modal" class="flex-1 btn-ghost py-2.5 rounded-xl text-sm">Cancel</button>
+                        <button type="submit" class="flex-1 btn-primary py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-user-plus"></i> <span>Add Staff</span>
                         </button>
                     </div>
                 </form>

@@ -85,6 +85,7 @@ function switchTab(tab) {
         appointments: 'Appointments',
         patients:     'Patients',
         doctors:      'Manage Doctors',
+        staff:        'Manage Staff',
         schedule:     'OPD Schedule',
         reports:      'Reports',
         activity:     'Activity Logs',
@@ -101,6 +102,7 @@ function switchTab(tab) {
         case 'appointments': loadAppointments(); break;
         case 'patients':     loadPatients();     break;
         case 'doctors':      loadDoctors();      break;
+        case 'staff':        loadStaff();        break;
         case 'schedule':     loadSchedule();     break;
         case 'reports':      loadReports();      break;
         case 'activity':     loadActivityLogs(); break;
@@ -1434,6 +1436,113 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modal) {
         modal.addEventListener('click', e => {
             if (e.target === modal) closeDoctorModal();
+        });
+    }
+});
+
+/* ══════════════════════════════════════════════
+   TAB: MANAGE STAFF
+══════════════════════════════════════════════ */
+async function loadStaff() {
+    const tbody = document.getElementById('staff-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-14 text-slate-400"><i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>Loading staff…</td></tr>';
+    try {
+        const data = await apiRequest('/admin/get-staff.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load staff');
+        if (!data.staff || !data.staff.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#888">No staff yet — add one to start.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.staff.map(s => `
+            <tr>
+                <td>${escHtml(s.full_name)}</td>
+                <td>${escHtml(s.email)}</td>
+                <td>${escHtml(s.username)}</td>
+                <td>${escHtml(s.contact_number || '—')}</td>
+                <td>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${s.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}">
+                        <i class="fas fa-circle text-[0.4rem]"></i> ${escHtml(s.status)}
+                    </span>
+                </td>
+                <td>${s.last_login ? new Date(s.last_login).toLocaleString() : '—'}</td>
+                <td>
+                    <button class="flex items-center justify-center gap-1 px-3 py-1.5 ${s.status === 'active' ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'} rounded-lg text-xs font-semibold transition"
+                            data-toggle-staff="${s.user_id}" data-current="${s.status}">
+                        ${s.status === 'active' ? '<i class="fas fa-ban"></i> Deactivate' : '<i class="fas fa-check-circle"></i> Activate'}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        tbody.querySelectorAll('[data-toggle-staff]').forEach(btn =>
+            btn.addEventListener('click', () => toggleStaffStatus(+btn.dataset.toggleStaff, btn.dataset.current))
+        );
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8" style="color:#c00"><i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</td></tr>`;
+        console.error(err);
+    }
+}
+
+async function toggleStaffStatus(user_id, current) {
+    const next = current === 'active' ? 'inactive' : 'active';
+    try {
+        const data = await apiRequest('/admin/update-staff-status.php', {
+            method: 'POST',
+            body: JSON.stringify({ user_id, status: next })
+        });
+        if (data && data.success) {
+            loadStaff();
+        } else {
+            Swal.fire('Error', data?.message || 'Failed to update status.', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+    }
+}
+
+// Wire up Staff modal open/close and form submit after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    const staffModal       = document.getElementById('modal-add-staff');
+    const btnAddStaff      = document.getElementById('btn-add-staff');
+    const btnCloseStaff    = document.getElementById('btn-close-staff-modal');
+    const btnCancelStaff   = document.getElementById('btn-cancel-staff-modal');
+    const formAddStaff     = document.getElementById('form-add-staff');
+
+    function openStaffModal()  { if (staffModal) staffModal.classList.remove('hidden'); }
+    function closeStaffModal() { if (staffModal) staffModal.classList.add('hidden'); }
+
+    if (btnAddStaff)    btnAddStaff.addEventListener('click', openStaffModal);
+    if (btnCloseStaff)  btnCloseStaff.addEventListener('click', closeStaffModal);
+    if (btnCancelStaff) btnCancelStaff.addEventListener('click', closeStaffModal);
+
+    // Close on backdrop click
+    if (staffModal) {
+        staffModal.addEventListener('click', e => {
+            if (e.target === staffModal) closeStaffModal();
+        });
+    }
+
+    if (formAddStaff) {
+        formAddStaff.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const fd = new FormData(ev.target);
+            const body = Object.fromEntries(fd.entries());
+            try {
+                const data = await apiRequest('/admin/add-staff.php', {
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                });
+                if (!data || !data.success) {
+                    Swal.fire('Error', data?.message || 'Failed to add staff.', 'error');
+                    return;
+                }
+                closeStaffModal();
+                ev.target.reset();
+                Swal.fire('Added', `Staff member created (username: ${escHtml(data.username)}).`, 'success');
+                loadStaff();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
         });
     }
 });
