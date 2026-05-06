@@ -21,6 +21,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- html5-qrcode (camera scanner) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <style>
         /* ── Typography ─────────────────────────────── */
         * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
@@ -28,6 +31,12 @@
 
         /* ── Base ───────────────────────────────────── */
         body { background: #F0FDFA; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+        /* ── QR Scanner ─────────────────────────────── */
+        #qr-reader video { width: 100% !important; border-radius: 10px; }
+        #qr-reader__dashboard_section_swaplink { display: none !important; }
+        .scan-success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+        .scan-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
 
         /* ── Sidebar ────────────────────────────────── */
         .sidebar {
@@ -261,16 +270,24 @@
                  TAB: SCAN QR
             ═══════════════════════════════ -->
             <div id="tab-scan" class="tab-content active">
-                <!-- Task 7 fills this -->
                 <div class="flex items-center space-x-2.5 mb-5">
                     <div class="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center shadow-sm">
                         <i class="fa-solid fa-qrcode text-white text-xs"></i>
                     </div>
-                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Scan QR</h3>
+                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Scan Patient QR</h3>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-slate-400">
-                    <i class="fa-solid fa-qrcode text-4xl text-cyan-200 mb-3"></i>
-                    <p class="text-sm font-medium">QR scanner coming in Task 7.</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <p class="text-sm text-slate-500 mb-4">Point the camera at the patient's QR code to check them in. They will move into the Vitals Queue.</p>
+                    <div id="qr-status-text" class="text-xs text-slate-400 mb-3 text-center">Initializing camera…</div>
+                    <div id="qr-reader" class="rounded-xl overflow-hidden bg-slate-50 max-w-md mx-auto"></div>
+                    <details class="mt-4 max-w-md mx-auto">
+                        <summary class="cursor-pointer text-xs text-cyan-600 hover:text-cyan-800 font-semibold">Camera not working? Enter token manually.</summary>
+                        <div class="mt-3 flex gap-2">
+                            <input type="text" id="manual-token" placeholder="Token hash" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                            <button id="manual-submit" class="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold hover:bg-cyan-700">Check in</button>
+                        </div>
+                    </details>
+                    <div id="scan-result" class="hidden mt-4 max-w-md mx-auto p-3 rounded-lg text-sm font-medium"></div>
                 </div>
             </div>
 
@@ -417,6 +434,97 @@ function escapeHtml(s) {
 }
 window.escapeHtml = escapeHtml;
 window.switchTab  = switchTab;
+
+// ─── QR Scanner ────────────────────────────────────────────────
+let staffScanner = null;
+let staffScannerRunning = false;
+
+async function startStaffScanner() {
+    if (staffScannerRunning) return;
+    const statusEl = document.getElementById('qr-status-text');
+    try {
+        if (!staffScanner) staffScanner = new Html5Qrcode('qr-reader');
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras || cameras.length === 0) {
+            if (statusEl) statusEl.textContent = 'No camera detected — use manual input below.';
+            return;
+        }
+        const camera = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[0];
+        await staffScanner.start(
+            camera.id,
+            { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+            onStaffScanSuccess,
+            () => {}
+        );
+        staffScannerRunning = true;
+        if (statusEl) statusEl.textContent = 'Camera active — point at patient QR code.';
+    } catch (err) {
+        console.error('Staff scanner error', err);
+        if (statusEl) statusEl.textContent = 'Camera unavailable — use manual input below.';
+    }
+}
+
+async function stopStaffScanner() {
+    if (staffScanner && staffScannerRunning) {
+        try { await staffScanner.stop(); } catch (_) {}
+        try { staffScanner.clear(); } catch (_) {}
+        staffScannerRunning = false;
+    }
+}
+
+async function onStaffScanSuccess(decodedText) {
+    let tokenHash = decodedText.trim();
+    try {
+        const url = new URL(tokenHash);
+        const tokenParam = url.searchParams.get('token');
+        if (tokenParam) tokenHash = tokenParam;
+    } catch (_) { /* not a URL — use as-is */ }
+    if (!tokenHash) return;
+    await stopStaffScanner();
+    await checkInToken(tokenHash);
+    setTimeout(startStaffScanner, 2500);
+}
+
+async function checkInToken(tokenHash) {
+    const result = document.getElementById('scan-result');
+    result.className = 'mt-4 max-w-md mx-auto p-3 rounded-lg text-sm font-medium';
+    result.classList.remove('hidden');
+    result.textContent = 'Checking in…';
+    try {
+        const data = await apiRequest('/appointments/checkin.php', {
+            method: 'POST',
+            body: JSON.stringify({ token_hash: tokenHash })
+        });
+        if (!data || !data.success) {
+            result.classList.add('scan-error');
+            result.textContent = '✗ ' + (data?.message || 'Check-in failed');
+            return;
+        }
+        const a = data.appointment || {};
+        result.classList.add('scan-success');
+        result.innerHTML = `✓ Checked in: <strong>${escapeHtml(a.patient_name || '—')}</strong> · ${a.appointment_time || ''} · #${escapeHtml(a.appointment_number || '')}`;
+    } catch (e) {
+        result.classList.add('scan-error');
+        result.textContent = '✗ Network error: ' + e.message;
+    }
+}
+
+document.getElementById('manual-submit').addEventListener('click', async () => {
+    const t = document.getElementById('manual-token').value.trim();
+    if (!t) return;
+    await stopStaffScanner();
+    await checkInToken(t);
+});
+
+// Wrap switchTab to manage scanner lifecycle on tab changes
+const __originalSwitchTab = switchTab;
+window.switchTab = function (tab) {
+    if (tab !== 'scan') stopStaffScanner();
+    __originalSwitchTab(tab);
+    if (tab === 'scan') setTimeout(startStaffScanner, 300);
+};
+
+window.addEventListener('load', () => setTimeout(startStaffScanner, 300));
 </script>
 </body>
 </html>
