@@ -2,26 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Medical Certificate</title>
+  <title>Medical Certificate — Bislig District Hospital</title>
   <link rel="icon" type="image/png" href="../assets/images/medicare.png">
   <style>
-    @page { size: A4; margin: 18mm; }
-    body { font-family: 'Times New Roman', serif; color:#111; max-width: 720px; margin:0 auto; padding:24px; }
-    .letterhead { display:flex; align-items:center; gap:16px; border-bottom:2px solid #0f172a; padding-bottom:12px; }
-    .letterhead img { width:64px; height:64px; }
-    .letterhead h1 { margin:0; font-size:20px; }
-    .letterhead p { margin:2px 0; font-size:12px; color:#475569; }
-    h2.title { text-align:center; letter-spacing:2px; margin:32px 0 24px; }
-    .body p { line-height:1.7; margin:8px 0; text-align:justify; }
-    .signatures { display:grid; grid-template-columns:1fr 1fr; gap:48px; margin-top:64px; }
-    .sig { text-align:center; }
-    .sig-line { border-top:1px solid #111; margin-top:48px; padding-top:4px; font-size:13px; font-weight:bold; }
-    .sig-role { font-size:11px; color:#64748b; }
-    .meta { margin-top:24px; font-size:11px; color:#64748b; }
-    .actions { text-align:center; margin:24px 0; }
-    .actions button { padding:8px 16px; border:1px solid #0f172a; background:#0f172a; color:#fff; border-radius:6px; cursor:pointer; font-family: inherit; }
-    .actions button.secondary { background:#fff; color:#0f172a; margin-left:8px; }
-    @media print { .actions { display:none; } body { padding:0; } }
+    @page { size: A4; margin: 16mm 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      color: #000;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 24px 32px;
+    }
+
+    /* ── Letterhead ──────────────────────────── */
+    .letterhead {
+      display: grid;
+      grid-template-columns: 80px 1fr 80px;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid #000;
+    }
+    .letterhead img { width: 76px; height: 76px; object-fit: contain; }
+    .letterhead .center { text-align: center; }
+    .letterhead .center .small { font-size: 13px; line-height: 1.2; }
+    .letterhead .center .big {
+      font-size: 22px; font-weight: bold; letter-spacing: 0.5px; margin-top: 2px;
+    }
+    .letterhead .center .city { font-size: 13px; margin-top: 2px; }
+
+    /* ── Top metadata (right side) ──────────── */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      align-items: end;
+      margin: 28px 0 8px;
+    }
+    .meta-grid .spacer { }
+    .meta-grid table { width: 100%; font-size: 13px; }
+    .meta-grid td.label { font-weight: bold; padding: 4px 0; width: 110px; }
+    .meta-grid td.val   { padding: 4px 0; border-bottom: 1px solid #000; }
+
+    /* ── Title ──────────────────────────────── */
+    h1.title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 28px 0 22px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Body fields ────────────────────────── */
+    .body { font-size: 14px; line-height: 1.8; }
+    .body p { margin: 0 0 14px; }
+    .field {
+      display: inline-block;
+      border-bottom: 1px solid #000;
+      min-width: 80px;
+      padding: 0 6px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .field.wide { min-width: 240px; }
+    .field.short { min-width: 110px; }
+    .caption {
+      display: block;
+      text-align: center;
+      font-size: 11px;
+      font-style: italic;
+      color: #333;
+      margin-top: 1px;
+    }
+    .triple-name { display: inline-grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; min-width: 480px; vertical-align: bottom; }
+    .triple-name .field { min-width: 0; width: 100%; }
+
+    /* ── Signatures ─────────────────────────── */
+    .signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .sig { text-align: center; font-size: 13px; }
+    .sig .name { font-weight: bold; text-transform: uppercase; padding-top: 24px; border-top: 1px solid #000; }
+    .sig .role { font-size: 12px; }
+    .sig .lic  { font-size: 12px; color: #333; }
+    .sig.empty .name { color: #888; font-style: italic; }
+
+    /* ── Footer ─────────────────────────────── */
+    .footer-note {
+      margin-top: 36px;
+      font-size: 11px;
+      letter-spacing: 1px;
+      font-style: italic;
+    }
+    .meta-line { margin-top: 18px; font-size: 10px; color: #555; text-align: right; }
+
+    /* ── Action buttons (hide when printing) ── */
+    .actions { text-align: center; margin: 12px 0 24px; }
+    .actions button {
+      padding: 8px 16px; border: 1px solid #0f172a; background: #0f172a;
+      color: #fff; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px;
+    }
+    .actions button.secondary { background: #fff; color: #0f172a; margin-left: 8px; }
+    @media print {
+      .actions { display: none; }
+      body { padding: 0; max-width: none; }
+    }
   </style>
 </head>
 <body>
@@ -30,75 +119,137 @@
     <button class="secondary" onclick="history.back()">Back</button>
   </div>
 
+  <!-- Letterhead -->
   <div class="letterhead">
-    <img src="../assets/images/medicare.png" alt="Clinic logo" onerror="this.style.display='none'">
-    <div>
-      <h1>Internal Medicine OPD</h1>
-      <p>Consultation Clinic &middot; Medical Certificate</p>
+    <img src="../assets/images/medical_certifcate_logo.jpg" alt="Bislig District Hospital seal" onerror="this.style.visibility='hidden'">
+    <div class="center">
+      <div class="small">Republic of the Philippines</div>
+      <div class="small">Province of Surigao del Sur</div>
+      <div class="big">BISLIG DISTRICT HOSPITAL</div>
+      <div class="city">Bislig City</div>
     </div>
+    <img src="../assets/images/medicare.png" alt="Clinic logo" onerror="this.style.visibility='hidden'">
   </div>
 
-  <h2 class="title">MEDICAL CERTIFICATE</h2>
+  <!-- Top metadata -->
+  <div class="meta-grid">
+    <div class="spacer"></div>
+    <table>
+      <tr><td class="label">DATE</td><td class="val" id="cert-date">—</td></tr>
+      <tr><td class="label">HOSPITAL NO.</td><td class="val" id="cert-hospitalno">—</td></tr>
+      <tr><td class="label">CASE NO.</td><td class="val" id="cert-caseno">—</td></tr>
+    </table>
+  </div>
 
-  <div class="body" id="cert-body">Loading…</div>
+  <h1 class="title">MEDICAL CERTIFICATE FOR TREATMENT/CONFINEMENT</h1>
 
-  <p class="meta" id="cert-meta"></p>
+  <div class="body" id="cert-body">
+    <p>Loading…</p>
+  </div>
+
+  <p class="footer-note">(VALID WITHOUT SEAL)</p>
+  <p class="meta-line" id="cert-meta"></p>
 
   <script src="../js/auth.js?v=3.0"></script>
   <script>
-    function escHtml(s) {
-      const d = document.createElement('div');
-      d.textContent = s ?? '';
-      return d.innerHTML;
-    }
-    function ageFromDob(dob) {
-      if (!dob) return '';
-      const d = new Date(dob), now = new Date();
-      let a = now.getFullYear() - d.getFullYear();
-      if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) a--;
-      return a;
-    }
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
     function fmtDate(s) {
       if (!s) return '';
-      try { return new Date(s).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
-      catch (_) { return s; }
+      try {
+        return new Date(s).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch (_) { return s; }
+    }
+
+    function splitName(full) {
+      const parts = String(full || '').trim().split(/\s+/);
+      if (parts.length === 0) return ['', '', ''];
+      if (parts.length === 1) return [parts[0], '', ''];
+      if (parts.length === 2) return [parts[0], '', parts[1]];
+      return [parts[0], parts.slice(1, -1).join(' '), parts[parts.length - 1]];
     }
 
     (async function () {
       const params = new URLSearchParams(location.search);
       const aid = params.get('appointment_id');
       const body = document.getElementById('cert-body');
-      if (!aid) { body.textContent = 'Missing appointment_id.'; return; }
+      if (!aid) { body.innerHTML = '<p>Missing appointment_id.</p>'; return; }
+
       try {
         const data = await apiRequest('/staff/certificate.php?appointment_id=' + encodeURIComponent(aid));
         if (!data || !data.success) {
-          body.textContent = data?.message || 'Certificate not found.';
+          body.innerHTML = `<p>${escHtml(data?.message || 'Certificate not found.')}</p>`;
           return;
         }
         const c = data.certificate;
-        const age = ageFromDob(c.date_of_birth);
-        const issuer = c.issued_by_full_name || c.issued_by_username;
+        const [first, middle, last] = splitName(c.patient_name);
+        const issuer = c.issued_by_full_name || c.issued_by_username || '';
+        const requestedBy = c.requested_by || c.patient_name || '';
+
+        // Top-right metadata
+        document.getElementById('cert-date').textContent       = fmtDate(c.issued_at);
+        document.getElementById('cert-hospitalno').textContent = c.id ? 'BDH-' + String(c.id).padStart(6, '0') : '—';
+        document.getElementById('cert-caseno').textContent     = c.appointment_number || '—';
+
         body.innerHTML = `
-          <p>To Whom It May Concern,</p>
-          <p>This is to certify that <strong>${escHtml(c.patient_name)}</strong>${age ? `, ${age} years old` : ''}${c.gender ? `, ${escHtml(c.gender)}` : ''}, was examined and diagnosed with <strong>${escHtml(c.diagnosis)}</strong> on ${fmtDate(c.appointment_date)}.</p>
-          <p>The patient is advised to rest from <strong>${fmtDate(c.rest_period_start)}</strong> to <strong>${fmtDate(c.rest_period_end)}</strong>, a total of <strong>${c.rest_days}</strong> day(s).</p>
-          ${c.notes ? `<p>${escHtml(c.notes)}</p>` : ''}
-          <p>Issued upon the request of the patient for whatever legal purpose it may serve.</p>
+          <p><strong>TO WHOM IT MAY CONCERN:</strong></p>
+
+          <p>
+            THIS IS TO CERTIFY that
+            <span class="triple-name">
+              <span><span class="field">${escHtml(first)}</span><span class="caption">First Name</span></span>
+              <span><span class="field">${escHtml(middle)}</span><span class="caption">Middle Name</span></span>
+              <span><span class="field">${escHtml(last)}</span><span class="caption">Last Name</span></span>
+            </span>
+            was examined/treated
+          </p>
+
+          <p>
+            in this hospital
+            <span class="field wide">${escHtml(c.diagnosis)}</span>
+            <span class="caption">(Diagnosis)</span>
+          </p>
+
+          <p>
+            On / From
+            <span class="field short">${fmtDate(c.rest_period_start)}</span>
+            to
+            <span class="field short">${fmtDate(c.rest_period_end)}</span>
+            &nbsp; <em>(${escHtml(String(c.rest_days))} day${c.rest_days == 1 ? '' : 's'})</em>
+          </p>
+
+          <p>
+            This certification is being issued upon the request of
+            <span class="field wide">${escHtml(requestedBy)}</span>
+            <span class="caption">(Name of Person Requesting)</span>
+          </p>
+
+          ${c.notes ? `<p><em>${escHtml(c.notes)}</em></p>` : ''}
+
+          <p>For whatever legal purpose this may serve him/her/best.</p>
+        `;
+
+        // Signatures
+        const signaturesHtml = `
           <div class="signatures">
             <div class="sig">
-              <div class="sig-line">${escHtml(c.doctor_name)}, M.D.</div>
-              <div class="sig-role">License: ${escHtml(c.license_number || '—')}</div>
+              <div class="name">${escHtml(c.doctor_name || '—')}</div>
+              <div class="role">${escHtml(c.specialization || 'Internal Medicine')}</div>
+              <div class="lic">License No. ${escHtml(c.license_number || '—')}</div>
             </div>
-            <div class="sig">
-              <div class="sig-line">${escHtml(issuer)}</div>
-              <div class="sig-role">Issuing Staff</div>
+            <div class="sig empty">
+              <div class="name">${escHtml(issuer || '— Co-signing Physician —')}</div>
+              <div class="role">Issuing Staff / Co-signatory</div>
+              <div class="lic">&nbsp;</div>
             </div>
           </div>
         `;
+        body.insertAdjacentHTML('beforeend', signaturesHtml);
+
         document.getElementById('cert-meta').textContent =
-          `Certificate #${c.id} · Appointment #${c.appointment_number} · Issued ${new Date(c.issued_at).toLocaleString()}`;
+          `Cert #${c.id} · Appt #${c.appointment_number} · Issued ${new Date(c.issued_at).toLocaleString()}`;
       } catch (e) {
-        body.textContent = 'Failed to load certificate: ' + e.message;
+        body.innerHTML = '<p>Failed to load certificate: ' + escHtml(e.message) + '</p>';
       }
     })();
   </script>

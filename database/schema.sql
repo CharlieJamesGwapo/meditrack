@@ -199,6 +199,7 @@ CREATE TABLE medical_certificates (
   rest_period_end DATE NOT NULL,
   rest_days INT NOT NULL,
   notes TEXT NULL,
+  requested_by VARCHAR(150) NULL,
   issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_cert_patient_id (patient_id),
   INDEX idx_cert_doctor_id (doctor_id),

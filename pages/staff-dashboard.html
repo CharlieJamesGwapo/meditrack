@@ -479,6 +479,10 @@
                 <input type="number" name="rest_days" min="0" step="1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
             </label>
             <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Requested by <span class="text-slate-400 font-normal">(Name of Person Requesting — defaults to patient)</span></span>
+                <input type="text" name="requested_by" placeholder="Patient or guardian name" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
                 <span class="text-xs font-semibold text-slate-600">Notes</span>
                 <textarea name="notes" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
             </label>
@@ -796,6 +800,7 @@ function openCertModal(appointment_id, patient_name, prefilled_diagnosis) {
     document.getElementById('cert-appt-id').value = appointment_id;
     document.getElementById('cert-patient-name').textContent = patient_name;
     form.diagnosis.value = prefilled_diagnosis || '';
+    form.requested_by.value = patient_name || '';
     const today    = new Date().toISOString().slice(0, 10);
     const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
     form.rest_period_start.value = today;

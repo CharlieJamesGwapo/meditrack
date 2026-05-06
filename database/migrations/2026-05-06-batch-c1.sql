@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS medical_certificates (
   rest_period_end DATE NOT NULL,
   rest_days INT NOT NULL,
   notes TEXT NULL,
+  requested_by VARCHAR(150) NULL,
   issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_cert_patient_id (patient_id),
   INDEX idx_cert_doctor_id (doctor_id),
@@ -86,3 +87,13 @@ CREATE TABLE IF NOT EXISTS medical_certificates (
   FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
   FOREIGN KEY (issued_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Idempotent: add requested_by if the cert table already existed before this column was introduced.
+SET @col := (
+  SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema = DATABASE() AND table_name = 'medical_certificates' AND column_name = 'requested_by'
+);
+SET @sql := IF(@col = 0,
+  'ALTER TABLE medical_certificates ADD COLUMN requested_by VARCHAR(150) NULL AFTER notes',
+  'SELECT 1');
+PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;

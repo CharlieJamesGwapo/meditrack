@@ -16,6 +16,7 @@ $rest_period_start  = sanitizeInput($input['rest_period_start'] ?? '');
 $rest_period_end    = sanitizeInput($input['rest_period_end'] ?? '');
 $rest_days_input    = $input['rest_days'] ?? null;
 $notes              = sanitizeInput($input['notes'] ?? '');
+$requested_by       = sanitizeInput($input['requested_by'] ?? '');
 
 if (!$appointment_id || empty($diagnosis) || empty($rest_period_start) || empty($rest_period_end)) {
     sendJSON(['success' => false, 'message' => 'appointment_id, diagnosis, rest_period_start, rest_period_end are required'], 400);
@@ -46,15 +47,16 @@ try {
 
     $stmt = $db->prepare("
         INSERT INTO medical_certificates
-          (appointment_id, patient_id, doctor_id, issued_by_user_id, diagnosis, rest_period_start, rest_period_end, rest_days, notes)
+          (appointment_id, patient_id, doctor_id, issued_by_user_id, diagnosis, rest_period_start, rest_period_end, rest_days, notes, requested_by)
         VALUES
-          (:aid, :pid, :did, :uid, :diag, :rs, :re, :rd, :notes)
+          (:aid, :pid, :did, :uid, :diag, :rs, :re, :rd, :notes, :req)
         ON DUPLICATE KEY UPDATE
           diagnosis         = VALUES(diagnosis),
           rest_period_start = VALUES(rest_period_start),
           rest_period_end   = VALUES(rest_period_end),
           rest_days         = VALUES(rest_days),
           notes             = VALUES(notes),
+          requested_by      = VALUES(requested_by),
           issued_by_user_id = VALUES(issued_by_user_id),
           issued_at         = CURRENT_TIMESTAMP
     ");
@@ -68,6 +70,7 @@ try {
         ':re'    => $rest_period_end,
         ':rd'    => $rest_days,
         ':notes' => $notes ?: null,
+        ':req'   => $requested_by ?: null,
     ]);
 
     logActivity($db, $userId, $_SESSION['username'] ?? '', 'staff', 'CREATE', 'MedicalCertificates', $appointment_id, "Cert issued for appointment #$appointment_id");
