@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Staff Dashboard — Consultation OPD</title>
+    <link rel="icon" type="image/png" href="../assets/images/medicare.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome 6.4 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts: Outfit + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* ── Typography ─────────────────────────────── */
+        * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+        h1,h2,h3,h4,h5,h6,.font-outfit { font-family: 'Outfit', sans-serif; }
+
+        /* ── Base ───────────────────────────────────── */
+        body { background: #F0FDFA; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+        /* ── Sidebar ────────────────────────────────── */
+        .sidebar {
+            width: 264px;
+            background: linear-gradient(180deg, #083344 0%, #0891B2 100%);
+            box-shadow: 4px 0 24px rgba(8,51,68,0.18);
+        }
+        .nav-item {
+            border-radius: 10px;
+            transition: background 0.18s ease, box-shadow 0.18s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px; height: 60%;
+            background: #fff;
+            border-radius: 0 3px 3px 0;
+            transition: transform 0.18s ease;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.10); }
+        .nav-item.active { background: rgba(255,255,255,0.18); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+        .nav-item.active::before { transform: translateY(-50%) scaleY(1); }
+
+        /* ── Tab system ─────────────────────────────── */
+        .tab-content { display: none; animation: fadeIn 0.22s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ── Skeleton shimmer ───────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg, #e2ecef 25%, #f0f7f9 50%, #e2ecef 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Pulse dot ──────────────────────────────── */
+        .pulse-dot { animation: pulseDot 2s cubic-bezier(.4,0,.6,1) infinite; }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+        /* ── Scrollbar ──────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f0fdf4; }
+        ::-webkit-scrollbar-thumb { background: #0891B2; border-radius: 3px; }
+
+        /* ── Form focus ─────────────────────────────── */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #0891B2 !important;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
+        }
+
+        /* ── SweetAlert overrides ───────────────────── */
+        .swal2-popup { border-radius: 16px; font-family: 'DM Sans', sans-serif; }
+        .swal2-title { font-family: 'Outfit', sans-serif; }
+        .swal2-confirm { background-color: #0891B2 !important; border-radius: 8px !important; }
+        .swal2-cancel  { background-color: #64748B !important; border-radius: 8px !important; }
+
+        /* ── Header gradient line ───────────────────── */
+        .header-accent { height: 3px; background: linear-gradient(90deg, #0891B2, #16A34A, #0891B2); background-size: 200%; animation: gradientShift 4s linear infinite; }
+        @keyframes gradientShift { 0%{background-position:0%} 100%{background-position:200%} }
+
+        /* ── Table ──────────────────────────────────── */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* ── Section divider ────────────────────────── */
+        .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
+
+        /* ── Mobile ─────────────────────────────────── */
+        @media (max-width: 767px) {
+            body { padding-bottom: 72px; }
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; }
+        }
+        @media (min-width: 768px) {
+            #mobile-bottom-nav { display: none !important; }
+        }
+        .mobile-nav-btn { transition: color 0.18s; }
+        .mobile-nav-btn.active { color: #0891B2; }
+        .mobile-nav-btn.active .mobile-nav-dot { opacity: 1; }
+        .mobile-nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #0891B2; opacity: 0; transition: opacity 0.18s; margin: 0 auto; }
+
+        /* ── Vital field ─────────────────────────────── */
+        .vital-field { position: relative; }
+        .vital-field label { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #64748B; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen">
+
+    <!-- ═══════════════════════════════════════════════════
+         SIDEBAR
+    ════════════════════════════════════════════════════ -->
+    <aside class="sidebar hidden md:flex flex-col flex-shrink-0 fixed top-0 left-0 h-full z-30"
+           style="background:linear-gradient(180deg,#083344 0%,#0891B2 100%)">
+
+        <!-- Branding -->
+        <div class="px-5 py-5 border-b border-white/10">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img src="../assets/images/medicare.png" alt="Logo" style="width:40px;height:40px;border-radius:10px;">
+                </div>
+                <div>
+                    <h1 class="text-white font-bold text-base leading-tight font-outfit tracking-tight">OPD</h1>
+                    <p class="text-cyan-200/80 text-xs font-medium tracking-wide">Staff Portal</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff identity -->
+        <div class="px-5 py-4 border-b border-white/10">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0 shadow">
+                    <i class="fas fa-user-nurse text-white/90"></i>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <p class="text-white font-semibold text-sm truncate leading-tight font-outfit" id="sidebar-name">Loading…</p>
+                    <p class="text-cyan-200/80 text-xs truncate mt-0.5">Staff</p>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 pulse-dot"></span>
+                <span class="text-cyan-200/70 text-xs font-medium">On duty</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <p class="section-label px-3 mb-2 opacity-60">Navigation</p>
+
+            <button onclick="switchTab('scan')" id="nav-scan"
+                class="nav-item active w-full flex items-center space-x-3 px-4 py-3 text-white text-sm font-medium">
+                <div class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-qrcode text-xs"></i>
+                </div>
+                <span>Scan QR</span>
+            </button>
+
+            <button onclick="switchTab('vitals')" id="nav-vitals"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-heart-pulse text-xs"></i>
+                </div>
+                <span>Vitals Queue</span>
+            </button>
+
+            <button onclick="switchTab('certs')" id="nav-certs"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-file-medical text-xs"></i>
+                </div>
+                <span>Certificates</span>
+            </button>
+        </nav>
+
+        <!-- Logout -->
+        <div class="px-3 pb-5 pt-2 border-t border-white/10">
+            <button onclick="logout()"
+                class="w-full flex items-center space-x-3 px-4 py-3 text-cyan-200/80 hover:text-white hover:bg-red-500/70 rounded-xl transition-all text-sm font-medium group">
+                <div class="w-8 h-8 rounded-lg bg-white/10 group-hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 transition-colors">
+                    <i class="fas fa-sign-out-alt text-xs"></i>
+                </div>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ═══════════════════════════════════════════════════
+         MAIN CONTENT
+    ════════════════════════════════════════════════════ -->
+    <main class="main-content flex-1 md:ml-[264px] flex flex-col min-h-screen">
+
+        <!-- ─── HEADER ─── -->
+        <header class="bg-white sticky top-0 z-20 shadow-sm border-b border-gray-100">
+            <div class="header-accent"></div>
+
+            <div class="px-4 md:px-6 py-3.5 flex items-center justify-between">
+                <!-- Left: mobile logo + page title -->
+                <div class="flex items-center space-x-3 min-w-0">
+                    <!-- Mobile branding -->
+                    <div class="md:hidden flex items-center space-x-2 flex-shrink-0">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#083344,#0891B2)">
+                            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <polyline points="2,12 5,4 8,12 11,8 14,16 17,10 20,14 22,12"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Page title -->
+                    <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-semibold text-[#083344] font-outfit truncate leading-tight" id="page-title">Scan QR</h2>
+                        <p class="text-xs text-slate-400 font-medium hidden sm:block" id="header-date"></p>
+                    </div>
+                </div>
+
+                <!-- Right: staff chip + logout -->
+                <div class="flex items-center space-x-3 flex-shrink-0">
+                    <!-- Staff avatar chip -->
+                    <div class="flex items-center space-x-2 sm:space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-2 py-1.5 sm:px-3 sm:py-2">
+                        <div class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
+                            <i class="fas fa-user-nurse text-xs"></i>
+                        </div>
+                        <div class="block max-w-[110px] sm:max-w-none">
+                            <p class="text-xs font-semibold text-[#083344] leading-tight font-outfit truncate" id="header-name">Loading…</p>
+                            <p class="text-[10px] sm:text-xs text-cyan-600 font-medium">Staff</p>
+                        </div>
+                    </div>
+
+                    <!-- Logout -->
+                    <button onclick="logout()"
+                        class="flex items-center space-x-1.5 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ─── TAB CONTENTS ─── -->
+        <div class="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
+
+            <!-- ══════════════════════════════
+                 TAB: SCAN QR
+            ═══════════════════════════════ -->
+            <div id="tab-scan" class="tab-content active">
+                <!-- Task 7 fills this -->
+                <div class="flex items-center space-x-2.5 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-qrcode text-white text-xs"></i>
+                    </div>
+                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Scan QR</h3>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-slate-400">
+                    <i class="fa-solid fa-qrcode text-4xl text-cyan-200 mb-3"></i>
+                    <p class="text-sm font-medium">QR scanner coming in Task 7.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════
+                 TAB: VITALS QUEUE
+            ═══════════════════════════════ -->
+            <div id="tab-vitals" class="tab-content">
+                <!-- Task 9 fills this -->
+                <div class="flex items-center space-x-2.5 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-[#134E4A] flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+                    </div>
+                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Vitals Queue</h3>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-slate-400">
+                    <i class="fa-solid fa-heart-pulse text-4xl text-cyan-200 mb-3"></i>
+                    <p class="text-sm font-medium">Vitals queue coming in Task 9.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════
+                 TAB: CERTIFICATES
+            ═══════════════════════════════ -->
+            <div id="tab-certs" class="tab-content">
+                <!-- Task 13 fills this -->
+                <div class="flex items-center space-x-2.5 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-file-medical text-white text-xs"></i>
+                    </div>
+                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Certificates</h3>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-slate-400">
+                    <i class="fa-solid fa-file-medical text-4xl text-cyan-200 mb-3"></i>
+                    <p class="text-sm font-medium">Certificate management coming in Task 13.</p>
+                </div>
+            </div>
+
+        </div><!-- /tab contents -->
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+════════════════════════════════════════════════════ -->
+<nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <div class="grid grid-cols-3 h-[68px]">
+
+        <button onclick="switchTab('scan')" id="mobile-nav-scan"
+            class="mobile-nav-btn active flex flex-col items-center justify-center py-2 text-[#0891B2] text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-qrcode text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Scan QR</span>
+        </button>
+
+        <button onclick="switchTab('vitals')" id="mobile-nav-vitals"
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-heart-pulse text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Vitals</span>
+        </button>
+
+        <button onclick="switchTab('certs')" id="mobile-nav-certs"
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-file-medical text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Certs</span>
+        </button>
+
+    </div>
+</nav>
+
+<!-- Auth + shared utilities -->
+<script src="../js/auth.js?v=3.0"></script>
+
+<script>
+(function guard() {
+    const user = getUser();
+    if (!user || user.role !== 'staff') {
+        window.location.replace('login.html');
+        return;
+    }
+    // Populate name chips
+    const displayName = user.full_name || user.username;
+    const sidebarEl = document.getElementById('sidebar-name');
+    const headerEl  = document.getElementById('header-name');
+    if (sidebarEl) sidebarEl.textContent = displayName;
+    if (headerEl)  headerEl.textContent  = displayName;
+})();
+
+// Set header date
+(function setDate() {
+    const el = document.getElementById('header-date');
+    if (el) {
+        el.textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+})();
+
+const TAB_TITLES = { scan: 'Scan QR', vitals: 'Vitals Queue', certs: 'Certificates' };
+
+function switchTab(tab) {
+    // Sidebar nav items
+    document.querySelectorAll('.nav-item[id^="nav-"]').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-cyan-100/80');
+        btn.classList.remove('text-white');
+        const iconWrap = btn.querySelector('.w-8');
+        if (iconWrap) { iconWrap.style.background = 'rgba(255,255,255,0.10)'; }
+    });
+    const activeNav = document.getElementById('nav-' + tab);
+    if (activeNav) {
+        activeNav.classList.add('active', 'text-white');
+        activeNav.classList.remove('text-cyan-100/80');
+        const iconWrap = activeNav.querySelector('.w-8');
+        if (iconWrap) { iconWrap.style.background = 'rgba(255,255,255,0.15)'; }
+    }
+
+    // Mobile bottom nav
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '';
+    });
+    const activeMobile = document.getElementById('mobile-nav-' + tab);
+    if (activeMobile) activeMobile.classList.add('active');
+
+    // Tab panels
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const panel = document.getElementById('tab-' + tab);
+    if (panel) panel.classList.add('active');
+
+    // Page title
+    const titleEl = document.getElementById('page-title');
+    if (titleEl) titleEl.textContent = TAB_TITLES[tab] || tab;
+
+    // Hook calls for downstream tasks
+    if (tab === 'vitals' && typeof loadVitalsQueue === 'function') loadVitalsQueue();
+    if (tab === 'certs'  && typeof loadCertList   === 'function') loadCertList();
+}
+
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+window.escapeHtml = escapeHtml;
+window.switchTab  = switchTab;
+</script>
+</body>
+</html>
