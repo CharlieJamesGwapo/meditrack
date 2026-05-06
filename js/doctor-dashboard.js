@@ -615,14 +615,111 @@ function openRecordModal(appointment) {
     document.getElementById('record-appt-time').textContent     = formatTime(appointment.appointment_time);
     document.getElementById('record-appt-reason').textContent   = appointment.reason_for_visit || 'General Consultation';
 
-    // Pre-fill chief complaint with reason_for_visit as a hint
-    if (appointment.reason_for_visit) {
-        document.getElementById('rec-chief-complaint').value = appointment.reason_for_visit;
-    }
+    // Pre-fill chief complaint: prefer triage value, fall back to reason_for_visit
+    const ccEl = document.getElementById('rec-chief-complaint');
+    const triageCC = appointment.triage_chief_complaint || (appointment.vitals && appointment.vitals.chief_complaint) || '';
+    ccEl.value = triageCC || appointment.reason_for_visit || '';
+
+    // Render vitals readout (read-only; staff records vitals at triage)
+    renderVitalsReadout(appointment);
 
     modal.classList.remove('hidden');
-    document.getElementById('rec-chief-complaint').focus();
+    ccEl.focus();
 }
+
+function renderVitalsReadout(appointment) {
+    const readout = document.getElementById('vitals-readout');
+    const meta    = document.getElementById('vitals-recorded-meta');
+    if (!readout) return;
+    const v = appointment.vitals;
+    if (v) {
+        readout.innerHTML = `
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">BP</div><div class="font-semibold text-[#083344]">${escapeHtml(v.blood_pressure || '—')}</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">Temp</div><div class="font-semibold text-[#083344]">${v.temperature ?? '—'} °C</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">HR</div><div class="font-semibold text-[#083344]">${v.heart_rate ?? '—'} bpm</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">SpO₂</div><div class="font-semibold text-[#083344]">${v.oxygen_saturation ?? '—'} %</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">Weight</div><div class="font-semibold text-[#083344]">${v.weight ?? '—'} kg</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">Height</div><div class="font-semibold text-[#083344]">${v.height_cm ?? '—'} cm</div></div>
+                ${v.notes ? `<div class="col-span-2 sm:col-span-2"><div class="text-[10px] text-slate-400 uppercase tracking-wide">Notes</div><div class="text-[#0f172a]">${escapeHtml(v.notes)}</div></div>` : ''}
+            </div>
+        `;
+        if (meta && v.recorded_at) {
+            meta.classList.remove('hidden');
+            meta.textContent = 'Recorded ' + new Date(v.recorded_at).toLocaleString();
+        }
+    } else {
+        readout.innerHTML = `
+            <div class="flex items-center justify-between">
+                <p class="text-slate-500">Vitals not recorded yet.</p>
+                <button type="button" id="btn-doctor-record-vitals" class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-700">
+                    <i class="fa-solid fa-heart-pulse mr-1"></i> Record vitals
+                </button>
+            </div>
+        `;
+        const btn = document.getElementById('btn-doctor-record-vitals');
+        if (btn) btn.addEventListener('click', () => openDoctorVitalsModal(appointment.id, appointment.patient_name));
+        if (meta) meta.classList.add('hidden');
+    }
+}
+
+async function openDoctorVitalsModal(appointment_id, patient_name) {
+    const form = document.getElementById('form-doctor-vitals');
+    form.reset();
+    document.getElementById('dv-appt-id').value = appointment_id;
+    document.getElementById('dv-patient-name').textContent = patient_name || '';
+    try {
+        const data = await apiRequest('/staff/get-vitals.php?appointment_id=' + appointment_id);
+        if (data && data.success && data.vitals) {
+            const v = data.vitals;
+            form.chief_complaint.value   = v.chief_complaint   ?? '';
+            form.blood_pressure.value    = v.blood_pressure    ?? '';
+            form.temperature.value       = v.temperature       ?? '';
+            form.heart_rate.value        = v.heart_rate        ?? '';
+            form.oxygen_saturation.value = v.oxygen_saturation ?? '';
+            form.weight.value            = v.weight            ?? '';
+            form.height_cm.value         = v.height_cm         ?? '';
+            form.notes.value             = v.notes             ?? '';
+        }
+    } catch (_) {}
+    document.getElementById('modal-doctor-vitals').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-close-doctor-vitals]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById('modal-doctor-vitals').classList.add('hidden'))
+);
+
+document.getElementById('form-doctor-vitals').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    ['temperature', 'heart_rate', 'oxygen_saturation', 'weight', 'height_cm'].forEach(k => {
+        if (body[k] === '') delete body[k];
+    });
+    body.appointment_id = +body.appointment_id;
+    const data = await apiRequest('/staff/save-vitals.php', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to save', 'error');
+        return;
+    }
+    document.getElementById('modal-doctor-vitals').classList.add('hidden');
+    Swal.fire({ icon: 'success', title: 'Saved', text: 'Vitals recorded.', confirmButtonColor: '#0891B2' });
+    if (typeof loadTodayAppointments === 'function') loadTodayAppointments(true);
+    if (currentAppointment && currentAppointment.id === body.appointment_id) {
+        // Refetch to update the readout
+        try {
+            const fresh = await apiRequest('/doctor/get-appointments.php');
+            const refreshed = (fresh?.appointments || []).find(a => a.id === body.appointment_id);
+            if (refreshed) {
+                currentAppointment = refreshed;
+                renderVitalsReadout(refreshed);
+            }
+        } catch (_) {}
+    }
+});
 
 function viewRecord(appointment) {
     // Open modal in read-only mode
