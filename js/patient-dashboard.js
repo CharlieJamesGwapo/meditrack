@@ -480,7 +480,11 @@ function renderAppointments(appointments) {
                 <button onclick="switchTab('records')"
                     class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-semibold transition">
                     <i class="fas fa-file-medical"></i> View Record
-                </button>`;
+                </button>
+                <a href="print-referral.html?appointment_id=${appt.id}" target="_blank"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-share-from-square"></i> Print Referral
+                </a>`;
         }
 
         return `
@@ -495,7 +499,10 @@ function renderAppointments(appointments) {
                         ${spec ? `<p class="text-xs text-teal-600">${spec}</p>` : ''}
                     </div>
                 </div>
-                <span class="flex-shrink-0 ${badge.bg} ${badge.text} text-xs font-semibold px-2.5 py-1 rounded-full">${badge.label}</span>
+                <div class="flex-shrink-0 flex items-center gap-1.5">
+                    ${appt.is_followup ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase tracking-wide">Follow-up</span>' : ''}
+                    <span class="${badge.bg} ${badge.text} text-xs font-semibold px-2.5 py-1 rounded-full">${badge.label}</span>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 mb-3 text-sm">

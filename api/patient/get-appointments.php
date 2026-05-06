@@ -25,6 +25,7 @@ try {
     $stmt = $db->prepare("
         SELECT a.id, a.appointment_number, a.appointment_date, a.appointment_time,
                a.status, a.reason_for_visit, a.checked_in_at, a.completed_at, a.cancelled_at, a.created_at,
+               a.is_followup, a.parent_appointment_id,
                d.full_name as doctor_name, d.specialization,
                qt.token_hash, qt.expires_at as qr_expires_at, qt.is_used as qr_used
         FROM appointments a

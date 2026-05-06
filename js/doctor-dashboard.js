@@ -623,6 +623,10 @@ function openRecordModal(appointment) {
     // Render vitals readout (read-only; staff records vitals at triage)
     renderVitalsReadout(appointment);
 
+    // Load existing referral and follow-up for this appointment (Batch C3)
+    if (appointment.id && typeof loadReferralForAppointment === 'function') loadReferralForAppointment(appointment.id);
+    if (appointment.id && typeof loadFollowupForAppointment === 'function') loadFollowupForAppointment(appointment.id);
+
     modal.classList.remove('hidden');
     document.getElementById('rec-symptoms').focus();
 }
@@ -1024,3 +1028,154 @@ document.addEventListener('keydown', (e) => {
         closeRecordModal();
     }
 });
+
+// ─── Referrals (Batch C3) ────────────────────────────────────
+function bindReferralCard() {
+    const enable = document.getElementById('ref-enable');
+    const body   = document.getElementById('ref-body');
+    const spec   = document.getElementById('ref-specialty');
+    const otherWrap = document.getElementById('ref-specialty-other-wrap');
+    if (!enable || !body) return;
+    enable.addEventListener('change', () => body.classList.toggle('hidden', !enable.checked));
+    spec.addEventListener('change', () => { otherWrap.style.display = spec.value === 'Other' ? '' : 'none'; });
+    document.getElementById('ref-save-btn').addEventListener('click', saveReferral);
+    document.getElementById('ref-print-btn').addEventListener('click', () => {
+        if (!currentAppointment) return;
+        window.open('print-referral.html?appointment_id=' + currentAppointment.id, '_blank');
+    });
+}
+
+async function loadReferralForAppointment(appointment_id) {
+    const status = document.getElementById('ref-status');
+    const printBtn = document.getElementById('ref-print-btn');
+    const enable = document.getElementById('ref-enable');
+    const body   = document.getElementById('ref-body');
+    const spec   = document.getElementById('ref-specialty');
+    const otherWrap = document.getElementById('ref-specialty-other-wrap');
+    if (!enable) return;
+    enable.checked = false;
+    body.classList.add('hidden');
+    spec.value = '';
+    otherWrap.style.display = 'none';
+    document.getElementById('ref-specialty-other').value = '';
+    document.getElementById('ref-suggested').value = '';
+    document.getElementById('ref-urgency').value = 'routine';
+    document.getElementById('ref-reason').value = '';
+    status.textContent = '';
+    printBtn.classList.add('hidden');
+    try {
+        const data = await apiRequest('/doctor/get-referral.php?appointment_id=' + appointment_id);
+        if (data && data.success && data.referral) {
+            const r = data.referral;
+            enable.checked = true;
+            body.classList.remove('hidden');
+            spec.value = r.specialty || '';
+            if (spec.value === 'Other') {
+                otherWrap.style.display = '';
+                document.getElementById('ref-specialty-other').value = r.specialty_other || '';
+            }
+            document.getElementById('ref-suggested').value = r.suggested_specialist || '';
+            document.getElementById('ref-urgency').value   = r.urgency || 'routine';
+            document.getElementById('ref-reason').value    = r.reason || '';
+            printBtn.classList.remove('hidden');
+            status.textContent = 'Referral on file — last updated ' + new Date(r.updated_at || r.issued_at).toLocaleString();
+        }
+    } catch (_) {}
+}
+
+async function saveReferral() {
+    if (!currentAppointment) return;
+    const status = document.getElementById('ref-status');
+    const body = {
+        appointment_id:       currentAppointment.id,
+        specialty:            document.getElementById('ref-specialty').value,
+        specialty_other:      document.getElementById('ref-specialty-other').value.trim(),
+        suggested_specialist: document.getElementById('ref-suggested').value.trim(),
+        urgency:              document.getElementById('ref-urgency').value,
+        reason:               document.getElementById('ref-reason').value.trim(),
+    };
+    if (!body.specialty || !body.reason) {
+        Swal.fire('Required', 'Specialty and reason are required.', 'warning');
+        return;
+    }
+    if (body.specialty === 'Other' && !body.specialty_other) {
+        Swal.fire('Required', 'Please describe the specialty.', 'warning');
+        return;
+    }
+    status.textContent = 'Saving…';
+    const data = await apiRequest('/doctor/save-referral.php', { method: 'POST', body: JSON.stringify(body) });
+    if (!data || !data.success) {
+        status.textContent = '';
+        Swal.fire('Error', data?.message || 'Failed to save referral', 'error');
+        return;
+    }
+    status.textContent = 'Saved ' + new Date().toLocaleString();
+    document.getElementById('ref-print-btn').classList.remove('hidden');
+}
+
+// ─── Follow-up scheduling (Batch C3) ─────────────────────────
+function bindFollowupCard() {
+    const enable = document.getElementById('fu-enable');
+    const body   = document.getElementById('fu-body');
+    if (!enable || !body) return;
+    enable.addEventListener('change', () => body.classList.toggle('hidden', !enable.checked));
+    document.getElementById('fu-save-btn').addEventListener('click', saveFollowup);
+}
+
+async function loadFollowupForAppointment(appointment_id) {
+    const enable = document.getElementById('fu-enable');
+    const body   = document.getElementById('fu-body');
+    const dateEl = document.getElementById('fu-date');
+    const timeEl = document.getElementById('fu-time');
+    const reasonEl = document.getElementById('fu-reason');
+    const statusEl = document.getElementById('fu-status');
+    const hidden = document.getElementById('rec-followup');
+    if (!enable || !body) return;
+    enable.checked = false;
+    body.classList.add('hidden');
+    dateEl.value = ''; timeEl.value = ''; reasonEl.value = ''; statusEl.textContent = '';
+    if (hidden) hidden.value = '';
+    try {
+        const data = await apiRequest('/doctor/get-followup.php?parent_appointment_id=' + appointment_id);
+        if (data && data.success && data.followup) {
+            const f = data.followup;
+            enable.checked = true;
+            body.classList.remove('hidden');
+            dateEl.value = f.appointment_date || '';
+            timeEl.value = (f.appointment_time || '').substring(0, 5);
+            reasonEl.value = f.reason_for_visit || '';
+            statusEl.textContent = `Existing follow-up #${f.appointment_number} (${f.status})`;
+            if (hidden) hidden.value = f.appointment_date || '';
+        }
+    } catch (_) {}
+}
+
+async function saveFollowup() {
+    if (!currentAppointment) return;
+    const date = document.getElementById('fu-date').value;
+    const time = document.getElementById('fu-time').value;
+    const reason = document.getElementById('fu-reason').value.trim();
+    const statusEl = document.getElementById('fu-status');
+    if (!date || !time) { Swal.fire('Required', 'Pick both a date and a time.', 'warning'); return; }
+    statusEl.textContent = 'Saving…';
+    const data = await apiRequest('/doctor/schedule-followup.php', {
+        method: 'POST',
+        body: JSON.stringify({
+            parent_appointment_id: currentAppointment.id,
+            appointment_date: date,
+            appointment_time: time,
+            reason_for_visit: reason
+        })
+    });
+    if (!data || !data.success) {
+        statusEl.textContent = '';
+        Swal.fire('Error', data?.message || 'Failed to save follow-up', 'error');
+        return;
+    }
+    statusEl.textContent = `Follow-up #${data.appointment_number} ${data.mode} for ${date} ${time}`;
+    const hidden = document.getElementById('rec-followup');
+    if (hidden) hidden.value = date;
+    if (typeof loadTodayAppointments === 'function') loadTodayAppointments(true);
+}
+
+window.addEventListener('DOMContentLoaded', () => { bindReferralCard(); bindFollowupCard(); });
