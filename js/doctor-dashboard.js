@@ -615,16 +615,16 @@ function openRecordModal(appointment) {
     document.getElementById('record-appt-time').textContent     = formatTime(appointment.appointment_time);
     document.getElementById('record-appt-reason').textContent   = appointment.reason_for_visit || 'General Consultation';
 
-    // Pre-fill chief complaint: prefer triage value, fall back to reason_for_visit
-    const ccEl = document.getElementById('rec-chief-complaint');
+    // Chief complaint is read-only (sourced from triage; falls back to reason_for_visit)
+    const ccDisplay = document.getElementById('rec-chief-complaint-display');
     const triageCC = appointment.triage_chief_complaint || (appointment.vitals && appointment.vitals.chief_complaint) || '';
-    ccEl.value = triageCC || appointment.reason_for_visit || '';
+    if (ccDisplay) ccDisplay.textContent = triageCC || appointment.reason_for_visit || '—';
 
     // Render vitals readout (read-only; staff records vitals at triage)
     renderVitalsReadout(appointment);
 
     modal.classList.remove('hidden');
-    ccEl.focus();
+    document.getElementById('rec-symptoms').focus();
 }
 
 function renderVitalsReadout(appointment) {
@@ -753,27 +753,21 @@ async function submitMedicalRecord(event) {
     const submitBtn = document.getElementById('record-submit-btn');
     const origHTML  = submitBtn.innerHTML;
 
-    // Collect form data
+    // Collect form data (chief_complaint + vitals are sourced from triage and not sent here)
     const appointmentId = document.getElementById('record-appointment-id').value;
     const patientId     = document.getElementById('record-patient-id').value;
-    const chiefComplaint = document.getElementById('rec-chief-complaint').value.trim();
     const symptoms       = document.getElementById('rec-symptoms').value.trim();
-    const bp             = document.getElementById('rec-bp').value.trim();
-    const temp           = document.getElementById('rec-temp').value.trim();
-    const hr             = document.getElementById('rec-hr').value.trim();
-    const weight         = document.getElementById('rec-weight').value.trim();
-    const height         = document.getElementById('rec-height').value.trim();
     const diagnosis      = document.getElementById('rec-diagnosis').value.trim();
     const prescription   = document.getElementById('rec-prescription').value.trim();
     const labTests       = document.getElementById('rec-lab-tests').value.trim();
     const notes          = document.getElementById('rec-notes').value.trim();
     const followUp       = document.getElementById('rec-followup').value;
 
-    if (!chiefComplaint && !diagnosis) {
+    if (!symptoms && !diagnosis) {
         Swal.fire({
             icon: 'warning',
             title: 'Required Fields',
-            text: 'Please enter at least a chief complaint or diagnosis.',
+            text: 'Please enter at least symptoms or a diagnosis.',
             confirmButtonColor: '#0891B2'
         });
         return;
@@ -788,9 +782,7 @@ async function submitMedicalRecord(event) {
             body: JSON.stringify({
                 appointment_id: appointmentId,
                 patient_id:     patientId,
-                chief_complaint: chiefComplaint,
                 symptoms,
-                vital_signs: { bp, temperature: temp, heart_rate: hr, weight, height },
                 diagnosis,
                 prescription,
                 lab_tests_ordered: labTests,

@@ -848,26 +848,24 @@
                     <input type="hidden" id="record-appointment-id">
                     <input type="hidden" id="record-patient-id">
 
-                    <!-- ─ Chief Complaint + Symptoms ─ -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
-                                <i class="fas fa-comment-medical text-[#0891B2]"></i>
-                                <span>Chief Complaint</span>
-                            </label>
-                            <textarea id="rec-chief-complaint" rows="3"
-                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
-                                placeholder="Primary reason for visit…"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
-                                <i class="fas fa-thermometer-half text-[#0891B2]"></i>
-                                <span>Symptoms</span>
-                            </label>
-                            <textarea id="rec-symptoms" rows="3"
-                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
-                                placeholder="List symptoms…"></textarea>
-                        </div>
+                    <!-- ─ Chief Complaint (read-only from triage) + Symptoms ─ -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-comment-medical text-[#0891B2]"></i>
+                            <span>Chief Complaint <span class="text-slate-400 normal-case font-normal">(recorded at triage)</span></span>
+                        </label>
+                        <div id="rec-chief-complaint-display"
+                            class="w-full border border-gray-100 rounded-xl px-3.5 py-2.5 text-sm bg-slate-50 text-slate-700 leading-relaxed min-h-[40px]">—</div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-thermometer-half text-[#0891B2]"></i>
+                            <span>Symptoms</span>
+                        </label>
+                        <textarea id="rec-symptoms" rows="3"
+                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
+                            placeholder="List symptoms…"></textarea>
                     </div>
 
                     <!-- ─ Vital Signs (read-only — recorded by staff in triage) ─ -->
