@@ -404,7 +404,7 @@
     try {
       var user = JSON.parse(sessionStorage.getItem('user') || 'null');
       if (user && user.role) {
-        var map = { patient: 'patient-dashboard.html', doctor: 'doctor-dashboard.html', admin: 'admin-dashboard.html' };
+        var map = { patient: 'patient-dashboard.html', doctor: 'doctor-dashboard.html', admin: 'admin-dashboard.html', staff: 'staff-dashboard.html' };
         window.location.replace(map[user.role] || 'patient-dashboard.html');
       }
     } catch (e) {}
@@ -492,7 +492,7 @@
         pwInput.value = '';
         setTimeout(function () {
           var role = data.user && data.user.role;
-          var map = { patient: 'patient-dashboard.html', doctor: 'doctor-dashboard.html', admin: 'admin-dashboard.html' };
+          var map = { patient: 'patient-dashboard.html', doctor: 'doctor-dashboard.html', admin: 'admin-dashboard.html', staff: 'staff-dashboard.html' };
           window.location.replace(map[role] || 'patient-dashboard.html');
         }, 1200);
       } else {
