@@ -295,16 +295,32 @@
                  TAB: VITALS QUEUE
             ═══════════════════════════════ -->
             <div id="tab-vitals" class="tab-content">
-                <!-- Task 9 fills this -->
-                <div class="flex items-center space-x-2.5 mb-5">
-                    <div class="w-8 h-8 rounded-lg bg-[#134E4A] flex items-center justify-center shadow-sm">
-                        <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#134E4A] flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Today's Queue</h3>
                     </div>
-                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Vitals Queue</h3>
+                    <button id="refresh-queue" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                        <i class="fa-solid fa-rotate mr-1"></i> Refresh
+                    </button>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-slate-400">
-                    <i class="fa-solid fa-heart-pulse text-4xl text-cyan-200 mb-3"></i>
-                    <p class="text-sm font-medium">Vitals queue coming in Task 9.</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left px-4 py-3">Time</th>
+                                <th class="text-left px-4 py-3">Patient</th>
+                                <th class="text-left px-4 py-3">Appt #</th>
+                                <th class="text-left px-4 py-3">Vitals</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="queue-tbody" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -358,6 +374,59 @@
 
     </div>
 </nav>
+
+<!-- ═══════════════════════════════════════════════════
+     VITALS MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-vitals" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Record Vitals — <span id="vitals-patient-name" class="text-cyan-700"></span></h3>
+            <button data-close-vitals class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-vitals" class="px-6 py-5 space-y-4">
+            <input type="hidden" name="appointment_id" id="vitals-appt-id">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Chief complaint <span class="text-red-500">*</span></span>
+                <textarea name="chief_complaint" required rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Blood pressure <span class="text-red-500">*</span></span>
+                    <input name="blood_pressure" placeholder="120/80" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Temperature (°C)</span>
+                    <input name="temperature" type="number" step="0.1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Heart rate (bpm)</span>
+                    <input name="heart_rate" type="number" step="1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">O₂ saturation (%)</span>
+                    <input name="oxygen_saturation" type="number" step="1" min="0" max="100" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Weight (kg) <span class="text-red-500">*</span></span>
+                    <input name="weight" type="number" step="0.1" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Height (cm) <span class="text-red-500">*</span></span>
+                    <input name="height_cm" type="number" step="1" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+            </div>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Notes</span>
+                <textarea name="notes" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" data-close-vitals class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Save vitals</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Auth + shared utilities -->
 <script src="../js/auth.js?v=3.0"></script>
@@ -525,6 +594,90 @@ window.switchTab = function (tab) {
 };
 
 window.addEventListener('load', () => setTimeout(startStaffScanner, 300));
+
+// ─── Vitals Queue + Modal ──────────────────────────────────────
+async function loadVitalsQueue() {
+    const tbody = document.getElementById('queue-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>';
+    try {
+        const data = await apiRequest('/staff/queue.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+        if (!data.queue.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">No patients waiting. Scan a QR to check someone in.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.queue.map(q => `
+            <tr class="hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium text-slate-700">${q.appointment_time || '—'}</td>
+                <td class="px-4 py-3">${escapeHtml(q.patient_name)}</td>
+                <td class="px-4 py-3 text-slate-500">#${escapeHtml(q.appointment_number)}</td>
+                <td class="px-4 py-3">${q.triage_id
+                    ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Recorded</span>'
+                    : '<span class="text-slate-400 text-xs">Pending</span>'}</td>
+                <td class="px-4 py-3 text-right">
+                    <button data-vitals-aid="${q.appointment_id}" data-name="${escapeHtml(q.patient_name)}"
+                        class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-700">
+                        ${q.triage_id ? 'Edit' : 'Record'} vitals
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        tbody.querySelectorAll('[data-vitals-aid]').forEach(b =>
+            b.addEventListener('click', () => openVitalsModal(+b.dataset.vitalsAid, b.dataset.name))
+        );
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+async function openVitalsModal(appointment_id, patient_name) {
+    const form = document.getElementById('form-vitals');
+    form.reset();
+    document.getElementById('vitals-appt-id').value = appointment_id;
+    document.getElementById('vitals-patient-name').textContent = patient_name;
+    try {
+        const data = await apiRequest('/staff/get-vitals.php?appointment_id=' + appointment_id);
+        if (data && data.success && data.vitals) {
+            const v = data.vitals;
+            form.chief_complaint.value   = v.chief_complaint   ?? '';
+            form.blood_pressure.value    = v.blood_pressure    ?? '';
+            form.temperature.value       = v.temperature       ?? '';
+            form.heart_rate.value        = v.heart_rate        ?? '';
+            form.oxygen_saturation.value = v.oxygen_saturation ?? '';
+            form.weight.value            = v.weight            ?? '';
+            form.height_cm.value         = v.height_cm         ?? '';
+            form.notes.value             = v.notes             ?? '';
+        }
+    } catch (_) {}
+    document.getElementById('modal-vitals').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-close-vitals]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById('modal-vitals').classList.add('hidden'))
+);
+
+document.getElementById('form-vitals').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    ['temperature', 'heart_rate', 'oxygen_saturation', 'weight', 'height_cm'].forEach(k => {
+        if (body[k] === '') delete body[k];
+    });
+    body.appointment_id = +body.appointment_id;
+    const data = await apiRequest('/staff/save-vitals.php', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to save', 'error');
+        return;
+    }
+    document.getElementById('modal-vitals').classList.add('hidden');
+    Swal.fire({ icon: 'success', title: 'Saved', text: 'Vitals recorded. Patient is now ready for the doctor.', confirmButtonColor: '#0891B2' });
+    loadVitalsQueue();
+});
+
+document.getElementById('refresh-queue').addEventListener('click', loadVitalsQueue);
 </script>
 </body>
 </html>
