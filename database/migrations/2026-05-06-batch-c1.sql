@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS staff_profiles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 3. Extend triage_assessments
+-- appointment_id is NULL-able to preserve any pre-existing walk-in rows that have no appointment.
 SET @col := (
   SELECT COUNT(*) FROM information_schema.columns
    WHERE table_schema = DATABASE() AND table_name = 'triage_assessments' AND column_name = 'appointment_id'
@@ -76,6 +77,9 @@ CREATE TABLE IF NOT EXISTS medical_certificates (
   rest_days INT NOT NULL,
   notes TEXT NULL,
   issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_cert_patient_id (patient_id),
+  INDEX idx_cert_doctor_id (doctor_id),
+  INDEX idx_cert_issued_by (issued_by_user_id),
   UNIQUE KEY uniq_cert_appointment (appointment_id),
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
   FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,

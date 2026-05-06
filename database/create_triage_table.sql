@@ -22,9 +22,8 @@ CREATE TABLE IF NOT EXISTS triage_assessments (
     INDEX idx_recorded_by (recorded_by),
     INDEX idx_priority (priority_level),
     INDEX idx_recorded_at (recorded_at),
-    INDEX idx_appointment_id (appointment_id),
     UNIQUE KEY uniq_triage_appointment (appointment_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Add priority_level column to appointments table if it doesn't exist
 ALTER TABLE appointments 

@@ -3,6 +3,8 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS medical_certificates;
+DROP TABLE IF EXISTS staff_profiles;
 DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS qr_tokens;
 DROP TABLE IF EXISTS medical_records;
@@ -198,6 +200,9 @@ CREATE TABLE medical_certificates (
   rest_days INT NOT NULL,
   notes TEXT NULL,
   issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_cert_patient_id (patient_id),
+  INDEX idx_cert_doctor_id (doctor_id),
+  INDEX idx_cert_issued_by (issued_by_user_id),
   UNIQUE KEY uniq_cert_appointment (appointment_id),
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
   FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
