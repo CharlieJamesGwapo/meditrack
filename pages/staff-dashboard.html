@@ -328,16 +328,37 @@
                  TAB: CERTIFICATES
             ═══════════════════════════════ -->
             <div id="tab-certs" class="tab-content">
-                <!-- Task 13 fills this -->
-                <div class="flex items-center space-x-2.5 mb-5">
-                    <div class="w-8 h-8 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-sm">
-                        <i class="fa-solid fa-file-medical text-white text-xs"></i>
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-file-medical text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Medical Certificates</h3>
                     </div>
-                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Certificates</h3>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-slate-500">From <input type="date" id="cert-from" class="ml-1 px-2 py-1 border border-slate-200 rounded text-xs"></label>
+                        <label class="text-xs text-slate-500">To <input type="date" id="cert-to" class="ml-1 px-2 py-1 border border-slate-200 rounded text-xs"></label>
+                        <button id="cert-refresh" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-slate-400">
-                    <i class="fa-solid fa-file-medical text-4xl text-cyan-200 mb-3"></i>
-                    <p class="text-sm font-medium">Certificate management coming in Task 13.</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left px-4 py-3">Date</th>
+                                <th class="text-left px-4 py-3">Patient</th>
+                                <th class="text-left px-4 py-3">Appt #</th>
+                                <th class="text-left px-4 py-3">Doctor</th>
+                                <th class="text-left px-4 py-3">Status</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cert-tbody" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -423,6 +444,47 @@
             <div class="pt-2 flex justify-end gap-2">
                 <button type="button" data-close-vitals class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
                 <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Save vitals</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     CERTIFICATE MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-cert" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Issue Medical Certificate — <span id="cert-patient-name" class="text-emerald-700"></span></h3>
+            <button data-close-cert class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-cert" class="px-6 py-5 space-y-4">
+            <input type="hidden" name="appointment_id" id="cert-appt-id">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Diagnosis <span class="text-red-500">*</span></span>
+                <textarea name="diagnosis" required rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Rest period start <span class="text-red-500">*</span></span>
+                    <input type="date" name="rest_period_start" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Rest period end <span class="text-red-500">*</span></span>
+                    <input type="date" name="rest_period_end" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+            </div>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Rest days <span class="text-slate-400 font-normal">(auto-computed; editable)</span></span>
+                <input type="number" name="rest_days" min="0" step="1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Notes</span>
+                <textarea name="notes" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" data-close-cert class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">Issue certificate</button>
             </div>
         </form>
     </div>
@@ -678,6 +740,106 @@ document.getElementById('form-vitals').addEventListener('submit', async (ev) => 
 });
 
 document.getElementById('refresh-queue').addEventListener('click', loadVitalsQueue);
+
+// ─── Certificates ──────────────────────────────────────────────
+async function loadCertList() {
+    const tbody = document.getElementById('cert-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>';
+    const from = document.getElementById('cert-from').value;
+    const to   = document.getElementById('cert-to').value;
+    const qs   = new URLSearchParams();
+    if (from) qs.set('from', from);
+    if (to)   qs.set('to', to);
+    try {
+        const data = await apiRequest('/staff/certificates.php' + (qs.toString() ? '?' + qs.toString() : ''));
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+        if (!data.rows.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No completed appointments in this date range.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.rows.map(r => {
+            const issued = !!r.cert_id;
+            const dateStr = new Date(r.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 text-slate-700">${dateStr} · ${r.appointment_time || ''}</td>
+                    <td class="px-4 py-3">${escapeHtml(r.patient_name)}</td>
+                    <td class="px-4 py-3 text-slate-500">#${escapeHtml(r.appointment_number)}</td>
+                    <td class="px-4 py-3 text-slate-700">${escapeHtml(r.doctor_name)}</td>
+                    <td class="px-4 py-3">${issued
+                        ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Issued</span>'
+                        : '<span class="text-slate-400 text-xs">Not issued</span>'}</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <button data-issue-aid="${r.appointment_id}"
+                            data-name="${escapeHtml(r.patient_name)}"
+                            data-diag="${escapeHtml(r.cert_diagnosis || r.record_diagnosis || '')}"
+                            class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
+                            ${issued ? 'Edit' : 'Issue'}
+                        </button>
+                        ${issued ? `<a target="_blank" href="print-certificate.html?appointment_id=${r.appointment_id}"
+                            class="ml-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 inline-block">Print</a>` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        tbody.querySelectorAll('[data-issue-aid]').forEach(b =>
+            b.addEventListener('click', () => openCertModal(+b.dataset.issueAid, b.dataset.name, b.dataset.diag))
+        );
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+function openCertModal(appointment_id, patient_name, prefilled_diagnosis) {
+    const form = document.getElementById('form-cert');
+    form.reset();
+    document.getElementById('cert-appt-id').value = appointment_id;
+    document.getElementById('cert-patient-name').textContent = patient_name;
+    form.diagnosis.value = prefilled_diagnosis || '';
+    const today    = new Date().toISOString().slice(0, 10);
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    form.rest_period_start.value = today;
+    form.rest_period_end.value   = tomorrow;
+    form.rest_days.value         = 2;
+    document.getElementById('modal-cert').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-close-cert]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById('modal-cert').classList.add('hidden'))
+);
+
+document.getElementById('form-cert').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    body.appointment_id = +body.appointment_id;
+    if (body.rest_days === '') delete body.rest_days; else body.rest_days = +body.rest_days;
+    const data = await apiRequest('/staff/issue-certificate.php', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to issue', 'error');
+        return;
+    }
+    document.getElementById('modal-cert').classList.add('hidden');
+    Swal.fire({
+        title: 'Certificate ready',
+        text: 'Open the print view now?',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Print',
+        cancelButtonText: 'Later',
+        confirmButtonColor: '#059669'
+    }).then(r => {
+        if (r.isConfirmed) window.open('print-certificate.html?appointment_id=' + body.appointment_id, '_blank');
+    });
+    loadCertList();
+});
+
+document.getElementById('cert-from').addEventListener('change', loadCertList);
+document.getElementById('cert-to').addEventListener('change', loadCertList);
+document.getElementById('cert-refresh').addEventListener('click', loadCertList);
 </script>
 </body>
 </html>

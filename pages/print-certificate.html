@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Medical Certificate</title>
+  <link rel="icon" type="image/png" href="../assets/images/medicare.png">
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: 'Times New Roman', serif; color:#111; max-width: 720px; margin:0 auto; padding:24px; }
+    .letterhead { display:flex; align-items:center; gap:16px; border-bottom:2px solid #0f172a; padding-bottom:12px; }
+    .letterhead img { width:64px; height:64px; }
+    .letterhead h1 { margin:0; font-size:20px; }
+    .letterhead p { margin:2px 0; font-size:12px; color:#475569; }
+    h2.title { text-align:center; letter-spacing:2px; margin:32px 0 24px; }
+    .body p { line-height:1.7; margin:8px 0; text-align:justify; }
+    .signatures { display:grid; grid-template-columns:1fr 1fr; gap:48px; margin-top:64px; }
+    .sig { text-align:center; }
+    .sig-line { border-top:1px solid #111; margin-top:48px; padding-top:4px; font-size:13px; font-weight:bold; }
+    .sig-role { font-size:11px; color:#64748b; }
+    .meta { margin-top:24px; font-size:11px; color:#64748b; }
+    .actions { text-align:center; margin:24px 0; }
+    .actions button { padding:8px 16px; border:1px solid #0f172a; background:#0f172a; color:#fff; border-radius:6px; cursor:pointer; font-family: inherit; }
+    .actions button.secondary { background:#fff; color:#0f172a; margin-left:8px; }
+    @media print { .actions { display:none; } body { padding:0; } }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button onclick="window.print()">Print</button>
+    <button class="secondary" onclick="history.back()">Back</button>
+  </div>
+
+  <div class="letterhead">
+    <img src="../assets/images/medicare.png" alt="Clinic logo" onerror="this.style.display='none'">
+    <div>
+      <h1>Internal Medicine OPD</h1>
+      <p>Consultation Clinic &middot; Medical Certificate</p>
+    </div>
+  </div>
+
+  <h2 class="title">MEDICAL CERTIFICATE</h2>
+
+  <div class="body" id="cert-body">Loading…</div>
+
+  <p class="meta" id="cert-meta"></p>
+
+  <script src="../js/auth.js?v=3.0"></script>
+  <script>
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s ?? '';
+      return d.innerHTML;
+    }
+    function ageFromDob(dob) {
+      if (!dob) return '';
+      const d = new Date(dob), now = new Date();
+      let a = now.getFullYear() - d.getFullYear();
+      if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) a--;
+      return a;
+    }
+    function fmtDate(s) {
+      if (!s) return '';
+      try { return new Date(s).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
+      catch (_) { return s; }
+    }
+
+    (async function () {
+      const params = new URLSearchParams(location.search);
+      const aid = params.get('appointment_id');
+      const body = document.getElementById('cert-body');
+      if (!aid) { body.textContent = 'Missing appointment_id.'; return; }
+      try {
+        const data = await apiRequest('/staff/certificate.php?appointment_id=' + encodeURIComponent(aid));
+        if (!data || !data.success) {
+          body.textContent = data?.message || 'Certificate not found.';
+          return;
+        }
+        const c = data.certificate;
+        const age = ageFromDob(c.date_of_birth);
+        const issuer = c.issued_by_full_name || c.issued_by_username;
+        body.innerHTML = `
+          <p>To Whom It May Concern,</p>
+          <p>This is to certify that <strong>${escHtml(c.patient_name)}</strong>${age ? `, ${age} years old` : ''}${c.gender ? `, ${escHtml(c.gender)}` : ''}, was examined and diagnosed with <strong>${escHtml(c.diagnosis)}</strong> on ${fmtDate(c.appointment_date)}.</p>
+          <p>The patient is advised to rest from <strong>${fmtDate(c.rest_period_start)}</strong> to <strong>${fmtDate(c.rest_period_end)}</strong>, a total of <strong>${c.rest_days}</strong> day(s).</p>
+          ${c.notes ? `<p>${escHtml(c.notes)}</p>` : ''}
+          <p>Issued upon the request of the patient for whatever legal purpose it may serve.</p>
+          <div class="signatures">
+            <div class="sig">
+              <div class="sig-line">${escHtml(c.doctor_name)}, M.D.</div>
+              <div class="sig-role">License: ${escHtml(c.license_number || '—')}</div>
+            </div>
+            <div class="sig">
+              <div class="sig-line">${escHtml(issuer)}</div>
+              <div class="sig-role">Issuing Staff</div>
+            </div>
+          </div>
+        `;
+        document.getElementById('cert-meta').textContent =
+          `Certificate #${c.id} · Appointment #${c.appointment_number} · Issued ${new Date(c.issued_at).toLocaleString()}`;
+      } catch (e) {
+        body.textContent = 'Failed to load certificate: ' + e.message;
+      }
+    })();
+  </script>
+</body>
+</html>
