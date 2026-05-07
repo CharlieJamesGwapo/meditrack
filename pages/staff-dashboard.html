@@ -248,8 +248,11 @@
                     </div>
                 </div>
 
-                <!-- Right: staff chip + logout -->
-                <div class="flex items-center space-x-3 flex-shrink-0">
+                <!-- Right: bell + staff chip + change password + logout -->
+                <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                    <!-- Notifications bell -->
+                    <div id="bell-container" class="flex-shrink-0"></div>
+
                     <!-- Staff avatar chip -->
                     <div class="flex items-center space-x-2 sm:space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-2 py-1.5 sm:px-3 sm:py-2">
                         <div class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
@@ -260,6 +263,13 @@
                             <p class="text-[10px] sm:text-xs text-cyan-600 font-medium">Staff</p>
                         </div>
                     </div>
+
+                    <!-- Change password -->
+                    <button onclick="document.getElementById('modal-staff-password').classList.remove('hidden')"
+                        class="hidden sm:inline-flex items-center px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                        title="Change password">
+                        <i class="fas fa-key"></i>
+                    </button>
 
                     <!-- Logout -->
                     <button onclick="logout()"
@@ -570,8 +580,41 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════
+     STAFF — CHANGE PASSWORD MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-staff-password" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Change Password</h3>
+            <button onclick="document.getElementById('modal-staff-password').classList.add('hidden')"
+                class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-staff-password" class="px-6 py-5 space-y-4">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Current password</span>
+                <input type="password" name="current_password" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">New password</span>
+                <input type="password" name="new_password" minlength="6" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Confirm new password</span>
+                <input type="password" name="confirm_password" minlength="6" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modal-staff-password').classList.add('hidden')"
+                    class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Update password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Auth + shared utilities -->
 <script src="../js/auth.js?v=3.0"></script>
+<script src="../js/notifications-bell.js?v=1.0"></script>
 
 <script>
 (function guard() {
@@ -1052,6 +1095,36 @@ function filterPatientHistoryTimeline(q) {
 
 window.viewPatientHistory = viewPatientHistory;
 window.filterPatientHistoryTimeline = filterPatientHistoryTimeline;
+
+// ─── Notifications bell mount ────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.NotificationsBell) NotificationsBell.mount('#bell-container');
+});
+
+// ─── Change password ─────────────────────────────────────────
+document.getElementById('form-staff-password').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    if (body.new_password !== body.confirm_password) {
+        Swal.fire('Mismatch', 'New password and confirmation must match.', 'warning');
+        return;
+    }
+    const data = await apiRequest('/staff/change-password.php', {
+        method: 'POST',
+        body: JSON.stringify({
+            current_password: body.current_password,
+            new_password: body.new_password,
+        })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to update password', 'error');
+        return;
+    }
+    document.getElementById('modal-staff-password').classList.add('hidden');
+    ev.target.reset();
+    Swal.fire('Updated', 'Password changed successfully.', 'success');
+});
 </script>
 </body>
 </html>
