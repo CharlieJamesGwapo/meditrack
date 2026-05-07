@@ -43,8 +43,22 @@ try {
         ]);
     }
 
-    // Get booked slots
-    $stmt = $db->prepare("SELECT appointment_time FROM appointments WHERE doctor_id = :did AND appointment_date = :date AND status NOT IN ('cancelled','no_show')");
+    // Get booked slots — exclude no-shows already, and treat stale 'scheduled'
+    // appointments past the grace period as no longer blocking the slot
+    // (the original row stays for audit; a new booking will atomically convert
+    // it to no_show in book-appointment.php).
+    $grace = defined('NO_SHOW_GRACE_MINUTES') ? (int) NO_SHOW_GRACE_MINUTES : 15;
+    $stmt = $db->prepare("
+        SELECT appointment_time
+          FROM appointments
+         WHERE doctor_id = :did
+           AND appointment_date = :date
+           AND status NOT IN ('cancelled','no_show')
+           AND NOT (
+               status = 'scheduled'
+               AND TIMESTAMP(appointment_date, appointment_time) < (NOW() - INTERVAL {$grace} MINUTE)
+           )
+    ");
     $stmt->execute([':did' => $doctor_id, ':date' => $date]);
     $booked = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 

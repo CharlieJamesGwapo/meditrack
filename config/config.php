@@ -40,6 +40,7 @@ define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png']);
 
 define('ITEMS_PER_PAGE', 20);
 define('CANCEL_BROADCAST_LIMIT', 20);
+define('NO_SHOW_GRACE_MINUTES', 15);
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');

@@ -265,6 +265,11 @@ function renderAppointmentCard(a) {
                 class="flex items-center space-x-1 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                 <i class="fas fa-qrcode"></i>
                 <span>Scan QR</span>
+            </button>
+            <button onclick='markNoShow(${a.id}, ${JSON.stringify(a.patient_name || "")})'
+                class="flex items-center space-x-1 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-700 border border-slate-200 hover:border-red-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                <i class="fas fa-user-slash"></i>
+                <span>No-show</span>
             </button>`;
     } else if (a.status === 'checked_in' || a.status === 'in_progress') {
         actionBtn = `
@@ -1393,3 +1398,30 @@ function renderHistoryEntry(h) {
 
 window.viewPatientHistory = viewPatientHistory;
 window.openPatientHistoryFromDrawer = openPatientHistoryFromDrawer;
+
+// ─── Mark no-show (Batch C addition) ───────────────────────────
+async function markNoShow(appointmentId, patientName) {
+    const result = await Swal.fire({
+        title: 'Mark as no-show?',
+        html: `<strong>${escapeHtml(patientName || 'This patient')}</strong> will be marked as <strong>no-show</strong>. The slot will become available for other patients.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark no-show',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
+    const data = await apiRequest('/staff/mark-noshow.php', {
+        method: 'POST',
+        body: JSON.stringify({ appointment_id: appointmentId })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to mark no-show', 'error');
+        return;
+    }
+    Swal.fire({ icon: 'success', title: 'Marked no-show', text: data.message, confirmButtonColor: '#0891B2' });
+    if (typeof loadTodayAppointments === 'function') loadTodayAppointments(true);
+    if (typeof loadStats === 'function') loadStats();
+}
+
+window.markNoShow = markNoShow;
