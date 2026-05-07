@@ -807,9 +807,16 @@
                         <p class="text-cyan-100/80 text-xs mt-0.5" id="record-modal-subtitle">Fill in consultation details</p>
                     </div>
                 </div>
-                <button onclick="closeRecordModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-colors">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-view-history" onclick="openPatientHistoryFromDrawer()"
+                        class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <i class="fas fa-clock-rotate-left"></i>
+                        <span>View History</span>
+                    </button>
+                    <button onclick="closeRecordModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-colors">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Scrollable body -->
@@ -1098,5 +1105,30 @@
   }
   if (window.DayCancel) DayCancel.init({ role: 'doctor' });
 });</script>
+
+<!-- ═══════════════════════════════════════════════════
+     PATIENT HISTORY MODAL (same UI used in admin)
+════════════════════════════════════════════════════ -->
+<div id="modal-patient-history" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div>
+                <h3 class="font-outfit font-bold text-[#083344] text-lg">Patient History</h3>
+                <p id="ph-patient-meta" class="text-xs text-slate-500 mt-0.5">Loading…</p>
+            </div>
+            <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
+                class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div id="ph-content" class="px-6 py-4">
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                <p class="text-sm mt-2">Loading history…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

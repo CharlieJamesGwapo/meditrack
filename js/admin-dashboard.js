@@ -490,7 +490,11 @@ function renderPatientsTable(patients) {
                     ${status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-3 whitespace-nowrap">
+                <button onclick="viewPatientHistory(${p.patient_id})"
+                        class="bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 px-3 py-1 rounded-lg text-xs font-semibold transition mr-1">
+                    <i class="fas fa-clock-rotate-left mr-1"></i>History
+                </button>
                 <button onclick="togglePatientStatus(${p.patient_id}, '${escHtml(p.full_name || '')}', '${newStatus}')"
                         class="${toggleCls} px-3 py-1 rounded-lg text-xs font-semibold transition">
                     ${toggleLabel}
@@ -1581,3 +1585,200 @@ function escHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+
+// ─── Patient History (Batch C addition) ────────────────────────────────
+async function viewPatientHistory(patientId) {
+    const modal   = document.getElementById('modal-patient-history');
+    const content = document.getElementById('ph-content');
+    const meta    = document.getElementById('ph-patient-meta');
+    if (!modal || !content) return;
+
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="text-center py-10 text-slate-400">
+            <i class="fas fa-spinner fa-spin text-2xl"></i>
+            <p class="text-sm mt-2">Loading history…</p>
+        </div>`;
+    meta.textContent = 'Loading…';
+
+    try {
+        const data = await apiRequest('/admin/get-patient-history.php?patient_id=' + patientId);
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load history');
+        renderPatientHistory(data.patient, data.history);
+    } catch (e) {
+        content.innerHTML = `<div class="text-center py-10 text-red-600">
+            <i class="fas fa-circle-exclamation text-2xl"></i>
+            <p class="text-sm mt-2">${escHtml(e.message)}</p>
+        </div>`;
+    }
+}
+
+function renderPatientHistory(patient, history) {
+    const meta = document.getElementById('ph-patient-meta');
+    const content = document.getElementById('ph-content');
+
+    // Patient meta line
+    const ageStr = patient.age != null ? `${patient.age}y` : '';
+    const parts = [
+        patient.gender, ageStr, patient.blood_group ? 'Blood ' + patient.blood_group : '',
+        patient.contact_number, patient.email
+    ].filter(Boolean);
+    meta.innerHTML = `<strong class="text-[#083344]">${escHtml(patient.full_name)}</strong> &middot; ${parts.map(escHtml).join(' &middot; ')}`;
+
+    if (!history.length) {
+        content.innerHTML = `
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-folder-open text-3xl mb-3"></i>
+                <p class="text-sm">No appointment history yet.</p>
+            </div>`;
+        return;
+    }
+
+    // Summary chips
+    const stats = history.reduce((s, h) => {
+        s.total++;
+        if (h.appointment.status === 'completed') s.completed++;
+        if (h.appointment.status === 'cancelled') s.cancelled++;
+        if (h.medical_record) s.records++;
+        if (h.certificate) s.certs++;
+        if (h.referral) s.referrals++;
+        if (h.appointment.is_followup) s.followups++;
+        return s;
+    }, { total: 0, completed: 0, cancelled: 0, records: 0, certs: 0, referrals: 0, followups: 0 });
+
+    const summaryHtml = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">
+            ${[
+                ['Visits', stats.total, 'cyan'],
+                ['Completed', stats.completed, 'emerald'],
+                ['Cancelled', stats.cancelled, 'red'],
+                ['Records', stats.records, 'blue'],
+                ['Certs', stats.certs, 'green'],
+                ['Referrals', stats.referrals, 'amber'],
+                ['Follow-ups', stats.followups, 'purple'],
+            ].map(([label, n, color]) => `
+                <div class="rounded-lg bg-${color}-50 border border-${color}-100 px-3 py-2 text-center">
+                    <div class="text-lg font-bold text-${color}-700">${n}</div>
+                    <div class="text-[10px] uppercase tracking-wide text-${color}-600 font-semibold">${label}</div>
+                </div>
+            `).join('')}
+        </div>`;
+
+    // Timeline
+    const timelineHtml = history.map(h => renderHistoryEntry(h)).join('');
+
+    content.innerHTML = summaryHtml + '<div class="space-y-3">' + timelineHtml + '</div>';
+}
+
+function renderHistoryEntry(h) {
+    const a = h.appointment;
+    const statusBadgeClass = {
+        scheduled:   'bg-blue-50 text-blue-700 border-blue-200',
+        checked_in:  'bg-amber-50 text-amber-700 border-amber-200',
+        in_progress: 'bg-purple-50 text-purple-700 border-purple-200',
+        completed:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+        cancelled:   'bg-red-50 text-red-700 border-red-200',
+        no_show:     'bg-gray-50 text-gray-700 border-gray-200',
+    }[a.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+
+    const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const timeStr = (a.appointment_time || '').substring(0, 5);
+
+    const v = h.vitals;
+    const vitalsHtml = v ? `
+        <div class="bg-rose-50 border border-rose-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-rose-700 mb-1.5"><i class="fas fa-heartbeat mr-1"></i>Vitals</div>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
+                ${[
+                    ['BP',   v.blood_pressure],
+                    ['Temp', v.temperature ? v.temperature + '°C' : null],
+                    ['HR',   v.heart_rate ? v.heart_rate + 'bpm' : null],
+                    ['SpO₂', v.oxygen_saturation ? v.oxygen_saturation + '%' : null],
+                    ['Wt',   v.weight ? v.weight + 'kg' : null],
+                    ['Ht',   v.height_cm ? v.height_cm + 'cm' : null],
+                ].map(([k, val]) => val ? `<div><span class="text-rose-500">${k}:</span> <span class="font-semibold">${escHtml(val)}</span></div>` : '').join('')}
+            </div>
+            ${v.chief_complaint ? `<div class="text-xs text-slate-600 mt-2"><strong>Chief complaint:</strong> ${escHtml(v.chief_complaint)}</div>` : ''}
+        </div>` : '';
+
+    const r = h.medical_record;
+    const recordHtml = r ? `
+        <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-cyan-700 mb-1.5"><i class="fas fa-stethoscope mr-1"></i>Medical Record</div>
+            <div class="space-y-1.5 text-xs">
+                ${r.symptoms     ? `<div><strong>Symptoms:</strong> ${escHtml(r.symptoms)}</div>` : ''}
+                ${r.diagnosis    ? `<div><strong>Diagnosis:</strong> ${escHtml(r.diagnosis)}</div>` : ''}
+                ${r.prescription ? `<div><strong>Prescription:</strong> ${escHtml(r.prescription)}</div>` : ''}
+                ${r.lab_tests_ordered ? `<div><strong>Labs:</strong> ${escHtml(r.lab_tests_ordered)}</div>` : ''}
+                ${r.notes        ? `<div class="text-slate-500 italic">${escHtml(r.notes)}</div>` : ''}
+            </div>
+        </div>` : '';
+
+    const c = h.certificate;
+    const certHtml = c ? `
+        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start gap-2">
+            <div class="flex-1">
+                <div class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 mb-1.5"><i class="fas fa-file-medical mr-1"></i>Medical Certificate</div>
+                <div class="text-xs text-slate-700">
+                    <strong>${escHtml(c.diagnosis)}</strong> &middot; Rest from ${escHtml(c.rest_period_start)} to ${escHtml(c.rest_period_end)} (${c.rest_days} day${c.rest_days == 1 ? '' : 's'})
+                    ${c.requested_by ? ` &middot; <span class="text-slate-500">requested by ${escHtml(c.requested_by)}</span>` : ''}
+                </div>
+            </div>
+            <a href="print-certificate.html?appointment_id=${a.id}" target="_blank"
+                class="px-2 py-1 rounded-md bg-white border border-emerald-300 text-emerald-700 text-[11px] font-semibold hover:bg-emerald-100">
+                <i class="fas fa-print"></i> Print
+            </a>
+        </div>` : '';
+
+    const ref = h.referral;
+    const refHtml = ref ? `
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
+            <div class="flex-1">
+                <div class="text-[10px] uppercase tracking-wide font-bold text-blue-700 mb-1.5"><i class="fas fa-share-from-square mr-1"></i>Referral</div>
+                <div class="text-xs text-slate-700">
+                    <strong>${escHtml(ref.specialty === 'Other' && ref.specialty_other ? ref.specialty_other : ref.specialty)}</strong>
+                    &middot; <span class="uppercase font-semibold text-blue-700">${escHtml(ref.urgency)}</span>
+                    <div class="text-slate-600 mt-1">${escHtml(ref.reason)}</div>
+                    ${ref.suggested_specialist ? `<div class="text-slate-500 mt-1">Suggested: ${escHtml(ref.suggested_specialist)}</div>` : ''}
+                </div>
+            </div>
+            <a href="print-referral.html?appointment_id=${a.id}" target="_blank"
+                class="px-2 py-1 rounded-md bg-white border border-blue-300 text-blue-700 text-[11px] font-semibold hover:bg-blue-100">
+                <i class="fas fa-print"></i> Print
+            </a>
+        </div>` : '';
+
+    const cancelHtml = a.status === 'cancelled' ? `
+        <div class="bg-red-50 border border-red-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-red-700 mb-1.5"><i class="fas fa-times-circle mr-1"></i>Cancelled</div>
+            <div class="text-xs text-slate-700">
+                By <strong>${escHtml(a.cancelled_by || '—')}</strong>${a.cancel_reason ? ` &middot; ${escHtml(a.cancel_reason)}` : ''}
+                ${a.cancelled_at ? `<div class="text-slate-500 mt-1">${new Date(a.cancelled_at).toLocaleString()}</div>` : ''}
+            </div>
+        </div>` : '';
+
+    return `
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <div class="bg-slate-50 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-xs font-mono text-slate-500">#${escHtml(a.appointment_number || a.id)}</span>
+                    <span class="font-semibold text-[#083344] text-sm">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>
+                    ${a.is_followup ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-semibold uppercase">Follow-up</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500">Dr. ${escHtml(h.doctor.full_name)}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${statusBadgeClass}">${escHtml(a.status)}</span>
+                </div>
+            </div>
+            <div class="p-3 space-y-2.5">
+                ${a.reason_for_visit ? `<div class="text-xs"><strong class="text-slate-700">Reason:</strong> <span class="text-slate-600">${escHtml(a.reason_for_visit)}</span></div>` : ''}
+                ${vitalsHtml}
+                ${recordHtml}
+                ${certHtml}
+                ${refHtml}
+                ${cancelHtml}
+            </div>
+        </div>`;
+}
+
+window.viewPatientHistory = viewPatientHistory;
