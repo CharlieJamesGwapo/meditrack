@@ -32,7 +32,7 @@ try {
     }
 
     // Get user
-    $stmt = $db->prepare("SELECT id, username FROM users WHERE email = :email AND status = 'active' LIMIT 1");
+    $stmt = $db->prepare("SELECT id, username, role FROM users WHERE email = :email AND status = 'active' LIMIT 1");
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 
@@ -51,7 +51,7 @@ try {
 
     $db->commit();
 
-    logActivity($db, $user['id'], $user['username'], 'patient', 'UPDATE', 'Auth', $user['id'], "Password reset successfully");
+    logActivity($db, $user['id'], $user['username'], $user['role'] ?? 'patient', 'UPDATE', 'Auth', $user['id'], "Password reset successfully");
 
     sendJSON(['success' => true, 'message' => 'Password reset successfully']);
 
