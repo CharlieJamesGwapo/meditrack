@@ -792,24 +792,45 @@ async function loadVitalsQueue() {
             tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">No patients waiting. Scan a QR to check someone in.</td></tr>';
             return;
         }
-        tbody.innerHTML = data.queue.map(q => `
-            <tr class="hover:bg-slate-50">
-                <td class="px-4 py-3 font-medium text-slate-700">${q.appointment_time || '—'}</td>
-                <td class="px-4 py-3">${escapeHtml(q.patient_name)}</td>
-                <td class="px-4 py-3 text-slate-500">#${escapeHtml(q.appointment_number)}</td>
-                <td class="px-4 py-3">${q.triage_id
-                    ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Recorded</span>'
-                    : '<span class="text-slate-400 text-xs">Pending</span>'}</td>
-                <td class="px-4 py-3 text-right">
+        tbody.innerHTML = data.queue.map(q => {
+            const statusBadge = {
+                scheduled:   '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">Awaiting check-in</span>',
+                checked_in:  q.triage_id
+                    ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Vitals recorded</span>'
+                    : '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">Awaiting vitals</span>',
+                in_progress: '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold">With doctor</span>',
+            }[q.status] || '<span class="text-slate-400 text-xs">—</span>';
+
+            let actionBtns = '';
+            if (q.status === 'scheduled') {
+                actionBtns = `
+                    <button data-noshow-aid="${q.appointment_id}" data-name="${escapeHtml(q.patient_name)}"
+                        class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-700 border border-slate-200 text-xs font-semibold transition">
+                        <i class="fas fa-user-slash mr-1"></i>No-show
+                    </button>`;
+            } else if (q.status === 'checked_in') {
+                actionBtns = `
                     <button data-vitals-aid="${q.appointment_id}" data-name="${escapeHtml(q.patient_name)}"
                         class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-700">
                         ${q.triage_id ? 'Edit' : 'Record'} vitals
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+                    </button>`;
+            }
+
+            return `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 font-medium text-slate-700">${q.appointment_time || '—'}</td>
+                    <td class="px-4 py-3">${escapeHtml(q.patient_name)}</td>
+                    <td class="px-4 py-3 text-slate-500">#${escapeHtml(q.appointment_number)}</td>
+                    <td class="px-4 py-3">${statusBadge}</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">${actionBtns}</td>
+                </tr>
+            `;
+        }).join('');
         tbody.querySelectorAll('[data-vitals-aid]').forEach(b =>
             b.addEventListener('click', () => openVitalsModal(+b.dataset.vitalsAid, b.dataset.name))
+        );
+        tbody.querySelectorAll('[data-noshow-aid]').forEach(b =>
+            b.addEventListener('click', () => staffMarkNoShow(+b.dataset.noshowAid, b.dataset.name))
         );
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
@@ -864,6 +885,31 @@ document.getElementById('form-vitals').addEventListener('submit', async (ev) => 
 });
 
 document.getElementById('refresh-queue').addEventListener('click', loadVitalsQueue);
+
+// Staff mark-no-show
+async function staffMarkNoShow(appointmentId, patientName) {
+    const result = await Swal.fire({
+        title: 'Mark as no-show?',
+        html: `<strong>${escapeHtml(patientName || 'This patient')}</strong> will be marked as <strong>no-show</strong>. The slot will become available for other patients.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark no-show',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
+    const data = await apiRequest('/staff/mark-noshow.php', {
+        method: 'POST',
+        body: JSON.stringify({ appointment_id: appointmentId })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to mark no-show', 'error');
+        return;
+    }
+    Swal.fire({ icon: 'success', title: 'Marked no-show', text: data.message, confirmButtonColor: '#0891B2' });
+    loadVitalsQueue();
+}
+window.staffMarkNoShow = staffMarkNoShow;
 
 // ─── Certificates ──────────────────────────────────────────────
 async function loadCertList() {

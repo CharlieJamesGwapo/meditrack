@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/NoShowSweeper.php';
 
 if (!isLoggedIn() || !hasRole('staff')) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
@@ -8,16 +9,23 @@ if (!isLoggedIn() || !hasRole('staff')) {
 
 try {
     $db = (new Database())->getConnection();
+    NoShowSweeper::sweep($db);  // self-healing: stale scheduled → no_show
+
+    // Show today's appointments that staff can act on:
+    //   scheduled → can scan QR or mark no-show
+    //   checked_in → can record vitals
+    //   in_progress → with the doctor (read-only on this view, but listed for context)
     $stmt = $db->prepare("
-        SELECT a.id AS appointment_id, a.appointment_number, a.appointment_time, a.checked_in_at,
+        SELECT a.id AS appointment_id, a.appointment_number, a.appointment_time, a.status,
+               a.checked_in_at,
                p.id AS patient_id, p.full_name AS patient_name, p.date_of_birth, p.gender,
                t.id AS triage_id
           FROM appointments a
           JOIN patients p ON p.id = a.patient_id
      LEFT JOIN triage_assessments t ON t.appointment_id = a.id
          WHERE a.appointment_date = CURDATE()
-           AND a.status = 'checked_in'
-         ORDER BY a.checked_in_at ASC
+           AND a.status IN ('scheduled','checked_in','in_progress')
+         ORDER BY a.appointment_time ASC
     ");
     $stmt->execute();
     sendJSON(['success' => true, 'queue' => $stmt->fetchAll()]);

@@ -345,11 +345,15 @@ async function loadAppointments() {
                 <td class="px-4 py-3 text-gray-600">${date}</td>
                 <td class="px-4 py-3 text-gray-600">${time}</td>
                 <td class="px-4 py-3">${badge}</td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 whitespace-nowrap">
                     ${canCancel
                         ? `<button onclick="cancelAppointment(${a.id}, '${apptNo}')"
-                                   class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition">
+                                   class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition mr-1">
                                <i class="fas fa-ban mr-1"></i>Cancel
+                           </button>
+                           <button onclick="adminMarkNoShow(${a.id}, '${escHtml(patient)}')"
+                                   class="bg-slate-50 hover:bg-amber-100 text-slate-600 hover:text-amber-700 border border-slate-200 px-3 py-1 rounded-lg text-xs font-semibold transition">
+                               <i class="fas fa-user-slash mr-1"></i>No-show
                            </button>`
                         : `<span class="text-gray-300 text-xs">—</span>`}
                 </td>
@@ -1795,3 +1799,28 @@ function renderHistoryEntry(h) {
 }
 
 window.viewPatientHistory = viewPatientHistory;
+
+// ─── Admin mark-no-show ────────────────────────────────────────
+async function adminMarkNoShow(appointmentId, patientName) {
+    const result = await Swal.fire({
+        title: 'Mark as no-show?',
+        html: `<strong>${patientName || 'This patient'}</strong> will be marked as <strong>no-show</strong>. The slot will become available for other patients.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark no-show',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
+    const data = await apiRequest('/staff/mark-noshow.php', {
+        method: 'POST',
+        body: JSON.stringify({ appointment_id: appointmentId })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to mark no-show', 'error');
+        return;
+    }
+    showToast && showToast('success', 'Marked no-show', data.message);
+    if (typeof loadAppointments === 'function') loadAppointments();
+}
+window.adminMarkNoShow = adminMarkNoShow;
