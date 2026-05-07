@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
 
-if (!isLoggedIn() || !(hasRole('staff') || hasRole('admin') || hasRole('doctor'))) {
+if (!isLoggedIn()) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
@@ -13,9 +13,14 @@ if (!$appointment_id) {
 
 try {
     $db = (new Database())->getConnection();
+    $userId = getCurrentUserId();
+    $role   = getCurrentUserRole();
+
     $stmt = $db->prepare("
         SELECT mc.*,
+               p.user_id AS patient_user_id,
                p.full_name AS patient_name, p.date_of_birth, p.gender, p.address, p.contact_number AS patient_contact,
+               d.user_id AS doctor_user_id,
                d.full_name AS doctor_name, d.license_number, d.specialization,
                u.username AS issued_by_username,
                sp.full_name AS issued_by_full_name,
@@ -34,6 +39,18 @@ try {
     if (!$row) {
         sendJSON(['success' => false, 'message' => 'Certificate not found'], 404);
     }
+
+    // Authorization: staff/admin always; doctor if owner; patient if their cert.
+    $authorized = in_array($role, ['staff', 'admin'], true)
+               || ($role === 'doctor'  && (int) $row['doctor_user_id']  === (int) $userId)
+               || ($role === 'patient' && (int) $row['patient_user_id'] === (int) $userId);
+    if (!$authorized) {
+        sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+    }
+
+    // Strip the auth-only fields before responding
+    unset($row['patient_user_id'], $row['doctor_user_id']);
+
     sendJSON(['success' => true, 'certificate' => $row]);
 } catch (Exception $e) {
     error_log("staff/certificate error: " . $e->getMessage());

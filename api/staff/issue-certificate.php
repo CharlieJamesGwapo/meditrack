@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/database.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-if (!isLoggedIn() || !hasRole('staff')) {
+if (!isLoggedIn() || !(hasRole('staff') || hasRole('admin'))) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 
@@ -73,7 +73,7 @@ try {
         ':req'   => $requested_by ?: null,
     ]);
 
-    logActivity($db, $userId, $_SESSION['username'] ?? '', 'staff', 'CREATE', 'MedicalCertificates', $appointment_id, "Cert issued for appointment #$appointment_id");
+    logActivity($db, $userId, $_SESSION['username'] ?? '', getCurrentUserRole() ?? 'staff', 'CREATE', 'MedicalCertificates', $appointment_id, "Cert issued for appointment #$appointment_id");
 
     sendJSON(['success' => true, 'message' => 'Certificate issued', 'rest_days' => $rest_days]);
 } catch (Exception $e) {

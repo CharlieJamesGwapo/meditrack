@@ -1,5 +1,7 @@
 # Environment & credentials
 env.php
+env.*.php
+env.*.bak
 
 # OS files
 .DS_Store
@@ -16,3 +18,14 @@ composer.lock
 # Logs
 *.log
 error_log
+
+# Local DB dumps and one-off backups
+/*.sql
+/*.zip
+/database/fix-production-db.sql
+/database/stjohnba_meditrack_fixed.sql
+
+# Loose images at repo root (assets live under assets/images/)
+/hospitalbg.jpg
+/medical_certifcate_logo.jpg
+/medicare.png

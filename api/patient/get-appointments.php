@@ -27,7 +27,9 @@ try {
                a.status, a.reason_for_visit, a.checked_in_at, a.completed_at, a.cancelled_at, a.created_at,
                a.is_followup, a.parent_appointment_id,
                d.full_name as doctor_name, d.specialization,
-               qt.token_hash, qt.expires_at as qr_expires_at, qt.is_used as qr_used
+               qt.token_hash, qt.expires_at as qr_expires_at, qt.is_used as qr_used,
+               (SELECT COUNT(*) FROM referrals r WHERE r.appointment_id = a.id) AS has_referral,
+               (SELECT COUNT(*) FROM medical_certificates mc WHERE mc.appointment_id = a.id) AS has_certificate
         FROM appointments a
         JOIN doctors d ON a.doctor_id = d.id
         LEFT JOIN qr_tokens qt ON a.id = qt.appointment_id
