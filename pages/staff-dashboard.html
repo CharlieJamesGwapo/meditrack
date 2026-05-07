@@ -199,6 +199,14 @@
                 </div>
                 <span>Certificates</span>
             </button>
+
+            <button onclick="switchTab('patients')" id="nav-patients"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-users text-xs"></i>
+                </div>
+                <span>Patients</span>
+            </button>
         </nav>
 
         <!-- Logout -->
@@ -362,6 +370,38 @@
                 </div>
             </div>
 
+            <!-- ══════════════════════════════
+                 TAB: PATIENTS
+            ═══════════════════════════════ -->
+            <div id="tab-patients" class="tab-content">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-700 flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-users text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Patients</h3>
+                    </div>
+                    <input id="patient-search" type="search" placeholder="Search by name, email, contact…"
+                        class="px-3 py-2 border border-slate-200 rounded-lg text-sm w-72">
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left px-4 py-3">Name</th>
+                                <th class="text-left px-4 py-3">Email</th>
+                                <th class="text-left px-4 py-3">Contact</th>
+                                <th class="text-left px-4 py-3">Visits</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="patients-tbody" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div><!-- /tab contents -->
     </main>
 </div>
@@ -370,13 +410,13 @@
      MOBILE BOTTOM NAV
 ════════════════════════════════════════════════════ -->
 <nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-    <div class="grid grid-cols-3 h-[68px]">
+    <div class="grid grid-cols-4 h-[68px]">
 
         <button onclick="switchTab('scan')" id="mobile-nav-scan"
             class="mobile-nav-btn active flex flex-col items-center justify-center py-2 text-[#0891B2] text-xs font-medium gap-1 transition-colors">
             <i class="fa-solid fa-qrcode text-base"></i>
             <div class="mobile-nav-dot"></div>
-            <span class="text-[10px] font-semibold">Scan QR</span>
+            <span class="text-[10px] font-semibold">Scan</span>
         </button>
 
         <button onclick="switchTab('vitals')" id="mobile-nav-vitals"
@@ -391,6 +431,13 @@
             <i class="fa-solid fa-file-medical text-base"></i>
             <div class="mobile-nav-dot"></div>
             <span class="text-[10px] font-semibold">Certs</span>
+        </button>
+
+        <button onclick="switchTab('patients')" id="mobile-nav-patients"
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-users text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Patients</span>
         </button>
 
     </div>
@@ -446,6 +493,35 @@
                 <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Save vitals</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PATIENT HISTORY MODAL (search-enabled)
+════════════════════════════════════════════════════ -->
+<div id="modal-patient-history" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 gap-3 flex-wrap">
+            <div class="min-w-0">
+                <h3 class="font-outfit font-bold text-[#083344] text-lg">Patient History</h3>
+                <p id="ph-patient-meta" class="text-xs text-slate-500 mt-0.5">Loading…</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <input id="ph-search" type="search" placeholder="Filter visits…"
+                    class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs w-48"
+                    oninput="filterPatientHistoryTimeline(this.value)">
+                <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="ph-content" class="px-6 py-4">
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                <p class="text-sm mt-2">Loading history…</p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -522,7 +598,7 @@
     }
 })();
 
-const TAB_TITLES = { scan: 'Scan QR', vitals: 'Vitals Queue', certs: 'Certificates' };
+const TAB_TITLES = { scan: 'Scan QR', vitals: 'Vitals Queue', certs: 'Certificates', patients: 'Patients' };
 
 function switchTab(tab) {
     // Sidebar nav items
@@ -559,8 +635,9 @@ function switchTab(tab) {
     if (titleEl) titleEl.textContent = TAB_TITLES[tab] || tab;
 
     // Hook calls for downstream tasks
-    if (tab === 'vitals' && typeof loadVitalsQueue === 'function') loadVitalsQueue();
-    if (tab === 'certs'  && typeof loadCertList   === 'function') loadCertList();
+    if (tab === 'vitals'   && typeof loadVitalsQueue === 'function') loadVitalsQueue();
+    if (tab === 'certs'    && typeof loadCertList    === 'function') loadCertList();
+    if (tab === 'patients' && typeof loadPatientsList === 'function') loadPatientsList();
 }
 
 function escapeHtml(s) {
@@ -845,6 +922,136 @@ document.getElementById('form-cert').addEventListener('submit', async (ev) => {
 document.getElementById('cert-from').addEventListener('change', loadCertList);
 document.getElementById('cert-to').addEventListener('change', loadCertList);
 document.getElementById('cert-refresh').addEventListener('click', loadCertList);
+
+// ─── Patients tab + history modal ───────────────────────────────
+let __allPatients = [];
+
+async function loadPatientsList() {
+    const tbody = document.getElementById('patients-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>';
+    try {
+        const data = await apiRequest('/admin/get-all-patients.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+        __allPatients = data.patients || [];
+        renderStaffPatientsTable(__allPatients);
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+function renderStaffPatientsTable(rows) {
+    const tbody = document.getElementById('patients-tbody');
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">No patients found.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map(p => `
+        <tr class="hover:bg-slate-50">
+            <td class="px-4 py-3">
+                <div class="font-semibold text-[#083344]">${escapeHtml(p.full_name || '—')}</div>
+                ${p.gender ? `<div class="text-[10px] text-slate-400">${escapeHtml(p.gender)}${p.blood_group ? ' · Blood ' + escapeHtml(p.blood_group) : ''}</div>` : ''}
+            </td>
+            <td class="px-4 py-3 text-slate-600">${escapeHtml(p.email || '—')}</td>
+            <td class="px-4 py-3 text-slate-600">${escapeHtml(p.contact_number || '—')}</td>
+            <td class="px-4 py-3 text-slate-700 font-semibold">${p.total_appointments ?? 0}</td>
+            <td class="px-4 py-3 text-right">
+                <button onclick="viewPatientHistory(${p.patient_id})"
+                    class="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 text-xs font-semibold">
+                    <i class="fas fa-clock-rotate-left mr-1"></i>View History
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('patient-search').addEventListener('input', (ev) => {
+    const q = ev.target.value.toLowerCase().trim();
+    if (!q) { renderStaffPatientsTable(__allPatients); return; }
+    const filtered = __allPatients.filter(p =>
+        (p.full_name || '').toLowerCase().includes(q) ||
+        (p.email     || '').toLowerCase().includes(q) ||
+        (p.contact_number || '').toLowerCase().includes(q)
+    );
+    renderStaffPatientsTable(filtered);
+});
+
+// History modal — same shape as admin/doctor
+async function viewPatientHistory(patientId) {
+    const modal   = document.getElementById('modal-patient-history');
+    const content = document.getElementById('ph-content');
+    const meta    = document.getElementById('ph-patient-meta');
+    if (!modal || !content) return;
+    modal.classList.remove('hidden');
+    content.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="text-sm mt-2">Loading history…</p></div>`;
+    meta.textContent = 'Loading…';
+    document.getElementById('ph-search').value = '';
+    try {
+        const data = await apiRequest('/admin/get-patient-history.php?patient_id=' + patientId);
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load history');
+        __phHistory = data.history;
+        __phPatient = data.patient;
+        renderPatientHistory(data.patient, data.history);
+    } catch (e) {
+        content.innerHTML = `<div class="text-center py-10 text-red-600"><i class="fas fa-circle-exclamation text-2xl"></i><p class="text-sm mt-2">${escapeHtml(e.message)}</p></div>`;
+    }
+}
+
+let __phHistory = [];
+let __phPatient = null;
+
+function renderPatientHistory(patient, history) {
+    const meta = document.getElementById('ph-patient-meta');
+    const content = document.getElementById('ph-content');
+    const ageStr = patient.age != null ? `${patient.age}y` : '';
+    const parts = [patient.gender, ageStr, patient.blood_group ? 'Blood ' + patient.blood_group : '', patient.contact_number, patient.email].filter(Boolean);
+    meta.innerHTML = `<strong class="text-[#083344]">${escapeHtml(patient.full_name)}</strong> &middot; ${parts.map(escapeHtml).join(' &middot; ')}`;
+    if (!history.length) {
+        content.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-folder-open text-3xl mb-3"></i><p class="text-sm">No appointment history yet.</p></div>`;
+        return;
+    }
+    const stats = history.reduce((s, h) => {
+        s.total++;
+        if (h.appointment.status === 'completed') s.completed++;
+        if (h.appointment.status === 'cancelled') s.cancelled++;
+        if (h.medical_record) s.records++;
+        if (h.certificate) s.certs++;
+        if (h.referral) s.referrals++;
+        if (h.appointment.is_followup) s.followups++;
+        return s;
+    }, { total: 0, completed: 0, cancelled: 0, records: 0, certs: 0, referrals: 0, followups: 0 });
+    const summaryHtml = `<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">${[
+        ['Visits', stats.total, 'cyan'], ['Completed', stats.completed, 'emerald'], ['Cancelled', stats.cancelled, 'red'],
+        ['Records', stats.records, 'blue'], ['Certs', stats.certs, 'green'], ['Referrals', stats.referrals, 'amber'], ['Follow-ups', stats.followups, 'purple'],
+    ].map(([label, n, color]) => `<div class="rounded-lg bg-${color}-50 border border-${color}-100 px-3 py-2 text-center"><div class="text-lg font-bold text-${color}-700">${n}</div><div class="text-[10px] uppercase tracking-wide text-${color}-600 font-semibold">${label}</div></div>`).join('')}</div>`;
+    const timelineHtml = history.map(h => renderHistoryEntry(h)).join('');
+    content.innerHTML = summaryHtml + '<div id="ph-timeline" class="space-y-3">' + timelineHtml + '</div>';
+}
+
+function renderHistoryEntry(h) {
+    const a = h.appointment;
+    const statusBadgeClass = { scheduled: 'bg-blue-50 text-blue-700 border-blue-200', checked_in: 'bg-amber-50 text-amber-700 border-amber-200', in_progress: 'bg-purple-50 text-purple-700 border-purple-200', completed: 'bg-emerald-50 text-emerald-700 border-emerald-200', cancelled: 'bg-red-50 text-red-700 border-red-200', no_show: 'bg-gray-50 text-gray-700 border-gray-200' }[a.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+    const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const timeStr = (a.appointment_time || '').substring(0, 5);
+    const v = h.vitals; const r = h.medical_record; const c = h.certificate; const ref = h.referral;
+    const vitalsHtml = v ? `<div class="bg-rose-50 border border-rose-100 rounded-lg p-3"><div class="text-[10px] uppercase tracking-wide font-bold text-rose-700 mb-1.5"><i class="fas fa-heartbeat mr-1"></i>Vitals</div><div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">${[['BP', v.blood_pressure], ['Temp', v.temperature ? v.temperature + '°C' : null], ['HR', v.heart_rate ? v.heart_rate + 'bpm' : null], ['SpO₂', v.oxygen_saturation ? v.oxygen_saturation + '%' : null], ['Wt', v.weight ? v.weight + 'kg' : null], ['Ht', v.height_cm ? v.height_cm + 'cm' : null]].map(([k, val]) => val ? `<div><span class="text-rose-500">${k}:</span> <span class="font-semibold">${escapeHtml(val)}</span></div>` : '').join('')}</div>${v.chief_complaint ? `<div class="text-xs text-slate-600 mt-2"><strong>Chief complaint:</strong> ${escapeHtml(v.chief_complaint)}</div>` : ''}</div>` : '';
+    const recordHtml = r ? `<div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3"><div class="text-[10px] uppercase tracking-wide font-bold text-cyan-700 mb-1.5"><i class="fas fa-stethoscope mr-1"></i>Medical Record</div><div class="space-y-1.5 text-xs">${r.symptoms ? `<div><strong>Symptoms:</strong> ${escapeHtml(r.symptoms)}</div>` : ''}${r.diagnosis ? `<div><strong>Diagnosis:</strong> ${escapeHtml(r.diagnosis)}</div>` : ''}${r.prescription ? `<div><strong>Prescription:</strong> ${escapeHtml(r.prescription)}</div>` : ''}${r.lab_tests_ordered ? `<div><strong>Labs:</strong> ${escapeHtml(r.lab_tests_ordered)}</div>` : ''}${r.notes ? `<div class="text-slate-500 italic">${escapeHtml(r.notes)}</div>` : ''}</div></div>` : '';
+    const certHtml = c ? `<div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start gap-2"><div class="flex-1"><div class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 mb-1.5"><i class="fas fa-file-medical mr-1"></i>Medical Certificate</div><div class="text-xs text-slate-700"><strong>${escapeHtml(c.diagnosis)}</strong> &middot; Rest from ${escapeHtml(c.rest_period_start)} to ${escapeHtml(c.rest_period_end)} (${c.rest_days} day${c.rest_days == 1 ? '' : 's'})${c.requested_by ? ` &middot; <span class="text-slate-500">requested by ${escapeHtml(c.requested_by)}</span>` : ''}</div></div><a href="print-certificate.html?appointment_id=${a.id}" target="_blank" class="px-2 py-1 rounded-md bg-white border border-emerald-300 text-emerald-700 text-[11px] font-semibold hover:bg-emerald-100"><i class="fas fa-print"></i> Print</a></div>` : '';
+    const refHtml = ref ? `<div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2"><div class="flex-1"><div class="text-[10px] uppercase tracking-wide font-bold text-blue-700 mb-1.5"><i class="fas fa-share-from-square mr-1"></i>Referral</div><div class="text-xs text-slate-700"><strong>${escapeHtml(ref.specialty === 'Other' && ref.specialty_other ? ref.specialty_other : ref.specialty)}</strong> &middot; <span class="uppercase font-semibold text-blue-700">${escapeHtml(ref.urgency)}</span><div class="text-slate-600 mt-1">${escapeHtml(ref.reason)}</div>${ref.suggested_specialist ? `<div class="text-slate-500 mt-1">Suggested: ${escapeHtml(ref.suggested_specialist)}</div>` : ''}</div></div><a href="print-referral.html?appointment_id=${a.id}" target="_blank" class="px-2 py-1 rounded-md bg-white border border-blue-300 text-blue-700 text-[11px] font-semibold hover:bg-blue-100"><i class="fas fa-print"></i> Print</a></div>` : '';
+    const cancelHtml = a.status === 'cancelled' ? `<div class="bg-red-50 border border-red-100 rounded-lg p-3"><div class="text-[10px] uppercase tracking-wide font-bold text-red-700 mb-1.5"><i class="fas fa-times-circle mr-1"></i>Cancelled</div><div class="text-xs text-slate-700">By <strong>${escapeHtml(a.cancelled_by || '—')}</strong>${a.cancel_reason ? ` &middot; ${escapeHtml(a.cancel_reason)}` : ''}${a.cancelled_at ? `<div class="text-slate-500 mt-1">${new Date(a.cancelled_at).toLocaleString()}</div>` : ''}</div></div>` : '';
+    return `<div class="border border-slate-200 rounded-xl overflow-hidden" data-appt-search="${escapeHtml((a.appointment_number || '') + ' ' + (a.reason_for_visit || '') + ' ' + (h.doctor.full_name || '') + ' ' + (r ? r.diagnosis + ' ' + r.symptoms + ' ' + r.prescription : '') + ' ' + (c ? c.diagnosis : '') + ' ' + (ref ? ref.specialty + ' ' + ref.reason : '')).toLowerCase()}"><div class="bg-slate-50 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap"><div class="flex items-center gap-2 min-w-0"><span class="text-xs font-mono text-slate-500">#${escapeHtml(a.appointment_number || a.id)}</span><span class="font-semibold text-[#083344] text-sm">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>${a.is_followup ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-semibold uppercase">Follow-up</span>' : ''}</div><div class="flex items-center gap-2"><span class="text-xs text-slate-500">Dr. ${escapeHtml(h.doctor.full_name)}</span><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${statusBadgeClass}">${escapeHtml(a.status)}</span></div></div><div class="p-3 space-y-2.5">${a.reason_for_visit ? `<div class="text-xs"><strong class="text-slate-700">Reason:</strong> <span class="text-slate-600">${escapeHtml(a.reason_for_visit)}</span></div>` : ''}${vitalsHtml}${recordHtml}${certHtml}${refHtml}${cancelHtml}</div></div>`;
+}
+
+function filterPatientHistoryTimeline(q) {
+    const tl = document.getElementById('ph-timeline');
+    if (!tl) return;
+    const norm = (q || '').toLowerCase().trim();
+    tl.querySelectorAll('[data-appt-search]').forEach(el => {
+        el.style.display = (!norm || el.dataset.apptSearch.includes(norm)) ? '' : 'none';
+    });
+}
+
+window.viewPatientHistory = viewPatientHistory;
+window.filterPatientHistoryTimeline = filterPatientHistoryTimeline;
 </script>
 </body>
 </html>

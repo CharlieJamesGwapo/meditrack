@@ -41,7 +41,9 @@ class CancelBroadcaster {
                             AND n.is_read = 0
                             AND n.created_at > (NOW() - INTERVAL 24 HOUR)
                    ) < 3
-                 ORDER BY u.last_login IS NULL ASC, u.last_login DESC
+                 -- Order by recency: prefer recently-active accounts, but treat brand-new
+                 -- accounts (NULL last_login) as recent so they aren't starved out.
+                 ORDER BY COALESCE(u.last_login, u.created_at) DESC
                  LIMIT {$limit}
             ");
             $stmt->execute([

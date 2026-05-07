@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/database.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
 }
-if (!isLoggedIn() || !hasRole('admin')) {
+if (!isLoggedIn() || !(hasRole('admin') || hasRole('staff'))) {
     sendJSON(['success' => false, 'message' => 'Unauthorized'], 401);
 }
 

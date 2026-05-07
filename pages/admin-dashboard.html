@@ -1195,15 +1195,20 @@
 ════════════════════════════════════════════════════ -->
 <div id="modal-patient-history" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-            <div>
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 gap-3 flex-wrap">
+            <div class="min-w-0">
                 <h3 class="font-outfit font-bold text-[#083344] text-lg">Patient History</h3>
                 <p id="ph-patient-meta" class="text-xs text-slate-500 mt-0.5">Loading…</p>
             </div>
-            <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
-                class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <input id="ph-search" type="search" placeholder="Filter visits…"
+                    class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs w-48"
+                    oninput="filterPatientHistoryTimeline(this.value)">
+                <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
         </div>
         <div id="ph-content" class="px-6 py-4">
             <div class="text-center py-10 text-slate-400">

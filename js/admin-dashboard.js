@@ -1667,8 +1667,20 @@ function renderPatientHistory(patient, history) {
     // Timeline
     const timelineHtml = history.map(h => renderHistoryEntry(h)).join('');
 
-    content.innerHTML = summaryHtml + '<div class="space-y-3">' + timelineHtml + '</div>';
+    content.innerHTML = summaryHtml + '<div id="ph-timeline" class="space-y-3">' + timelineHtml + '</div>';
+    const search = document.getElementById('ph-search');
+    if (search) search.value = '';
 }
+
+function filterPatientHistoryTimeline(q) {
+    const tl = document.getElementById('ph-timeline');
+    if (!tl) return;
+    const norm = (q || '').toLowerCase().trim();
+    tl.querySelectorAll('[data-appt-search]').forEach(el => {
+        el.style.display = (!norm || el.dataset.apptSearch.includes(norm)) ? '' : 'none';
+    });
+}
+window.filterPatientHistoryTimeline = filterPatientHistoryTimeline;
 
 function renderHistoryEntry(h) {
     const a = h.appointment;
@@ -1757,8 +1769,9 @@ function renderHistoryEntry(h) {
             </div>
         </div>` : '';
 
+    const searchBlob = ((a.appointment_number || '') + ' ' + (a.reason_for_visit || '') + ' ' + (h.doctor.full_name || '') + ' ' + (a.status || '') + ' ' + (r ? (r.diagnosis || '') + ' ' + (r.symptoms || '') + ' ' + (r.prescription || '') : '') + ' ' + (c ? (c.diagnosis || '') : '') + ' ' + (ref ? (ref.specialty || '') + ' ' + (ref.reason || '') : '')).toLowerCase();
     return `
-        <div class="border border-slate-200 rounded-xl overflow-hidden">
+        <div class="border border-slate-200 rounded-xl overflow-hidden" data-appt-search="${escHtml(searchBlob)}">
             <div class="bg-slate-50 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="text-xs font-mono text-slate-500">#${escHtml(a.appointment_number || a.id)}</span>
