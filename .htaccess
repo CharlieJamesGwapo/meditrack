@@ -6,8 +6,26 @@ RewriteEngine On
 # Prevent directory browsing
 Options -Indexes
 
-# Protect sensitive files
-<FilesMatch "(\.htaccess|\.htpasswd|\.ini|\.log|\.sh|\.sql|composer\.json|composer\.lock|README\.md|env\.php)$">
+# Protect sensitive files. Extension list covers:
+#   .htaccess/.htpasswd/.ini/.log/.sh — server config + logs
+#   .sql                              — schema dumps and migrations at any path
+#   .bak                              — backups (e.g. env.production.php.bak)
+#   .zip                              — source archives accidentally uploaded
+#   .bat                              — Windows install scripts (would leak commands)
+#   composer.json/composer.lock       — dependency manifests
+#   README.md                         — internal docs
+#   env.php and any env.*             — runtime credentials
+<FilesMatch "(\.htaccess|\.htpasswd|\.ini|\.log|\.sh|\.sql|\.bak|\.zip|\.bat|composer\.json|composer\.lock|README\.md|env\.php|env\..+\.php)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Block direct access to setup/maintenance scripts. Each requires a token gate
+# at runtime, but defense-in-depth: never serve them at all in normal operation.
+# To run setup-db.php or setup-diagnostic.php on a fresh deploy, temporarily
+# remove the matching file from the server, run it, then re-upload — or simply
+# comment out this block during the maintenance window.
+<FilesMatch "^setup-.*\.php$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>

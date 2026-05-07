@@ -3,34 +3,40 @@
  * Setup / Diagnostic tool for Meditrack (Bislig District Hospital).
  *
  * SECURITY:
- *  - Gated by SETUP_TOKEN below. Change it before deploying.
+ *  - Token comes from env.php as 'SETUP_TOKEN'. If not set, this file refuses
+ *    to run. (env.php is gitignored, so the token never ends up in source.)
  *  - DELETE THIS FILE from the server as soon as you are done.
  *
- * Access:  https://<your-host>/meditrack/setup-diagnostic.php?token=CHANGE-ME-NOW
+ * Access:  https://<your-host>/meditrack/setup-diagnostic.php?token=YOUR-TOKEN
  */
 
-// ────────────────────────────────────────────────────────────────────────────
-// CHANGE THIS TOKEN before uploading. Keep it secret. No one else should know.
-// ────────────────────────────────────────────────────────────────────────────
-const SETUP_TOKEN = 'bislig-2026-emergency-setup-9f2a7b';
+// Bootstrap DB connection from env.php (same path the app uses).
+// We need env.php BEFORE the token check so we can read SETUP_TOKEN from it.
+$envPath = __DIR__ . '/env.php';
+if (!file_exists($envPath)) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "env.php not found at $envPath\n";
+    exit;
+}
+$env = require $envPath;
 
-// ────────────────────────────────────────────────────────────────────────────
-
-// Token gate (URL param OR posted field)
+// Token gate (URL param OR posted field). Token must be configured in env.php.
+$expectedToken = $env['SETUP_TOKEN'] ?? null;
 $provided = $_GET['token'] ?? $_POST['token'] ?? '';
-if (!hash_equals(SETUP_TOKEN, $provided)) {
+
+if (!$expectedToken || !is_string($expectedToken) || $expectedToken === '') {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Forbidden. setup-diagnostic.php is disabled because SETUP_TOKEN is not configured in env.php.\n";
+    exit;
+}
+if (!hash_equals($expectedToken, (string) $provided)) {
     http_response_code(403);
     header('Content-Type: text/plain; charset=utf-8');
     echo "Forbidden. Append ?token=YOUR-TOKEN to the URL.\n";
     exit;
 }
-
-// Bootstrap DB connection from env.php (same path the app uses)
-$envPath = __DIR__ . '/env.php';
-if (!file_exists($envPath)) {
-    fail('env.php not found at ' . $envPath);
-}
-$env = require $envPath;
 foreach (['DB_HOST', 'DB_NAME', 'DB_USERNAME', 'DB_PASSWORD'] as $k) {
     if (!array_key_exists($k, $env)) fail("Missing $k in env.php");
 }
