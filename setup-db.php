@@ -1,11 +1,33 @@
 <?php
 /**
  * Database Setup Script
- * Upload this to your server and visit it in browser to set up the database.
- * DELETE THIS FILE AFTER USE!
+ *
+ * DESTRUCTIVE: Drops every table in the configured database and re-imports
+ * database/schema.sql. Never expose this without auth.
+ *
+ * SECURITY:
+ *  - Requires SETUP_TOKEN in env.php AND a matching ?token= URL param.
+ *  - If env.php has no SETUP_TOKEN, this script refuses to run.
+ *  - DELETE THIS FILE from the server as soon as you are done.
  */
 
 $env = require __DIR__ . '/env.php';
+
+$expectedToken = $env['SETUP_TOKEN'] ?? null;
+$providedToken = $_GET['token'] ?? $_POST['token'] ?? '';
+
+if (!$expectedToken || !is_string($expectedToken) || $expectedToken === '') {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Forbidden. setup-db.php is disabled because SETUP_TOKEN is not configured in env.php.\n";
+    exit;
+}
+if (!hash_equals($expectedToken, (string) $providedToken)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Forbidden. Append ?token=YOUR-TOKEN to the URL.\n";
+    exit;
+}
 
 $host = $env['DB_HOST'] ?? 'localhost';
 $dbname = $env['DB_NAME'] ?? 'stjohnba_meditrack';

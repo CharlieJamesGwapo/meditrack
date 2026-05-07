@@ -3,6 +3,10 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS referrals;
+DROP TABLE IF EXISTS cancel_broadcasts;
+DROP TABLE IF EXISTS medical_certificates;
+DROP TABLE IF EXISTS staff_profiles;
 DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS qr_tokens;
 DROP TABLE IF EXISTS medical_records;
@@ -26,7 +30,7 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('patient', 'doctor', 'admin') NOT NULL,
+    role ENUM('patient', 'doctor', 'admin', 'staff') NOT NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
     last_login DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -63,6 +67,7 @@ CREATE TABLE doctors (
     consultation_fee DECIMAL(10,2) DEFAULT 0.00,
     experience_years INT DEFAULT 0,
     bio TEXT NULL,
+    profile_picture VARCHAR(255) NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -87,6 +92,8 @@ CREATE TABLE appointments (
     appointment_number VARCHAR(20) UNIQUE NOT NULL,
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
+    parent_appointment_id INT NULL,
+    is_followup TINYINT(1) NOT NULL DEFAULT 0,
     appointment_date DATE NOT NULL,
     appointment_time TIME NOT NULL,
     status ENUM('scheduled', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show') DEFAULT 'scheduled',
@@ -94,10 +101,27 @@ CREATE TABLE appointments (
     checked_in_at DATETIME NULL,
     completed_at DATETIME NULL,
     cancelled_at DATETIME NULL,
+    cancelled_by ENUM('patient','doctor','admin','system') NULL,
+    cancel_reason VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_parent_appointment (parent_appointment_id),
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    link VARCHAR(255) NULL,
+    is_read TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_unread (user_id, is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE medical_records (
@@ -160,6 +184,72 @@ CREATE TABLE activity_logs (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE staff_profiles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNIQUE NOT NULL,
+  full_name VARCHAR(100) NOT NULL,
+  contact_number VARCHAR(20) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE medical_certificates (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  doctor_id INT NOT NULL,
+  issued_by_user_id INT NOT NULL,
+  diagnosis VARCHAR(500) NOT NULL,
+  rest_period_start DATE NOT NULL,
+  rest_period_end DATE NOT NULL,
+  rest_days INT NOT NULL,
+  notes TEXT NULL,
+  requested_by VARCHAR(150) NULL,
+  issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_cert_patient_id (patient_id),
+  INDEX idx_cert_doctor_id (doctor_id),
+  INDEX idx_cert_issued_by (issued_by_user_id),
+  UNIQUE KEY uniq_cert_appointment (appointment_id),
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+  FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
+  FOREIGN KEY (issued_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE referrals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  referring_doctor_id INT NOT NULL,
+  specialty VARCHAR(100) NOT NULL,
+  specialty_other VARCHAR(100) NULL,
+  suggested_specialist VARCHAR(150) NULL,
+  reason TEXT NOT NULL,
+  urgency ENUM('routine','urgent','emergency') NOT NULL DEFAULT 'routine',
+  issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_referral_appointment (appointment_id),
+  INDEX idx_referral_patient (patient_id),
+  INDEX idx_referral_doctor (referring_doctor_id),
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+  FOREIGN KEY (referring_doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE cancel_broadcasts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cancelled_appointment_id INT NOT NULL,
+  recipient_user_id INT NOT NULL,
+  notification_id INT NULL,
+  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_broadcast_recipient (cancelled_appointment_id, recipient_user_id),
+  FOREIGN KEY (cancelled_appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+  FOREIGN KEY (recipient_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE SET NULL,
+  INDEX idx_recipient (recipient_user_id, sent_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- SEED DATA
 
 -- Admin (password: admin123)
@@ -171,7 +261,7 @@ INSERT INTO users (email, username, password_hash, role, status) VALUES
 ('doctor@meditrack.com', 'doctor', '$2y$10$2FTVv59RqkEEMwSYHwQWvOztHURKjWLTpaZ25d/FFWWAmgnP6Ryoi', 'doctor', 'active');
 
 INSERT INTO doctors (user_id, full_name, specialization, license_number, consultation_fee, experience_years, bio) VALUES
-(2, 'Dr. Maria Santos', 'Internal Medicine', 'PRC-IM-2024-001', 500.00, 10, 'Board-certified Internal Medicine specialist with 10 years of clinical experience.');
+(2, 'Xelca Mae B. Bechayda', 'General Medicine', 'PRC-MO-2024-001', 500.00, 5, 'General Medicine attending physician at Bislig District Hospital — Consultation OPD.');
 
 INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration, max_patients, is_active) VALUES
 (1, 1, '08:00:00', '17:00:00', 30, 20, 1),

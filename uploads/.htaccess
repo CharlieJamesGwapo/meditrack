@@ -1,0 +1,28 @@
+# uploads/.htaccess — defense-in-depth for the user-writable upload directory.
+#
+# Even though api/admin/upload-doctor-photo.php validates MIME and rewrites
+# filenames, treat anything that lands here as untrusted: never let Apache
+# execute it as code, and never serve .htaccess/.php/.phtml/.htm/.html files.
+
+# Strip any handler that might run uploads as code.
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# Block any extension we never want served from here.
+<FilesMatch "\.(php|phtml|phps|php5|php7|phar|pl|py|cgi|sh|htaccess|htm|html)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Disable any handler associations that might still trigger interpretation.
+RemoveHandler .php .phtml .phps .php5 .php7 .phar
+RemoveType .php .phtml .phps .php5 .php7 .phar
+
+# Force a safe content type for anything that does get served.
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

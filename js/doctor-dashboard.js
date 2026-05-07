@@ -1,6 +1,6 @@
 /**
  * doctor-dashboard.js
- * Internal Medicine OPD Management System
+ * Consultation OPD Management System
  * Doctor Portal — fully functional dashboard with QR check-in and medical records
  */
 
@@ -265,6 +265,11 @@ function renderAppointmentCard(a) {
                 class="flex items-center space-x-1 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
                 <i class="fas fa-qrcode"></i>
                 <span>Scan QR</span>
+            </button>
+            <button onclick='markNoShow(${a.id}, ${JSON.stringify(a.patient_name || "")})'
+                class="flex items-center space-x-1 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-700 border border-slate-200 hover:border-red-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                <i class="fas fa-user-slash"></i>
+                <span>No-show</span>
             </button>`;
     } else if (a.status === 'checked_in' || a.status === 'in_progress') {
         actionBtn = `
@@ -388,6 +393,12 @@ function openQRScanner(appointment) {
     modal.classList.remove('hidden');
     document.getElementById('manual-token').value = '';
     document.getElementById('qr-status-text').textContent = 'Allow camera access to scan';
+
+    // Reset manual-entry fallback to hidden so each open shows camera as primary path
+    const manualBlock  = document.getElementById('manual-block');
+    const manualToggle = document.getElementById('manual-toggle');
+    if (manualBlock)  manualBlock.classList.add('hidden');
+    if (manualToggle) manualToggle.classList.remove('hidden');
 
     // Initialize scanner after a short delay to let the modal render
     setTimeout(() => initQRScanner(), 300);
@@ -609,14 +620,115 @@ function openRecordModal(appointment) {
     document.getElementById('record-appt-time').textContent     = formatTime(appointment.appointment_time);
     document.getElementById('record-appt-reason').textContent   = appointment.reason_for_visit || 'General Consultation';
 
-    // Pre-fill chief complaint with reason_for_visit as a hint
-    if (appointment.reason_for_visit) {
-        document.getElementById('rec-chief-complaint').value = appointment.reason_for_visit;
-    }
+    // Chief complaint is read-only (sourced from triage; falls back to reason_for_visit)
+    const ccDisplay = document.getElementById('rec-chief-complaint-display');
+    const triageCC = appointment.triage_chief_complaint || (appointment.vitals && appointment.vitals.chief_complaint) || '';
+    if (ccDisplay) ccDisplay.textContent = triageCC || appointment.reason_for_visit || '—';
+
+    // Render vitals readout (read-only; staff records vitals at triage)
+    renderVitalsReadout(appointment);
+
+    // Load existing referral and follow-up for this appointment (Batch C3)
+    if (appointment.id && typeof loadReferralForAppointment === 'function') loadReferralForAppointment(appointment.id);
+    if (appointment.id && typeof loadFollowupForAppointment === 'function') loadFollowupForAppointment(appointment.id);
 
     modal.classList.remove('hidden');
-    document.getElementById('rec-chief-complaint').focus();
+    document.getElementById('rec-symptoms').focus();
 }
+
+function renderVitalsReadout(appointment) {
+    const readout = document.getElementById('vitals-readout');
+    const meta    = document.getElementById('vitals-recorded-meta');
+    if (!readout) return;
+    const v = appointment.vitals;
+    if (v) {
+        readout.innerHTML = `
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">BP</div><div class="font-semibold text-[#083344]">${escapeHtml(v.blood_pressure || '—')}</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">Temp</div><div class="font-semibold text-[#083344]">${v.temperature ?? '—'} °C</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">HR</div><div class="font-semibold text-[#083344]">${v.heart_rate ?? '—'} bpm</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">SpO₂</div><div class="font-semibold text-[#083344]">${v.oxygen_saturation ?? '—'} %</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">Weight</div><div class="font-semibold text-[#083344]">${v.weight ?? '—'} kg</div></div>
+                <div><div class="text-[10px] text-slate-400 uppercase tracking-wide">Height</div><div class="font-semibold text-[#083344]">${v.height_cm ?? '—'} cm</div></div>
+                ${v.notes ? `<div class="col-span-2 sm:col-span-2"><div class="text-[10px] text-slate-400 uppercase tracking-wide">Notes</div><div class="text-[#0f172a]">${escapeHtml(v.notes)}</div></div>` : ''}
+            </div>
+        `;
+        if (meta && v.recorded_at) {
+            meta.classList.remove('hidden');
+            meta.textContent = 'Recorded ' + new Date(v.recorded_at).toLocaleString();
+        }
+    } else {
+        readout.innerHTML = `
+            <div class="flex items-center justify-between">
+                <p class="text-slate-500">Vitals not recorded yet.</p>
+                <button type="button" id="btn-doctor-record-vitals" class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-700">
+                    <i class="fa-solid fa-heart-pulse mr-1"></i> Record vitals
+                </button>
+            </div>
+        `;
+        const btn = document.getElementById('btn-doctor-record-vitals');
+        if (btn) btn.addEventListener('click', () => openDoctorVitalsModal(appointment.id, appointment.patient_name));
+        if (meta) meta.classList.add('hidden');
+    }
+}
+
+async function openDoctorVitalsModal(appointment_id, patient_name) {
+    const form = document.getElementById('form-doctor-vitals');
+    form.reset();
+    document.getElementById('dv-appt-id').value = appointment_id;
+    document.getElementById('dv-patient-name').textContent = patient_name || '';
+    try {
+        const data = await apiRequest('/staff/get-vitals.php?appointment_id=' + appointment_id);
+        if (data && data.success && data.vitals) {
+            const v = data.vitals;
+            form.chief_complaint.value   = v.chief_complaint   ?? '';
+            form.blood_pressure.value    = v.blood_pressure    ?? '';
+            form.temperature.value       = v.temperature       ?? '';
+            form.heart_rate.value        = v.heart_rate        ?? '';
+            form.oxygen_saturation.value = v.oxygen_saturation ?? '';
+            form.weight.value            = v.weight            ?? '';
+            form.height_cm.value         = v.height_cm         ?? '';
+            form.notes.value             = v.notes             ?? '';
+        }
+    } catch (_) {}
+    document.getElementById('modal-doctor-vitals').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-close-doctor-vitals]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById('modal-doctor-vitals').classList.add('hidden'))
+);
+
+document.getElementById('form-doctor-vitals').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    ['temperature', 'heart_rate', 'oxygen_saturation', 'weight', 'height_cm'].forEach(k => {
+        if (body[k] === '') delete body[k];
+    });
+    body.appointment_id = +body.appointment_id;
+    const data = await apiRequest('/staff/save-vitals.php', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to save', 'error');
+        return;
+    }
+    document.getElementById('modal-doctor-vitals').classList.add('hidden');
+    Swal.fire({ icon: 'success', title: 'Saved', text: 'Vitals recorded.', confirmButtonColor: '#0891B2' });
+    if (typeof loadTodayAppointments === 'function') loadTodayAppointments(true);
+    if (currentAppointment && currentAppointment.id === body.appointment_id) {
+        // Refetch to update the readout
+        try {
+            const fresh = await apiRequest('/doctor/get-appointments.php');
+            const refreshed = (fresh?.appointments || []).find(a => a.id === body.appointment_id);
+            if (refreshed) {
+                currentAppointment = refreshed;
+                renderVitalsReadout(refreshed);
+            }
+        } catch (_) {}
+    }
+});
 
 function viewRecord(appointment) {
     // Open modal in read-only mode
@@ -650,27 +762,21 @@ async function submitMedicalRecord(event) {
     const submitBtn = document.getElementById('record-submit-btn');
     const origHTML  = submitBtn.innerHTML;
 
-    // Collect form data
+    // Collect form data (chief_complaint + vitals are sourced from triage and not sent here)
     const appointmentId = document.getElementById('record-appointment-id').value;
     const patientId     = document.getElementById('record-patient-id').value;
-    const chiefComplaint = document.getElementById('rec-chief-complaint').value.trim();
     const symptoms       = document.getElementById('rec-symptoms').value.trim();
-    const bp             = document.getElementById('rec-bp').value.trim();
-    const temp           = document.getElementById('rec-temp').value.trim();
-    const hr             = document.getElementById('rec-hr').value.trim();
-    const weight         = document.getElementById('rec-weight').value.trim();
-    const height         = document.getElementById('rec-height').value.trim();
     const diagnosis      = document.getElementById('rec-diagnosis').value.trim();
     const prescription   = document.getElementById('rec-prescription').value.trim();
     const labTests       = document.getElementById('rec-lab-tests').value.trim();
     const notes          = document.getElementById('rec-notes').value.trim();
     const followUp       = document.getElementById('rec-followup').value;
 
-    if (!chiefComplaint && !diagnosis) {
+    if (!symptoms && !diagnosis) {
         Swal.fire({
             icon: 'warning',
             title: 'Required Fields',
-            text: 'Please enter at least a chief complaint or diagnosis.',
+            text: 'Please enter at least symptoms or a diagnosis.',
             confirmButtonColor: '#0891B2'
         });
         return;
@@ -685,10 +791,7 @@ async function submitMedicalRecord(event) {
             body: JSON.stringify({
                 appointment_id: appointmentId,
                 patient_id:     patientId,
-                chief_complaint: chiefComplaint,
                 symptoms,
-                vital_signs: { bp, temperature: temp, heart_rate: hr, weight, height },
-                bp, temperature: temp, heart_rate: hr, weight, height,
                 diagnosis,
                 prescription,
                 lab_tests_ordered: labTests,
@@ -930,3 +1033,395 @@ document.addEventListener('keydown', (e) => {
         closeRecordModal();
     }
 });
+
+// ─── Referrals (Batch C3) ────────────────────────────────────
+function bindReferralCard() {
+    const enable = document.getElementById('ref-enable');
+    const body   = document.getElementById('ref-body');
+    const spec   = document.getElementById('ref-specialty');
+    const otherWrap = document.getElementById('ref-specialty-other-wrap');
+    if (!enable || !body) return;
+    enable.addEventListener('change', () => body.classList.toggle('hidden', !enable.checked));
+    spec.addEventListener('change', () => { otherWrap.style.display = spec.value === 'Other' ? '' : 'none'; });
+    document.getElementById('ref-save-btn').addEventListener('click', saveReferral);
+    document.getElementById('ref-print-btn').addEventListener('click', () => {
+        if (!currentAppointment) return;
+        window.open('print-referral.html?appointment_id=' + currentAppointment.id, '_blank');
+    });
+}
+
+async function loadReferralForAppointment(appointment_id) {
+    const status = document.getElementById('ref-status');
+    const printBtn = document.getElementById('ref-print-btn');
+    const enable = document.getElementById('ref-enable');
+    const body   = document.getElementById('ref-body');
+    const spec   = document.getElementById('ref-specialty');
+    const otherWrap = document.getElementById('ref-specialty-other-wrap');
+    if (!enable) return;
+    enable.checked = false;
+    body.classList.add('hidden');
+    spec.value = '';
+    otherWrap.style.display = 'none';
+    document.getElementById('ref-specialty-other').value = '';
+    document.getElementById('ref-suggested').value = '';
+    document.getElementById('ref-urgency').value = 'routine';
+    document.getElementById('ref-reason').value = '';
+    status.textContent = '';
+    printBtn.classList.add('hidden');
+    try {
+        const data = await apiRequest('/doctor/get-referral.php?appointment_id=' + appointment_id);
+        if (data && data.success && data.referral) {
+            const r = data.referral;
+            enable.checked = true;
+            body.classList.remove('hidden');
+            spec.value = r.specialty || '';
+            if (spec.value === 'Other') {
+                otherWrap.style.display = '';
+                document.getElementById('ref-specialty-other').value = r.specialty_other || '';
+            }
+            document.getElementById('ref-suggested').value = r.suggested_specialist || '';
+            document.getElementById('ref-urgency').value   = r.urgency || 'routine';
+            document.getElementById('ref-reason').value    = r.reason || '';
+            printBtn.classList.remove('hidden');
+            status.textContent = 'Referral on file — last updated ' + new Date(r.updated_at || r.issued_at).toLocaleString();
+        }
+    } catch (_) {}
+}
+
+async function saveReferral() {
+    if (!currentAppointment) return;
+    const status = document.getElementById('ref-status');
+    const body = {
+        appointment_id:       currentAppointment.id,
+        specialty:            document.getElementById('ref-specialty').value,
+        specialty_other:      document.getElementById('ref-specialty-other').value.trim(),
+        suggested_specialist: document.getElementById('ref-suggested').value.trim(),
+        urgency:              document.getElementById('ref-urgency').value,
+        reason:               document.getElementById('ref-reason').value.trim(),
+    };
+    if (!body.specialty || !body.reason) {
+        Swal.fire('Required', 'Specialty and reason are required.', 'warning');
+        return;
+    }
+    if (body.specialty === 'Other' && !body.specialty_other) {
+        Swal.fire('Required', 'Please describe the specialty.', 'warning');
+        return;
+    }
+    status.textContent = 'Saving…';
+    const data = await apiRequest('/doctor/save-referral.php', { method: 'POST', body: JSON.stringify(body) });
+    if (!data || !data.success) {
+        status.textContent = '';
+        Swal.fire('Error', data?.message || 'Failed to save referral', 'error');
+        return;
+    }
+    status.textContent = 'Saved ' + new Date().toLocaleString();
+    document.getElementById('ref-print-btn').classList.remove('hidden');
+}
+
+// ─── Follow-up scheduling (Batch C3) ─────────────────────────
+function bindFollowupCard() {
+    const enable = document.getElementById('fu-enable');
+    const body   = document.getElementById('fu-body');
+    if (!enable || !body) return;
+    enable.addEventListener('change', () => body.classList.toggle('hidden', !enable.checked));
+    document.getElementById('fu-save-btn').addEventListener('click', saveFollowup);
+}
+
+async function loadFollowupForAppointment(appointment_id) {
+    const enable = document.getElementById('fu-enable');
+    const body   = document.getElementById('fu-body');
+    const dateEl = document.getElementById('fu-date');
+    const timeEl = document.getElementById('fu-time');
+    const reasonEl = document.getElementById('fu-reason');
+    const statusEl = document.getElementById('fu-status');
+    const hidden = document.getElementById('rec-followup');
+    if (!enable || !body) return;
+    enable.checked = false;
+    body.classList.add('hidden');
+    dateEl.value = ''; timeEl.value = ''; reasonEl.value = ''; statusEl.textContent = '';
+    if (hidden) hidden.value = '';
+    try {
+        const data = await apiRequest('/doctor/get-followup.php?parent_appointment_id=' + appointment_id);
+        if (data && data.success && data.followup) {
+            const f = data.followup;
+            enable.checked = true;
+            body.classList.remove('hidden');
+            dateEl.value = f.appointment_date || '';
+            timeEl.value = (f.appointment_time || '').substring(0, 5);
+            reasonEl.value = f.reason_for_visit || '';
+            statusEl.textContent = `Existing follow-up #${f.appointment_number} (${f.status})`;
+            if (hidden) hidden.value = f.appointment_date || '';
+        }
+    } catch (_) {}
+}
+
+async function saveFollowup() {
+    if (!currentAppointment) return;
+    const date = document.getElementById('fu-date').value;
+    const time = document.getElementById('fu-time').value;
+    const reason = document.getElementById('fu-reason').value.trim();
+    const statusEl = document.getElementById('fu-status');
+    if (!date || !time) { Swal.fire('Required', 'Pick both a date and a time.', 'warning'); return; }
+    statusEl.textContent = 'Saving…';
+    const data = await apiRequest('/doctor/schedule-followup.php', {
+        method: 'POST',
+        body: JSON.stringify({
+            parent_appointment_id: currentAppointment.id,
+            appointment_date: date,
+            appointment_time: time,
+            reason_for_visit: reason
+        })
+    });
+    if (!data || !data.success) {
+        statusEl.textContent = '';
+        Swal.fire('Error', data?.message || 'Failed to save follow-up', 'error');
+        return;
+    }
+    statusEl.textContent = `Follow-up #${data.appointment_number} ${data.mode} for ${date} ${time}`;
+    const hidden = document.getElementById('rec-followup');
+    if (hidden) hidden.value = date;
+    if (typeof loadTodayAppointments === 'function') loadTodayAppointments(true);
+}
+
+window.addEventListener('DOMContentLoaded', () => { bindReferralCard(); bindFollowupCard(); });
+
+// ─── Patient History (Batch C addition) ────────────────────────────────
+async function openPatientHistoryFromDrawer() {
+    if (!currentAppointment || !currentAppointment.patient_id) {
+        Swal.fire('No patient', 'Open a patient appointment first.', 'info');
+        return;
+    }
+    return viewPatientHistory(currentAppointment.patient_id);
+}
+
+async function viewPatientHistory(patientId) {
+    const modal   = document.getElementById('modal-patient-history');
+    const content = document.getElementById('ph-content');
+    const meta    = document.getElementById('ph-patient-meta');
+    if (!modal || !content) return;
+
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="text-center py-10 text-slate-400">
+            <i class="fas fa-spinner fa-spin text-2xl"></i>
+            <p class="text-sm mt-2">Loading history…</p>
+        </div>`;
+    meta.textContent = 'Loading…';
+
+    try {
+        const data = await apiRequest('/admin/get-patient-history.php?patient_id=' + patientId);
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load history');
+        renderPatientHistory(data.patient, data.history);
+    } catch (e) {
+        content.innerHTML = `<div class="text-center py-10 text-red-600">
+            <i class="fas fa-circle-exclamation text-2xl"></i>
+            <p class="text-sm mt-2">${escapeHtml(e.message)}</p>
+        </div>`;
+    }
+}
+
+function renderPatientHistory(patient, history) {
+    const meta = document.getElementById('ph-patient-meta');
+    const content = document.getElementById('ph-content');
+    const ageStr = patient.age != null ? `${patient.age}y` : '';
+    const parts = [
+        patient.gender, ageStr, patient.blood_group ? 'Blood ' + patient.blood_group : '',
+        patient.contact_number, patient.email
+    ].filter(Boolean);
+    meta.innerHTML = `<strong class="text-[#083344]">${escapeHtml(patient.full_name)}</strong> &middot; ${parts.map(escapeHtml).join(' &middot; ')}`;
+
+    if (!history.length) {
+        content.innerHTML = `
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-folder-open text-3xl mb-3"></i>
+                <p class="text-sm">No appointment history yet.</p>
+            </div>`;
+        return;
+    }
+
+    const stats = history.reduce((s, h) => {
+        s.total++;
+        if (h.appointment.status === 'completed') s.completed++;
+        if (h.appointment.status === 'cancelled') s.cancelled++;
+        if (h.medical_record) s.records++;
+        if (h.certificate) s.certs++;
+        if (h.referral) s.referrals++;
+        if (h.appointment.is_followup) s.followups++;
+        return s;
+    }, { total: 0, completed: 0, cancelled: 0, records: 0, certs: 0, referrals: 0, followups: 0 });
+
+    const summaryHtml = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">
+            ${[
+                ['Visits', stats.total, 'cyan'],
+                ['Completed', stats.completed, 'emerald'],
+                ['Cancelled', stats.cancelled, 'red'],
+                ['Records', stats.records, 'blue'],
+                ['Certs', stats.certs, 'green'],
+                ['Referrals', stats.referrals, 'amber'],
+                ['Follow-ups', stats.followups, 'purple'],
+            ].map(([label, n, color]) => `
+                <div class="rounded-lg bg-${color}-50 border border-${color}-100 px-3 py-2 text-center">
+                    <div class="text-lg font-bold text-${color}-700">${n}</div>
+                    <div class="text-[10px] uppercase tracking-wide text-${color}-600 font-semibold">${label}</div>
+                </div>
+            `).join('')}
+        </div>`;
+
+    const timelineHtml = history.map(h => renderHistoryEntry(h)).join('');
+    content.innerHTML = summaryHtml + '<div id="ph-timeline" class="space-y-3">' + timelineHtml + '</div>';
+    const search = document.getElementById('ph-search');
+    if (search) search.value = '';
+}
+
+function filterPatientHistoryTimeline(q) {
+    const tl = document.getElementById('ph-timeline');
+    if (!tl) return;
+    const norm = (q || '').toLowerCase().trim();
+    tl.querySelectorAll('[data-appt-search]').forEach(el => {
+        el.style.display = (!norm || el.dataset.apptSearch.includes(norm)) ? '' : 'none';
+    });
+}
+window.filterPatientHistoryTimeline = filterPatientHistoryTimeline;
+
+function renderHistoryEntry(h) {
+    const a = h.appointment;
+    const statusBadgeClass = {
+        scheduled:   'bg-blue-50 text-blue-700 border-blue-200',
+        checked_in:  'bg-amber-50 text-amber-700 border-amber-200',
+        in_progress: 'bg-purple-50 text-purple-700 border-purple-200',
+        completed:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+        cancelled:   'bg-red-50 text-red-700 border-red-200',
+        no_show:     'bg-gray-50 text-gray-700 border-gray-200',
+    }[a.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+
+    const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const timeStr = (a.appointment_time || '').substring(0, 5);
+
+    const v = h.vitals;
+    const vitalsHtml = v ? `
+        <div class="bg-rose-50 border border-rose-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-rose-700 mb-1.5"><i class="fas fa-heartbeat mr-1"></i>Vitals</div>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
+                ${[
+                    ['BP',   v.blood_pressure],
+                    ['Temp', v.temperature ? v.temperature + '°C' : null],
+                    ['HR',   v.heart_rate ? v.heart_rate + 'bpm' : null],
+                    ['SpO₂', v.oxygen_saturation ? v.oxygen_saturation + '%' : null],
+                    ['Wt',   v.weight ? v.weight + 'kg' : null],
+                    ['Ht',   v.height_cm ? v.height_cm + 'cm' : null],
+                ].map(([k, val]) => val ? `<div><span class="text-rose-500">${k}:</span> <span class="font-semibold">${escapeHtml(val)}</span></div>` : '').join('')}
+            </div>
+            ${v.chief_complaint ? `<div class="text-xs text-slate-600 mt-2"><strong>Chief complaint:</strong> ${escapeHtml(v.chief_complaint)}</div>` : ''}
+        </div>` : '';
+
+    const r = h.medical_record;
+    const recordHtml = r ? `
+        <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-cyan-700 mb-1.5"><i class="fas fa-stethoscope mr-1"></i>Medical Record</div>
+            <div class="space-y-1.5 text-xs">
+                ${r.symptoms     ? `<div><strong>Symptoms:</strong> ${escapeHtml(r.symptoms)}</div>` : ''}
+                ${r.diagnosis    ? `<div><strong>Diagnosis:</strong> ${escapeHtml(r.diagnosis)}</div>` : ''}
+                ${r.prescription ? `<div><strong>Prescription:</strong> ${escapeHtml(r.prescription)}</div>` : ''}
+                ${r.lab_tests_ordered ? `<div><strong>Labs:</strong> ${escapeHtml(r.lab_tests_ordered)}</div>` : ''}
+                ${r.notes        ? `<div class="text-slate-500 italic">${escapeHtml(r.notes)}</div>` : ''}
+            </div>
+        </div>` : '';
+
+    const c = h.certificate;
+    const certHtml = c ? `
+        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start gap-2">
+            <div class="flex-1">
+                <div class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 mb-1.5"><i class="fas fa-file-medical mr-1"></i>Medical Certificate</div>
+                <div class="text-xs text-slate-700">
+                    <strong>${escapeHtml(c.diagnosis)}</strong> &middot; Rest from ${escapeHtml(c.rest_period_start)} to ${escapeHtml(c.rest_period_end)} (${c.rest_days} day${c.rest_days == 1 ? '' : 's'})
+                    ${c.requested_by ? ` &middot; <span class="text-slate-500">requested by ${escapeHtml(c.requested_by)}</span>` : ''}
+                </div>
+            </div>
+            <a href="print-certificate.html?appointment_id=${a.id}" target="_blank"
+                class="px-2 py-1 rounded-md bg-white border border-emerald-300 text-emerald-700 text-[11px] font-semibold hover:bg-emerald-100">
+                <i class="fas fa-print"></i> Print
+            </a>
+        </div>` : '';
+
+    const ref = h.referral;
+    const refHtml = ref ? `
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
+            <div class="flex-1">
+                <div class="text-[10px] uppercase tracking-wide font-bold text-blue-700 mb-1.5"><i class="fas fa-share-from-square mr-1"></i>Referral</div>
+                <div class="text-xs text-slate-700">
+                    <strong>${escapeHtml(ref.specialty === 'Other' && ref.specialty_other ? ref.specialty_other : ref.specialty)}</strong>
+                    &middot; <span class="uppercase font-semibold text-blue-700">${escapeHtml(ref.urgency)}</span>
+                    <div class="text-slate-600 mt-1">${escapeHtml(ref.reason)}</div>
+                    ${ref.suggested_specialist ? `<div class="text-slate-500 mt-1">Suggested: ${escapeHtml(ref.suggested_specialist)}</div>` : ''}
+                </div>
+            </div>
+            <a href="print-referral.html?appointment_id=${a.id}" target="_blank"
+                class="px-2 py-1 rounded-md bg-white border border-blue-300 text-blue-700 text-[11px] font-semibold hover:bg-blue-100">
+                <i class="fas fa-print"></i> Print
+            </a>
+        </div>` : '';
+
+    const cancelHtml = a.status === 'cancelled' ? `
+        <div class="bg-red-50 border border-red-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-red-700 mb-1.5"><i class="fas fa-times-circle mr-1"></i>Cancelled</div>
+            <div class="text-xs text-slate-700">
+                By <strong>${escapeHtml(a.cancelled_by || '—')}</strong>${a.cancel_reason ? ` &middot; ${escapeHtml(a.cancel_reason)}` : ''}
+                ${a.cancelled_at ? `<div class="text-slate-500 mt-1">${new Date(a.cancelled_at).toLocaleString()}</div>` : ''}
+            </div>
+        </div>` : '';
+
+    const searchBlob = ((a.appointment_number || '') + ' ' + (a.reason_for_visit || '') + ' ' + (h.doctor.full_name || '') + ' ' + (a.status || '') + ' ' + (r ? (r.diagnosis || '') + ' ' + (r.symptoms || '') + ' ' + (r.prescription || '') : '') + ' ' + (c ? (c.diagnosis || '') : '') + ' ' + (ref ? (ref.specialty || '') + ' ' + (ref.reason || '') : '')).toLowerCase();
+    return `
+        <div class="border border-slate-200 rounded-xl overflow-hidden" data-appt-search="${escapeHtml(searchBlob)}">
+            <div class="bg-slate-50 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-xs font-mono text-slate-500">#${escapeHtml(a.appointment_number || a.id)}</span>
+                    <span class="font-semibold text-[#083344] text-sm">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>
+                    ${a.is_followup ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-semibold uppercase">Follow-up</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500">Dr. ${escapeHtml(h.doctor.full_name)}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${statusBadgeClass}">${escapeHtml(a.status)}</span>
+                </div>
+            </div>
+            <div class="p-3 space-y-2.5">
+                ${a.reason_for_visit ? `<div class="text-xs"><strong class="text-slate-700">Reason:</strong> <span class="text-slate-600">${escapeHtml(a.reason_for_visit)}</span></div>` : ''}
+                ${vitalsHtml}
+                ${recordHtml}
+                ${certHtml}
+                ${refHtml}
+                ${cancelHtml}
+            </div>
+        </div>`;
+}
+
+window.viewPatientHistory = viewPatientHistory;
+window.openPatientHistoryFromDrawer = openPatientHistoryFromDrawer;
+
+// ─── Mark no-show (Batch C addition) ───────────────────────────
+async function markNoShow(appointmentId, patientName) {
+    const result = await Swal.fire({
+        title: 'Mark as no-show?',
+        html: `<strong>${escapeHtml(patientName || 'This patient')}</strong> will be marked as <strong>no-show</strong>. The slot will become available for other patients.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark no-show',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
+    const data = await apiRequest('/staff/mark-noshow.php', {
+        method: 'POST',
+        body: JSON.stringify({ appointment_id: appointmentId })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to mark no-show', 'error');
+        return;
+    }
+    Swal.fire({ icon: 'success', title: 'Marked no-show', text: data.message, confirmButtonColor: '#0891B2' });
+    if (typeof loadTodayAppointments === 'function') loadTodayAppointments(true);
+    if (typeof loadStats === 'function') loadStats();
+}
+
+window.markNoShow = markNoShow;

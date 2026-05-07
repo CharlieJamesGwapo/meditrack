@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Staff Dashboard — Consultation OPD</title>
+    <link rel="icon" type="image/png" href="../assets/images/medicare.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome 6.4 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts: Outfit + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- html5-qrcode (camera scanner) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <style>
+        /* ── Typography ─────────────────────────────── */
+        * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+        h1,h2,h3,h4,h5,h6,.font-outfit { font-family: 'Outfit', sans-serif; }
+
+        /* ── Base ───────────────────────────────────── */
+        body { background: #F0FDFA; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+        /* ── QR Scanner ─────────────────────────────── */
+        #qr-reader video { width: 100% !important; border-radius: 10px; }
+        #qr-reader__dashboard_section_swaplink { display: none !important; }
+        .scan-success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+        .scan-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        /* ── Sidebar ────────────────────────────────── */
+        .sidebar {
+            width: 264px;
+            background: linear-gradient(180deg, #083344 0%, #0891B2 100%);
+            box-shadow: 4px 0 24px rgba(8,51,68,0.18);
+        }
+        .nav-item {
+            border-radius: 10px;
+            transition: background 0.18s ease, box-shadow 0.18s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px; height: 60%;
+            background: #fff;
+            border-radius: 0 3px 3px 0;
+            transition: transform 0.18s ease;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.10); }
+        .nav-item.active { background: rgba(255,255,255,0.18); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+        .nav-item.active::before { transform: translateY(-50%) scaleY(1); }
+
+        /* ── Tab system ─────────────────────────────── */
+        .tab-content { display: none; animation: fadeIn 0.22s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ── Skeleton shimmer ───────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg, #e2ecef 25%, #f0f7f9 50%, #e2ecef 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Pulse dot ──────────────────────────────── */
+        .pulse-dot { animation: pulseDot 2s cubic-bezier(.4,0,.6,1) infinite; }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+        /* ── Scrollbar ──────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f0fdf4; }
+        ::-webkit-scrollbar-thumb { background: #0891B2; border-radius: 3px; }
+
+        /* ── Form focus ─────────────────────────────── */
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #0891B2 !important;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
+        }
+
+        /* ── SweetAlert overrides ───────────────────── */
+        .swal2-popup { border-radius: 16px; font-family: 'DM Sans', sans-serif; }
+        .swal2-title { font-family: 'Outfit', sans-serif; }
+        .swal2-confirm { background-color: #0891B2 !important; border-radius: 8px !important; }
+        .swal2-cancel  { background-color: #64748B !important; border-radius: 8px !important; }
+
+        /* ── Header gradient line ───────────────────── */
+        .header-accent { height: 3px; background: linear-gradient(90deg, #0891B2, #16A34A, #0891B2); background-size: 200%; animation: gradientShift 4s linear infinite; }
+        @keyframes gradientShift { 0%{background-position:0%} 100%{background-position:200%} }
+
+        /* ── Table ──────────────────────────────────── */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* ── Section divider ────────────────────────── */
+        .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
+
+        /* ── Mobile ─────────────────────────────────── */
+        @media (max-width: 767px) {
+            body { padding-bottom: 72px; }
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; }
+        }
+        @media (min-width: 768px) {
+            #mobile-bottom-nav { display: none !important; }
+        }
+        .mobile-nav-btn { transition: color 0.18s; }
+        .mobile-nav-btn.active { color: #0891B2; }
+        .mobile-nav-btn.active .mobile-nav-dot { opacity: 1; }
+        .mobile-nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #0891B2; opacity: 0; transition: opacity 0.18s; margin: 0 auto; }
+
+        /* ── Vital field ─────────────────────────────── */
+        .vital-field { position: relative; }
+        .vital-field label { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #64748B; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen">
+
+    <!-- ═══════════════════════════════════════════════════
+         SIDEBAR
+    ════════════════════════════════════════════════════ -->
+    <aside class="sidebar hidden md:flex flex-col flex-shrink-0 fixed top-0 left-0 h-full z-30"
+           style="background:linear-gradient(180deg,#083344 0%,#0891B2 100%)">
+
+        <!-- Branding -->
+        <div class="px-5 py-5 border-b border-white/10">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img src="../assets/images/medicare.png" alt="Logo" style="width:40px;height:40px;border-radius:10px;">
+                </div>
+                <div>
+                    <h1 class="text-white font-bold text-base leading-tight font-outfit tracking-tight">OPD</h1>
+                    <p class="text-cyan-200/80 text-xs font-medium tracking-wide">Staff Portal</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff identity -->
+        <div class="px-5 py-4 border-b border-white/10">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0 shadow">
+                    <i class="fas fa-user-nurse text-white/90"></i>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <p class="text-white font-semibold text-sm truncate leading-tight font-outfit" id="sidebar-name">Loading…</p>
+                    <p class="text-cyan-200/80 text-xs truncate mt-0.5">Staff</p>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 pulse-dot"></span>
+                <span class="text-cyan-200/70 text-xs font-medium">On duty</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <p class="section-label px-3 mb-2 opacity-60">Navigation</p>
+
+            <button onclick="switchTab('scan')" id="nav-scan"
+                class="nav-item active w-full flex items-center space-x-3 px-4 py-3 text-white text-sm font-medium">
+                <div class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-qrcode text-xs"></i>
+                </div>
+                <span>Scan QR</span>
+            </button>
+
+            <button onclick="switchTab('vitals')" id="nav-vitals"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-heart-pulse text-xs"></i>
+                </div>
+                <span>Vitals Queue</span>
+            </button>
+
+            <button onclick="switchTab('certs')" id="nav-certs"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-file-medical text-xs"></i>
+                </div>
+                <span>Certificates</span>
+            </button>
+
+            <button onclick="switchTab('patients')" id="nav-patients"
+                class="nav-item w-full flex items-center space-x-3 px-4 py-3 text-cyan-100/80 text-sm font-medium hover:text-white">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-users text-xs"></i>
+                </div>
+                <span>Patients</span>
+            </button>
+        </nav>
+
+        <!-- Logout -->
+        <div class="px-3 pb-5 pt-2 border-t border-white/10">
+            <button onclick="logout()"
+                class="w-full flex items-center space-x-3 px-4 py-3 text-cyan-200/80 hover:text-white hover:bg-red-500/70 rounded-xl transition-all text-sm font-medium group">
+                <div class="w-8 h-8 rounded-lg bg-white/10 group-hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 transition-colors">
+                    <i class="fas fa-sign-out-alt text-xs"></i>
+                </div>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ═══════════════════════════════════════════════════
+         MAIN CONTENT
+    ════════════════════════════════════════════════════ -->
+    <main class="main-content flex-1 md:ml-[264px] flex flex-col min-h-screen">
+
+        <!-- ─── HEADER ─── -->
+        <header class="bg-white sticky top-0 z-20 shadow-sm border-b border-gray-100">
+            <div class="header-accent"></div>
+
+            <div class="px-4 md:px-6 py-3.5 flex items-center justify-between">
+                <!-- Left: mobile logo + page title -->
+                <div class="flex items-center space-x-3 min-w-0">
+                    <!-- Mobile branding -->
+                    <div class="md:hidden flex items-center space-x-2 flex-shrink-0">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#083344,#0891B2)">
+                            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <polyline points="2,12 5,4 8,12 11,8 14,16 17,10 20,14 22,12"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Page title -->
+                    <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-semibold text-[#083344] font-outfit truncate leading-tight" id="page-title">Scan QR</h2>
+                        <p class="text-xs text-slate-400 font-medium hidden sm:block" id="header-date"></p>
+                    </div>
+                </div>
+
+                <!-- Right: bell + staff chip + change password + logout -->
+                <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                    <!-- Notifications bell -->
+                    <div id="bell-container" class="flex-shrink-0"></div>
+
+                    <!-- Staff avatar chip -->
+                    <div class="flex items-center space-x-2 sm:space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-2 py-1.5 sm:px-3 sm:py-2">
+                        <div class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
+                            <i class="fas fa-user-nurse text-xs"></i>
+                        </div>
+                        <div class="block max-w-[110px] sm:max-w-none">
+                            <p class="text-xs font-semibold text-[#083344] leading-tight font-outfit truncate" id="header-name">Loading…</p>
+                            <p class="text-[10px] sm:text-xs text-cyan-600 font-medium">Staff</p>
+                        </div>
+                    </div>
+
+                    <!-- Change password -->
+                    <button onclick="document.getElementById('modal-staff-password').classList.remove('hidden')"
+                        class="hidden sm:inline-flex items-center px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                        title="Change password">
+                        <i class="fas fa-key"></i>
+                    </button>
+
+                    <!-- Logout -->
+                    <button onclick="logout()"
+                        class="flex items-center space-x-1.5 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ─── TAB CONTENTS ─── -->
+        <div class="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
+
+            <!-- ══════════════════════════════
+                 TAB: SCAN QR
+            ═══════════════════════════════ -->
+            <div id="tab-scan" class="tab-content active">
+                <div class="flex items-center space-x-2.5 mb-5">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-qrcode text-white text-xs"></i>
+                    </div>
+                    <h3 class="font-semibold text-[#083344] text-base font-outfit">Scan Patient QR</h3>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <p class="text-sm text-slate-500 mb-4">Point the camera at the patient's QR code to check them in. They will move into the Vitals Queue.</p>
+                    <div id="qr-status-text" class="text-xs text-slate-400 mb-3 text-center">Initializing camera…</div>
+                    <div id="qr-reader" class="rounded-xl overflow-hidden bg-slate-50 max-w-md mx-auto"></div>
+                    <details class="mt-4 max-w-md mx-auto">
+                        <summary class="cursor-pointer text-xs text-cyan-600 hover:text-cyan-800 font-semibold">Camera not working? Enter token manually.</summary>
+                        <div class="mt-3 flex gap-2">
+                            <input type="text" id="manual-token" placeholder="Token hash" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                            <button id="manual-submit" class="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold hover:bg-cyan-700">Check in</button>
+                        </div>
+                    </details>
+                    <div id="scan-result" class="hidden mt-4 max-w-md mx-auto p-3 rounded-lg text-sm font-medium"></div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════
+                 TAB: VITALS QUEUE
+            ═══════════════════════════════ -->
+            <div id="tab-vitals" class="tab-content">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#134E4A] flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Today's Queue</h3>
+                    </div>
+                    <button id="refresh-queue" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                        <i class="fa-solid fa-rotate mr-1"></i> Refresh
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left px-4 py-3">Time</th>
+                                <th class="text-left px-4 py-3">Patient</th>
+                                <th class="text-left px-4 py-3">Appt #</th>
+                                <th class="text-left px-4 py-3">Vitals</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="queue-tbody" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════
+                 TAB: CERTIFICATES
+            ═══════════════════════════════ -->
+            <div id="tab-certs" class="tab-content">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-file-medical text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Medical Certificates</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-slate-500">From <input type="date" id="cert-from" class="ml-1 px-2 py-1 border border-slate-200 rounded text-xs"></label>
+                        <label class="text-xs text-slate-500">To <input type="date" id="cert-to" class="ml-1 px-2 py-1 border border-slate-200 rounded text-xs"></label>
+                        <button id="cert-refresh" class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left px-4 py-3">Date</th>
+                                <th class="text-left px-4 py-3">Patient</th>
+                                <th class="text-left px-4 py-3">Appt #</th>
+                                <th class="text-left px-4 py-3">Doctor</th>
+                                <th class="text-left px-4 py-3">Status</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cert-tbody" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════
+                 TAB: PATIENTS
+            ═══════════════════════════════ -->
+            <div id="tab-patients" class="tab-content">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-700 flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-users text-white text-xs"></i>
+                        </div>
+                        <h3 class="font-semibold text-[#083344] text-base font-outfit">Patients</h3>
+                    </div>
+                    <input id="patient-search" type="search" placeholder="Search by name, email, contact…"
+                        class="px-3 py-2 border border-slate-200 rounded-lg text-sm w-72">
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left px-4 py-3">Name</th>
+                                <th class="text-left px-4 py-3">Email</th>
+                                <th class="text-left px-4 py-3">Contact</th>
+                                <th class="text-left px-4 py-3">Visits</th>
+                                <th class="px-4 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="patients-tbody" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /tab contents -->
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+════════════════════════════════════════════════════ -->
+<nav id="mobile-bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-30 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <div class="grid grid-cols-4 h-[68px]">
+
+        <button onclick="switchTab('scan')" id="mobile-nav-scan"
+            class="mobile-nav-btn active flex flex-col items-center justify-center py-2 text-[#0891B2] text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-qrcode text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Scan</span>
+        </button>
+
+        <button onclick="switchTab('vitals')" id="mobile-nav-vitals"
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-heart-pulse text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Vitals</span>
+        </button>
+
+        <button onclick="switchTab('certs')" id="mobile-nav-certs"
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-file-medical text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Certs</span>
+        </button>
+
+        <button onclick="switchTab('patients')" id="mobile-nav-patients"
+            class="mobile-nav-btn flex flex-col items-center justify-center py-2 text-slate-400 text-xs font-medium gap-1 transition-colors">
+            <i class="fa-solid fa-users text-base"></i>
+            <div class="mobile-nav-dot"></div>
+            <span class="text-[10px] font-semibold">Patients</span>
+        </button>
+
+    </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     VITALS MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-vitals" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Record Vitals — <span id="vitals-patient-name" class="text-cyan-700"></span></h3>
+            <button data-close-vitals class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-vitals" class="px-6 py-5 space-y-4">
+            <input type="hidden" name="appointment_id" id="vitals-appt-id">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Chief complaint <span class="text-red-500">*</span></span>
+                <textarea name="chief_complaint" required rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Blood pressure <span class="text-red-500">*</span></span>
+                    <input name="blood_pressure" placeholder="120/80" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Temperature (°C)</span>
+                    <input name="temperature" type="number" step="0.1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Heart rate (bpm)</span>
+                    <input name="heart_rate" type="number" step="1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">O₂ saturation (%)</span>
+                    <input name="oxygen_saturation" type="number" step="1" min="0" max="100" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Weight (kg) <span class="text-red-500">*</span></span>
+                    <input name="weight" type="number" step="0.1" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Height (cm) <span class="text-red-500">*</span></span>
+                    <input name="height_cm" type="number" step="1" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+            </div>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Notes</span>
+                <textarea name="notes" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" data-close-vitals class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Save vitals</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PATIENT HISTORY MODAL (search-enabled)
+════════════════════════════════════════════════════ -->
+<div id="modal-patient-history" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 gap-3 flex-wrap">
+            <div class="min-w-0">
+                <h3 class="font-outfit font-bold text-[#083344] text-lg">Patient History</h3>
+                <p id="ph-patient-meta" class="text-xs text-slate-500 mt-0.5">Loading…</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <input id="ph-search" type="search" placeholder="Filter visits…"
+                    class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs w-48"
+                    oninput="filterPatientHistoryTimeline(this.value)">
+                <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="ph-content" class="px-6 py-4">
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                <p class="text-sm mt-2">Loading history…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     CERTIFICATE MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-cert" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Issue Medical Certificate — <span id="cert-patient-name" class="text-emerald-700"></span></h3>
+            <button data-close-cert class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-cert" class="px-6 py-5 space-y-4">
+            <input type="hidden" name="appointment_id" id="cert-appt-id">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Diagnosis <span class="text-red-500">*</span></span>
+                <textarea name="diagnosis" required rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Rest period start <span class="text-red-500">*</span></span>
+                    <input type="date" name="rest_period_start" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-xs font-semibold text-slate-600">Rest period end <span class="text-red-500">*</span></span>
+                    <input type="date" name="rest_period_end" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </label>
+            </div>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Rest days <span class="text-slate-400 font-normal">(auto-computed; editable)</span></span>
+                <input type="number" name="rest_days" min="0" step="1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Requested by <span class="text-slate-400 font-normal">(Name of Person Requesting — defaults to patient)</span></span>
+                <input type="text" name="requested_by" placeholder="Patient or guardian name" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Notes</span>
+                <textarea name="notes" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" data-close-cert class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">Issue certificate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STAFF — CHANGE PASSWORD MODAL
+════════════════════════════════════════════════════ -->
+<div id="modal-staff-password" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Change Password</h3>
+            <button onclick="document.getElementById('modal-staff-password').classList.add('hidden')"
+                class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-staff-password" class="px-6 py-5 space-y-4">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Current password</span>
+                <input type="password" name="current_password" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">New password</span>
+                <input type="password" name="new_password" minlength="6" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Confirm new password</span>
+                <input type="password" name="confirm_password" minlength="6" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modal-staff-password').classList.add('hidden')"
+                    class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Update password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Auth + shared utilities -->
+<script src="../js/auth.js?v=3.0"></script>
+<script src="../js/notifications-bell.js?v=1.0"></script>
+
+<script>
+(function guard() {
+    const user = getUser();
+    if (!user || user.role !== 'staff') {
+        window.location.replace('login.html');
+        return;
+    }
+    // Populate name chips
+    const displayName = user.full_name || user.username;
+    const sidebarEl = document.getElementById('sidebar-name');
+    const headerEl  = document.getElementById('header-name');
+    if (sidebarEl) sidebarEl.textContent = displayName;
+    if (headerEl)  headerEl.textContent  = displayName;
+})();
+
+// Set header date
+(function setDate() {
+    const el = document.getElementById('header-date');
+    if (el) {
+        el.textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+})();
+
+const TAB_TITLES = { scan: 'Scan QR', vitals: 'Vitals Queue', certs: 'Certificates', patients: 'Patients' };
+
+function switchTab(tab) {
+    // Sidebar nav items
+    document.querySelectorAll('.nav-item[id^="nav-"]').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-cyan-100/80');
+        btn.classList.remove('text-white');
+        const iconWrap = btn.querySelector('.w-8');
+        if (iconWrap) { iconWrap.style.background = 'rgba(255,255,255,0.10)'; }
+    });
+    const activeNav = document.getElementById('nav-' + tab);
+    if (activeNav) {
+        activeNav.classList.add('active', 'text-white');
+        activeNav.classList.remove('text-cyan-100/80');
+        const iconWrap = activeNav.querySelector('.w-8');
+        if (iconWrap) { iconWrap.style.background = 'rgba(255,255,255,0.15)'; }
+    }
+
+    // Mobile bottom nav
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '';
+    });
+    const activeMobile = document.getElementById('mobile-nav-' + tab);
+    if (activeMobile) activeMobile.classList.add('active');
+
+    // Tab panels
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const panel = document.getElementById('tab-' + tab);
+    if (panel) panel.classList.add('active');
+
+    // Page title
+    const titleEl = document.getElementById('page-title');
+    if (titleEl) titleEl.textContent = TAB_TITLES[tab] || tab;
+
+    // Hook calls for downstream tasks
+    if (tab === 'vitals'   && typeof loadVitalsQueue === 'function') loadVitalsQueue();
+    if (tab === 'certs'    && typeof loadCertList    === 'function') loadCertList();
+    if (tab === 'patients' && typeof loadPatientsList === 'function') loadPatientsList();
+}
+
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+window.escapeHtml = escapeHtml;
+window.switchTab  = switchTab;
+
+// ─── QR Scanner ────────────────────────────────────────────────
+let staffScanner = null;
+let staffScannerRunning = false;
+
+async function startStaffScanner() {
+    if (staffScannerRunning) return;
+    const statusEl = document.getElementById('qr-status-text');
+    try {
+        if (!staffScanner) staffScanner = new Html5Qrcode('qr-reader');
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras || cameras.length === 0) {
+            if (statusEl) statusEl.textContent = 'No camera detected — use manual input below.';
+            return;
+        }
+        const camera = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[0];
+        await staffScanner.start(
+            camera.id,
+            { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+            onStaffScanSuccess,
+            () => {}
+        );
+        staffScannerRunning = true;
+        if (statusEl) statusEl.textContent = 'Camera active — point at patient QR code.';
+    } catch (err) {
+        console.error('Staff scanner error', err);
+        if (statusEl) statusEl.textContent = 'Camera unavailable — use manual input below.';
+    }
+}
+
+async function stopStaffScanner() {
+    if (staffScanner && staffScannerRunning) {
+        try { await staffScanner.stop(); } catch (_) {}
+        try { staffScanner.clear(); } catch (_) {}
+        staffScannerRunning = false;
+    }
+}
+
+async function onStaffScanSuccess(decodedText) {
+    let tokenHash = decodedText.trim();
+    try {
+        const url = new URL(tokenHash);
+        const tokenParam = url.searchParams.get('token');
+        if (tokenParam) tokenHash = tokenParam;
+    } catch (_) { /* not a URL — use as-is */ }
+    if (!tokenHash) return;
+    await stopStaffScanner();
+    await checkInToken(tokenHash);
+    setTimeout(startStaffScanner, 2500);
+}
+
+async function checkInToken(tokenHash) {
+    const result = document.getElementById('scan-result');
+    result.className = 'mt-4 max-w-md mx-auto p-3 rounded-lg text-sm font-medium';
+    result.classList.remove('hidden');
+    result.textContent = 'Checking in…';
+    try {
+        const data = await apiRequest('/appointments/checkin.php', {
+            method: 'POST',
+            body: JSON.stringify({ token_hash: tokenHash })
+        });
+        if (!data || !data.success) {
+            result.classList.add('scan-error');
+            result.textContent = '✗ ' + (data?.message || 'Check-in failed');
+            return;
+        }
+        const a = data.appointment || {};
+        result.classList.add('scan-success');
+        result.innerHTML = `✓ Checked in: <strong>${escapeHtml(a.patient_name || '—')}</strong> · ${a.appointment_time || ''} · #${escapeHtml(a.appointment_number || '')}`;
+    } catch (e) {
+        result.classList.add('scan-error');
+        result.textContent = '✗ Network error: ' + e.message;
+    }
+}
+
+document.getElementById('manual-submit').addEventListener('click', async () => {
+    const t = document.getElementById('manual-token').value.trim();
+    if (!t) return;
+    await stopStaffScanner();
+    await checkInToken(t);
+});
+
+// Wrap switchTab to manage scanner lifecycle on tab changes
+const __originalSwitchTab = switchTab;
+window.switchTab = function (tab) {
+    if (tab !== 'scan') stopStaffScanner();
+    __originalSwitchTab(tab);
+    if (tab === 'scan') setTimeout(startStaffScanner, 300);
+};
+
+window.addEventListener('load', () => setTimeout(startStaffScanner, 300));
+
+// ─── Vitals Queue + Modal ──────────────────────────────────────
+async function loadVitalsQueue() {
+    const tbody = document.getElementById('queue-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>';
+    try {
+        const data = await apiRequest('/staff/queue.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+        if (!data.queue.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">No patients waiting. Scan a QR to check someone in.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.queue.map(q => {
+            const statusBadge = {
+                scheduled:   '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">Awaiting check-in</span>',
+                checked_in:  q.triage_id
+                    ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Vitals recorded</span>'
+                    : '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">Awaiting vitals</span>',
+                in_progress: '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold">With doctor</span>',
+            }[q.status] || '<span class="text-slate-400 text-xs">—</span>';
+
+            let actionBtns = '';
+            if (q.status === 'scheduled') {
+                actionBtns = `
+                    <button data-noshow-aid="${q.appointment_id}" data-name="${escapeHtml(q.patient_name)}"
+                        class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-700 border border-slate-200 text-xs font-semibold transition">
+                        <i class="fas fa-user-slash mr-1"></i>No-show
+                    </button>`;
+            } else if (q.status === 'checked_in') {
+                actionBtns = `
+                    <button data-vitals-aid="${q.appointment_id}" data-name="${escapeHtml(q.patient_name)}"
+                        class="px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-700">
+                        ${q.triage_id ? 'Edit' : 'Record'} vitals
+                    </button>`;
+            }
+
+            return `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 font-medium text-slate-700">${q.appointment_time || '—'}</td>
+                    <td class="px-4 py-3">${escapeHtml(q.patient_name)}</td>
+                    <td class="px-4 py-3 text-slate-500">#${escapeHtml(q.appointment_number)}</td>
+                    <td class="px-4 py-3">${statusBadge}</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">${actionBtns}</td>
+                </tr>
+            `;
+        }).join('');
+        tbody.querySelectorAll('[data-vitals-aid]').forEach(b =>
+            b.addEventListener('click', () => openVitalsModal(+b.dataset.vitalsAid, b.dataset.name))
+        );
+        tbody.querySelectorAll('[data-noshow-aid]').forEach(b =>
+            b.addEventListener('click', () => staffMarkNoShow(+b.dataset.noshowAid, b.dataset.name))
+        );
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+async function openVitalsModal(appointment_id, patient_name) {
+    const form = document.getElementById('form-vitals');
+    form.reset();
+    document.getElementById('vitals-appt-id').value = appointment_id;
+    document.getElementById('vitals-patient-name').textContent = patient_name;
+    try {
+        const data = await apiRequest('/staff/get-vitals.php?appointment_id=' + appointment_id);
+        if (data && data.success && data.vitals) {
+            const v = data.vitals;
+            form.chief_complaint.value   = v.chief_complaint   ?? '';
+            form.blood_pressure.value    = v.blood_pressure    ?? '';
+            form.temperature.value       = v.temperature       ?? '';
+            form.heart_rate.value        = v.heart_rate        ?? '';
+            form.oxygen_saturation.value = v.oxygen_saturation ?? '';
+            form.weight.value            = v.weight            ?? '';
+            form.height_cm.value         = v.height_cm         ?? '';
+            form.notes.value             = v.notes             ?? '';
+        }
+    } catch (_) {}
+    document.getElementById('modal-vitals').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-close-vitals]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById('modal-vitals').classList.add('hidden'))
+);
+
+document.getElementById('form-vitals').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    ['temperature', 'heart_rate', 'oxygen_saturation', 'weight', 'height_cm'].forEach(k => {
+        if (body[k] === '') delete body[k];
+    });
+    body.appointment_id = +body.appointment_id;
+    const data = await apiRequest('/staff/save-vitals.php', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to save', 'error');
+        return;
+    }
+    document.getElementById('modal-vitals').classList.add('hidden');
+    Swal.fire({ icon: 'success', title: 'Saved', text: 'Vitals recorded. Patient is now ready for the doctor.', confirmButtonColor: '#0891B2' });
+    loadVitalsQueue();
+});
+
+document.getElementById('refresh-queue').addEventListener('click', loadVitalsQueue);
+
+// Staff mark-no-show
+async function staffMarkNoShow(appointmentId, patientName) {
+    const result = await Swal.fire({
+        title: 'Mark as no-show?',
+        html: `<strong>${escapeHtml(patientName || 'This patient')}</strong> will be marked as <strong>no-show</strong>. The slot will become available for other patients.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark no-show',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
+    const data = await apiRequest('/staff/mark-noshow.php', {
+        method: 'POST',
+        body: JSON.stringify({ appointment_id: appointmentId })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to mark no-show', 'error');
+        return;
+    }
+    Swal.fire({ icon: 'success', title: 'Marked no-show', text: data.message, confirmButtonColor: '#0891B2' });
+    loadVitalsQueue();
+}
+window.staffMarkNoShow = staffMarkNoShow;
+
+// ─── Certificates ──────────────────────────────────────────────
+async function loadCertList() {
+    const tbody = document.getElementById('cert-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>';
+    const from = document.getElementById('cert-from').value;
+    const to   = document.getElementById('cert-to').value;
+    const qs   = new URLSearchParams();
+    if (from) qs.set('from', from);
+    if (to)   qs.set('to', to);
+    try {
+        const data = await apiRequest('/staff/certificates.php' + (qs.toString() ? '?' + qs.toString() : ''));
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+        if (!data.rows.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No completed appointments in this date range.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.rows.map(r => {
+            const issued = !!r.cert_id;
+            const dateStr = new Date(r.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 text-slate-700">${dateStr} · ${r.appointment_time || ''}</td>
+                    <td class="px-4 py-3">${escapeHtml(r.patient_name)}</td>
+                    <td class="px-4 py-3 text-slate-500">#${escapeHtml(r.appointment_number)}</td>
+                    <td class="px-4 py-3 text-slate-700">${escapeHtml(r.doctor_name)}</td>
+                    <td class="px-4 py-3">${issued
+                        ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">Issued</span>'
+                        : '<span class="text-slate-400 text-xs">Not issued</span>'}</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <button data-issue-aid="${r.appointment_id}"
+                            data-name="${escapeHtml(r.patient_name)}"
+                            data-diag="${escapeHtml(r.cert_diagnosis || r.record_diagnosis || '')}"
+                            class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
+                            ${issued ? 'Edit' : 'Issue'}
+                        </button>
+                        ${issued ? `<a target="_blank" href="print-certificate.html?appointment_id=${r.appointment_id}"
+                            class="ml-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 inline-block">Print</a>` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        tbody.querySelectorAll('[data-issue-aid]').forEach(b =>
+            b.addEventListener('click', () => openCertModal(+b.dataset.issueAid, b.dataset.name, b.dataset.diag))
+        );
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+function openCertModal(appointment_id, patient_name, prefilled_diagnosis) {
+    const form = document.getElementById('form-cert');
+    form.reset();
+    document.getElementById('cert-appt-id').value = appointment_id;
+    document.getElementById('cert-patient-name').textContent = patient_name;
+    form.diagnosis.value = prefilled_diagnosis || '';
+    form.requested_by.value = patient_name || '';
+    const today    = new Date().toISOString().slice(0, 10);
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    form.rest_period_start.value = today;
+    form.rest_period_end.value   = tomorrow;
+    form.rest_days.value         = 2;
+    document.getElementById('modal-cert').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-close-cert]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById('modal-cert').classList.add('hidden'))
+);
+
+document.getElementById('form-cert').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    body.appointment_id = +body.appointment_id;
+    if (body.rest_days === '') delete body.rest_days; else body.rest_days = +body.rest_days;
+    const data = await apiRequest('/staff/issue-certificate.php', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to issue', 'error');
+        return;
+    }
+    document.getElementById('modal-cert').classList.add('hidden');
+    Swal.fire({
+        title: 'Certificate ready',
+        text: 'Open the print view now?',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Print',
+        cancelButtonText: 'Later',
+        confirmButtonColor: '#059669'
+    }).then(r => {
+        if (r.isConfirmed) window.open('print-certificate.html?appointment_id=' + body.appointment_id, '_blank');
+    });
+    loadCertList();
+});
+
+document.getElementById('cert-from').addEventListener('change', loadCertList);
+document.getElementById('cert-to').addEventListener('change', loadCertList);
+document.getElementById('cert-refresh').addEventListener('click', loadCertList);
+
+// ─── Patients tab + history modal ───────────────────────────────
+let __allPatients = [];
+
+async function loadPatientsList() {
+    const tbody = document.getElementById('patients-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading…</td></tr>';
+    try {
+        const data = await apiRequest('/admin/get-all-patients.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed');
+        __allPatients = data.patients || [];
+        renderStaffPatientsTable(__allPatients);
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-red-600">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+function renderStaffPatientsTable(rows) {
+    const tbody = document.getElementById('patients-tbody');
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">No patients found.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map(p => `
+        <tr class="hover:bg-slate-50">
+            <td class="px-4 py-3">
+                <div class="font-semibold text-[#083344]">${escapeHtml(p.full_name || '—')}</div>
+                ${p.gender ? `<div class="text-[10px] text-slate-400">${escapeHtml(p.gender)}${p.blood_group ? ' · Blood ' + escapeHtml(p.blood_group) : ''}</div>` : ''}
+            </td>
+            <td class="px-4 py-3 text-slate-600">${escapeHtml(p.email || '—')}</td>
+            <td class="px-4 py-3 text-slate-600">${escapeHtml(p.contact_number || '—')}</td>
+            <td class="px-4 py-3 text-slate-700 font-semibold">${p.total_appointments ?? 0}</td>
+            <td class="px-4 py-3 text-right">
+                <button onclick="viewPatientHistory(${p.patient_id})"
+                    class="px-3 py-1.5 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 text-xs font-semibold">
+                    <i class="fas fa-clock-rotate-left mr-1"></i>View History
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('patient-search').addEventListener('input', (ev) => {
+    const q = ev.target.value.toLowerCase().trim();
+    if (!q) { renderStaffPatientsTable(__allPatients); return; }
+    const filtered = __allPatients.filter(p =>
+        (p.full_name || '').toLowerCase().includes(q) ||
+        (p.email     || '').toLowerCase().includes(q) ||
+        (p.contact_number || '').toLowerCase().includes(q)
+    );
+    renderStaffPatientsTable(filtered);
+});
+
+// History modal — same shape as admin/doctor
+async function viewPatientHistory(patientId) {
+    const modal   = document.getElementById('modal-patient-history');
+    const content = document.getElementById('ph-content');
+    const meta    = document.getElementById('ph-patient-meta');
+    if (!modal || !content) return;
+    modal.classList.remove('hidden');
+    content.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i><p class="text-sm mt-2">Loading history…</p></div>`;
+    meta.textContent = 'Loading…';
+    document.getElementById('ph-search').value = '';
+    try {
+        const data = await apiRequest('/admin/get-patient-history.php?patient_id=' + patientId);
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load history');
+        __phHistory = data.history;
+        __phPatient = data.patient;
+        renderPatientHistory(data.patient, data.history);
+    } catch (e) {
+        content.innerHTML = `<div class="text-center py-10 text-red-600"><i class="fas fa-circle-exclamation text-2xl"></i><p class="text-sm mt-2">${escapeHtml(e.message)}</p></div>`;
+    }
+}
+
+let __phHistory = [];
+let __phPatient = null;
+
+function renderPatientHistory(patient, history) {
+    const meta = document.getElementById('ph-patient-meta');
+    const content = document.getElementById('ph-content');
+    const ageStr = patient.age != null ? `${patient.age}y` : '';
+    const parts = [patient.gender, ageStr, patient.blood_group ? 'Blood ' + patient.blood_group : '', patient.contact_number, patient.email].filter(Boolean);
+    meta.innerHTML = `<strong class="text-[#083344]">${escapeHtml(patient.full_name)}</strong> &middot; ${parts.map(escapeHtml).join(' &middot; ')}`;
+    if (!history.length) {
+        content.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fas fa-folder-open text-3xl mb-3"></i><p class="text-sm">No appointment history yet.</p></div>`;
+        return;
+    }
+    const stats = history.reduce((s, h) => {
+        s.total++;
+        if (h.appointment.status === 'completed') s.completed++;
+        if (h.appointment.status === 'cancelled') s.cancelled++;
+        if (h.medical_record) s.records++;
+        if (h.certificate) s.certs++;
+        if (h.referral) s.referrals++;
+        if (h.appointment.is_followup) s.followups++;
+        return s;
+    }, { total: 0, completed: 0, cancelled: 0, records: 0, certs: 0, referrals: 0, followups: 0 });
+    const summaryHtml = `<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">${[
+        ['Visits', stats.total, 'cyan'], ['Completed', stats.completed, 'emerald'], ['Cancelled', stats.cancelled, 'red'],
+        ['Records', stats.records, 'blue'], ['Certs', stats.certs, 'green'], ['Referrals', stats.referrals, 'amber'], ['Follow-ups', stats.followups, 'purple'],
+    ].map(([label, n, color]) => `<div class="rounded-lg bg-${color}-50 border border-${color}-100 px-3 py-2 text-center"><div class="text-lg font-bold text-${color}-700">${n}</div><div class="text-[10px] uppercase tracking-wide text-${color}-600 font-semibold">${label}</div></div>`).join('')}</div>`;
+    const timelineHtml = history.map(h => renderHistoryEntry(h)).join('');
+    content.innerHTML = summaryHtml + '<div id="ph-timeline" class="space-y-3">' + timelineHtml + '</div>';
+}
+
+function renderHistoryEntry(h) {
+    const a = h.appointment;
+    const statusBadgeClass = { scheduled: 'bg-blue-50 text-blue-700 border-blue-200', checked_in: 'bg-amber-50 text-amber-700 border-amber-200', in_progress: 'bg-purple-50 text-purple-700 border-purple-200', completed: 'bg-emerald-50 text-emerald-700 border-emerald-200', cancelled: 'bg-red-50 text-red-700 border-red-200', no_show: 'bg-gray-50 text-gray-700 border-gray-200' }[a.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+    const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const timeStr = (a.appointment_time || '').substring(0, 5);
+    const v = h.vitals; const r = h.medical_record; const c = h.certificate; const ref = h.referral;
+    const vitalsHtml = v ? `<div class="bg-rose-50 border border-rose-100 rounded-lg p-3"><div class="text-[10px] uppercase tracking-wide font-bold text-rose-700 mb-1.5"><i class="fas fa-heartbeat mr-1"></i>Vitals</div><div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">${[['BP', v.blood_pressure], ['Temp', v.temperature ? v.temperature + '°C' : null], ['HR', v.heart_rate ? v.heart_rate + 'bpm' : null], ['SpO₂', v.oxygen_saturation ? v.oxygen_saturation + '%' : null], ['Wt', v.weight ? v.weight + 'kg' : null], ['Ht', v.height_cm ? v.height_cm + 'cm' : null]].map(([k, val]) => val ? `<div><span class="text-rose-500">${k}:</span> <span class="font-semibold">${escapeHtml(val)}</span></div>` : '').join('')}</div>${v.chief_complaint ? `<div class="text-xs text-slate-600 mt-2"><strong>Chief complaint:</strong> ${escapeHtml(v.chief_complaint)}</div>` : ''}</div>` : '';
+    const recordHtml = r ? `<div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3"><div class="text-[10px] uppercase tracking-wide font-bold text-cyan-700 mb-1.5"><i class="fas fa-stethoscope mr-1"></i>Medical Record</div><div class="space-y-1.5 text-xs">${r.symptoms ? `<div><strong>Symptoms:</strong> ${escapeHtml(r.symptoms)}</div>` : ''}${r.diagnosis ? `<div><strong>Diagnosis:</strong> ${escapeHtml(r.diagnosis)}</div>` : ''}${r.prescription ? `<div><strong>Prescription:</strong> ${escapeHtml(r.prescription)}</div>` : ''}${r.lab_tests_ordered ? `<div><strong>Labs:</strong> ${escapeHtml(r.lab_tests_ordered)}</div>` : ''}${r.notes ? `<div class="text-slate-500 italic">${escapeHtml(r.notes)}</div>` : ''}</div></div>` : '';
+    const certHtml = c ? `<div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start gap-2"><div class="flex-1"><div class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 mb-1.5"><i class="fas fa-file-medical mr-1"></i>Medical Certificate</div><div class="text-xs text-slate-700"><strong>${escapeHtml(c.diagnosis)}</strong> &middot; Rest from ${escapeHtml(c.rest_period_start)} to ${escapeHtml(c.rest_period_end)} (${c.rest_days} day${c.rest_days == 1 ? '' : 's'})${c.requested_by ? ` &middot; <span class="text-slate-500">requested by ${escapeHtml(c.requested_by)}</span>` : ''}</div></div><a href="print-certificate.html?appointment_id=${a.id}" target="_blank" class="px-2 py-1 rounded-md bg-white border border-emerald-300 text-emerald-700 text-[11px] font-semibold hover:bg-emerald-100"><i class="fas fa-print"></i> Print</a></div>` : '';
+    const refHtml = ref ? `<div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2"><div class="flex-1"><div class="text-[10px] uppercase tracking-wide font-bold text-blue-700 mb-1.5"><i class="fas fa-share-from-square mr-1"></i>Referral</div><div class="text-xs text-slate-700"><strong>${escapeHtml(ref.specialty === 'Other' && ref.specialty_other ? ref.specialty_other : ref.specialty)}</strong> &middot; <span class="uppercase font-semibold text-blue-700">${escapeHtml(ref.urgency)}</span><div class="text-slate-600 mt-1">${escapeHtml(ref.reason)}</div>${ref.suggested_specialist ? `<div class="text-slate-500 mt-1">Suggested: ${escapeHtml(ref.suggested_specialist)}</div>` : ''}</div></div><a href="print-referral.html?appointment_id=${a.id}" target="_blank" class="px-2 py-1 rounded-md bg-white border border-blue-300 text-blue-700 text-[11px] font-semibold hover:bg-blue-100"><i class="fas fa-print"></i> Print</a></div>` : '';
+    const cancelHtml = a.status === 'cancelled' ? `<div class="bg-red-50 border border-red-100 rounded-lg p-3"><div class="text-[10px] uppercase tracking-wide font-bold text-red-700 mb-1.5"><i class="fas fa-times-circle mr-1"></i>Cancelled</div><div class="text-xs text-slate-700">By <strong>${escapeHtml(a.cancelled_by || '—')}</strong>${a.cancel_reason ? ` &middot; ${escapeHtml(a.cancel_reason)}` : ''}${a.cancelled_at ? `<div class="text-slate-500 mt-1">${new Date(a.cancelled_at).toLocaleString()}</div>` : ''}</div></div>` : '';
+    return `<div class="border border-slate-200 rounded-xl overflow-hidden" data-appt-search="${escapeHtml((a.appointment_number || '') + ' ' + (a.reason_for_visit || '') + ' ' + (h.doctor.full_name || '') + ' ' + (r ? r.diagnosis + ' ' + r.symptoms + ' ' + r.prescription : '') + ' ' + (c ? c.diagnosis : '') + ' ' + (ref ? ref.specialty + ' ' + ref.reason : '')).toLowerCase()}"><div class="bg-slate-50 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap"><div class="flex items-center gap-2 min-w-0"><span class="text-xs font-mono text-slate-500">#${escapeHtml(a.appointment_number || a.id)}</span><span class="font-semibold text-[#083344] text-sm">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>${a.is_followup ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-semibold uppercase">Follow-up</span>' : ''}</div><div class="flex items-center gap-2"><span class="text-xs text-slate-500">Dr. ${escapeHtml(h.doctor.full_name)}</span><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${statusBadgeClass}">${escapeHtml(a.status)}</span></div></div><div class="p-3 space-y-2.5">${a.reason_for_visit ? `<div class="text-xs"><strong class="text-slate-700">Reason:</strong> <span class="text-slate-600">${escapeHtml(a.reason_for_visit)}</span></div>` : ''}${vitalsHtml}${recordHtml}${certHtml}${refHtml}${cancelHtml}</div></div>`;
+}
+
+function filterPatientHistoryTimeline(q) {
+    const tl = document.getElementById('ph-timeline');
+    if (!tl) return;
+    const norm = (q || '').toLowerCase().trim();
+    tl.querySelectorAll('[data-appt-search]').forEach(el => {
+        el.style.display = (!norm || el.dataset.apptSearch.includes(norm)) ? '' : 'none';
+    });
+}
+
+window.viewPatientHistory = viewPatientHistory;
+window.filterPatientHistoryTimeline = filterPatientHistoryTimeline;
+
+// ─── Notifications bell mount ────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.NotificationsBell) NotificationsBell.mount('#bell-container');
+});
+
+// ─── Change password ─────────────────────────────────────────
+document.getElementById('form-staff-password').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    const body = Object.fromEntries(fd.entries());
+    if (body.new_password !== body.confirm_password) {
+        Swal.fire('Mismatch', 'New password and confirmation must match.', 'warning');
+        return;
+    }
+    const data = await apiRequest('/staff/change-password.php', {
+        method: 'POST',
+        body: JSON.stringify({
+            current_password: body.current_password,
+            new_password: body.new_password,
+        })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to update password', 'error');
+        return;
+    }
+    document.getElementById('modal-staff-password').classList.add('hidden');
+    ev.target.reset();
+    Swal.fire('Updated', 'Password changed successfully.', 'success');
+});
+</script>
+</body>
+</html>

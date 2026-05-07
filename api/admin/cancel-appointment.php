@@ -31,7 +31,7 @@ try {
         sendJSON(['success' => false, 'message' => 'Cannot cancel a ' . $appointment['status'] . ' appointment'], 400);
     }
 
-    $db->prepare("UPDATE appointments SET status = 'cancelled', cancelled_at = NOW() WHERE id = :aid")
+    $db->prepare("UPDATE appointments SET status = 'cancelled', cancelled_at = NOW(), cancelled_by = 'admin', cancel_reason = 'Cancelled by admin' WHERE id = :aid")
        ->execute([':aid' => $appointment_id]);
 
     logActivity($db, getCurrentUserId(), $_SESSION['username'] ?? '', 'admin', 'UPDATE', 'Appointments', $appointment_id,

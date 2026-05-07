@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Referral Letter — Bislig District Hospital</title>
+  <link rel="icon" type="image/png" href="../assets/images/medicare.png">
+  <style>
+    @page { size: A4; margin: 16mm 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      color: #000;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 24px 32px;
+    }
+
+    .letterhead {
+      display: grid;
+      grid-template-columns: 80px 1fr 80px;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid #000;
+    }
+    .letterhead img { width: 76px; height: 76px; object-fit: contain; }
+    .letterhead .center { text-align: center; }
+    .letterhead .center .small { font-size: 13px; line-height: 1.2; }
+    .letterhead .center .big { font-size: 22px; font-weight: bold; letter-spacing: 0.5px; margin-top: 2px; }
+    .letterhead .center .city { font-size: 13px; margin-top: 2px; }
+
+    .meta { margin: 24px 0 8px; font-size: 13px; text-align: right; }
+    .meta strong { display: inline-block; min-width: 90px; }
+
+    h1.title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: underline;
+      margin: 28px 0 22px;
+      letter-spacing: 0.5px;
+    }
+
+    .recipient { margin: 0 0 18px; font-size: 14px; }
+    .recipient .label { font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; display: block; }
+
+    .body { font-size: 14px; line-height: 1.8; }
+    .body p { margin: 0 0 12px; text-align: justify; }
+    .urgency { display: inline-block; padding: 2px 12px; border-radius: 999px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: .05em; vertical-align: 2px; }
+    .urgency.routine   { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+    .urgency.urgent    { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .urgency.emergency { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+    .signatures { margin-top: 56px; }
+    .sig { display: inline-block; width: 320px; text-align: center; }
+    .sig .name { font-weight: bold; text-transform: uppercase; padding-top: 24px; border-top: 1px solid #000; font-size: 13px; }
+    .sig .role { font-size: 12px; color: #333; }
+
+    .footer-note { margin-top: 36px; font-size: 11px; letter-spacing: 1px; font-style: italic; }
+    .meta-line { margin-top: 18px; font-size: 10px; color: #555; text-align: right; }
+
+    .actions { text-align: center; margin: 12px 0 24px; }
+    .actions button {
+      padding: 8px 16px; border: 1px solid #0f172a; background: #0f172a;
+      color: #fff; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px;
+    }
+    .actions button.secondary { background: #fff; color: #0f172a; margin-left: 8px; }
+    @media print { .actions { display: none; } body { padding: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button onclick="window.print()">Print</button>
+    <button class="secondary" onclick="history.back()">Back</button>
+  </div>
+
+  <div class="letterhead">
+    <img src="../assets/images/medical_certifcate_logo.jpg" alt="Bislig District Hospital seal" onerror="this.style.visibility='hidden'">
+    <div class="center">
+      <div class="small">Republic of the Philippines</div>
+      <div class="small">Province of Surigao del Sur</div>
+      <div class="big">BISLIG DISTRICT HOSPITAL</div>
+      <div class="city">Bislig City</div>
+    </div>
+    <img src="../assets/images/medicare.png" alt="Clinic logo" onerror="this.style.visibility='hidden'">
+  </div>
+
+  <p class="meta" id="ref-meta-top">DATE: —</p>
+
+  <h1 class="title">REFERRAL LETTER</h1>
+
+  <div id="ref-body"><p>Loading…</p></div>
+
+  <p class="footer-note">(VALID WITHOUT SEAL)</p>
+  <p class="meta-line" id="ref-meta"></p>
+
+  <script src="../js/auth.js?v=3.0"></script>
+  <script>
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+    function ageFromDob(dob) {
+      if (!dob) return '';
+      const d = new Date(dob), now = new Date();
+      let a = now.getFullYear() - d.getFullYear();
+      if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) a--;
+      return a;
+    }
+    function fmtDate(s) {
+      if (!s) return '';
+      try { return new Date(s).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
+      catch (_) { return s; }
+    }
+
+    (async function () {
+      const params = new URLSearchParams(location.search);
+      const aid = params.get('appointment_id');
+      const out = document.getElementById('ref-body');
+      if (!aid) { out.innerHTML = '<p>Missing appointment_id.</p>'; return; }
+      try {
+        const data = await apiRequest('/staff/referral.php?appointment_id=' + encodeURIComponent(aid));
+        if (!data || !data.success) {
+          out.innerHTML = `<p>${escHtml(data?.message || 'Referral not found.')}</p>`;
+          return;
+        }
+        const r = data.referral;
+        const specialtyLabel = (r.specialty === 'Other' && r.specialty_other) ? r.specialty_other : r.specialty;
+        const age = ageFromDob(r.date_of_birth);
+
+        document.getElementById('ref-meta-top').innerHTML = `<strong>DATE:</strong> ${fmtDate(r.issued_at)}`;
+
+        out.innerHTML = `
+          <div class="recipient">
+            <span class="label">To:</span>
+            ${r.suggested_specialist ? escHtml(r.suggested_specialist) : `Attending ${escHtml(specialtyLabel)} Specialist`}
+          </div>
+          <div class="body">
+            <p>Dear Colleague,</p>
+            <p>I am referring my patient, <strong>${escHtml(r.patient_name)}</strong>${age ? `, ${age} years old` : ''}${r.gender ? `, ${escHtml(r.gender)}` : ''}, for further evaluation and management in your specialty (<strong>${escHtml(specialtyLabel)}</strong>).</p>
+            <p><strong>Reason for referral:</strong> ${escHtml(r.reason)}</p>
+            <p><strong>Urgency:</strong> <span class="urgency ${escHtml(r.urgency)}">${escHtml(r.urgency)}</span></p>
+            <p>This patient was seen on ${fmtDate(r.appointment_date)} at our hospital (Appointment #${escHtml(r.appointment_number)}). Kindly find the patient's contact information below and arrange the consultation accordingly.</p>
+            <p><strong>Contact:</strong> ${escHtml(r.patient_contact || '—')}</p>
+            <p>Thank you for your kind attention.</p>
+          </div>
+          <div class="signatures">
+            <div class="sig">
+              <div class="name">${escHtml(r.doctor_name)}, M.D.</div>
+              <div class="role">${escHtml(r.specialization || 'Internal Medicine')} · License No. ${escHtml(r.license_number || '—')}</div>
+            </div>
+          </div>
+        `;
+        document.getElementById('ref-meta').textContent =
+          `Referral #${r.id} · Issued ${new Date(r.issued_at).toLocaleString()}`;
+      } catch (e) {
+        out.innerHTML = '<p>Failed to load referral: ' + escHtml(e.message) + '</p>';
+      }
+    })();
+  </script>
+</body>
+</html>

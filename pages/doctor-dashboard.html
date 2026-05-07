@@ -6,8 +6,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Doctor Dashboard — Internal Medicine OPD</title>
-    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <title>Doctor Dashboard — Consultation OPD</title>
+    <link rel="icon" type="image/png" href="../assets/images/medicare.png">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -188,13 +188,11 @@
         <!-- Branding -->
         <div class="px-5 py-5 border-b border-white/10">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white/15 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0 border border-white/20 shadow-inner">
-                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
-                        <polyline points="2,12 5,4 8,12 11,8 14,16 17,10 20,14 22,12"/>
-                    </svg>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img src="../assets/images/medicare.png" alt="Logo" style="width:40px;height:40px;border-radius:10px;">
                 </div>
                 <div>
-                    <h1 class="text-white font-bold text-base leading-tight font-outfit tracking-tight">IM-OPD</h1>
+                    <h1 class="text-white font-bold text-base leading-tight font-outfit tracking-tight">OPD</h1>
                     <p class="text-cyan-200/80 text-xs font-medium tracking-wide">Doctor Portal</p>
                 </div>
             </div>
@@ -288,15 +286,23 @@
 
                 <!-- Right: avatar + logout -->
                 <div class="flex items-center space-x-3 flex-shrink-0">
+                    <!-- Global Scan QR — opens scanner without a specific appointment.
+                         performCheckIn() resolves the appointment from the QR token server-side. -->
+                    <button type="button" onclick="openQRScanner(null)"
+                        class="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                        <i class="fas fa-qrcode"></i>
+                        <span class="hidden sm:inline">Scan QR</span>
+                    </button>
+                    <div id="bell-container"></div>
                     <!-- Doctor avatar chip -->
-                    <div class="hidden sm:flex items-center space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-3 py-2">
+                    <div class="flex items-center space-x-2 sm:space-x-2.5 bg-[#F0FDFA] border border-cyan-100 rounded-xl px-2 py-1.5 sm:px-3 sm:py-2">
                         <div class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0"
                              id="header-avatar">
                             <i class="fas fa-user-md text-xs"></i>
                         </div>
-                        <div class="hidden md:block">
-                            <p class="text-xs font-semibold text-[#083344] leading-tight font-outfit" id="header-name">Loading…</p>
-                            <p class="text-xs text-cyan-600 font-medium" id="header-role">Doctor</p>
+                        <div class="block max-w-[110px] sm:max-w-none">
+                            <p class="text-xs font-semibold text-[#083344] leading-tight font-outfit truncate" id="header-name">Loading…</p>
+                            <p class="text-[10px] sm:text-xs text-cyan-600 font-medium" id="header-role">Doctor</p>
                         </div>
                     </div>
 
@@ -363,6 +369,8 @@
                  TAB: TODAY'S APPOINTMENTS
             ═══════════════════════════════ -->
             <div id="tab-today" class="tab-content active">
+                <!-- Day-cancel mount -->
+                <div id="day-cancel-mount" class="mb-4 flex justify-end"></div>
                 <!-- Section header -->
                 <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center space-x-2.5">
@@ -393,6 +401,9 @@
 
                 <!-- Appointment list -->
                 <div id="today-appointments-list" class="hidden space-y-3"></div>
+
+                <!-- Weekly schedule -->
+                <div id="weekly-schedule-container" class="mt-6"></div>
             </div>
 
             <!-- ══════════════════════════════
@@ -737,29 +748,37 @@
                     <span id="qr-status-text">Allow camera access to scan</span>
                 </p>
 
-                <!-- Divider -->
-                <div class="flex items-center mb-4">
-                    <div class="flex-1 border-t border-gray-100"></div>
-                    <span class="px-3 text-xs text-slate-400 font-medium bg-white">or enter manually</span>
-                    <div class="flex-1 border-t border-gray-100"></div>
-                </div>
+                <!-- Manual entry toggle (hidden by default; shown when camera unavailable) -->
+                <button type="button" id="manual-toggle"
+                    onclick="document.getElementById('manual-block').classList.remove('hidden'); this.classList.add('hidden');"
+                    class="block w-full text-center text-xs text-cyan-700 hover:text-cyan-800 underline mt-2">
+                    Camera not working? Enter code manually
+                </button>
 
-                <!-- Manual token input -->
-                <div class="flex space-x-2">
-                    <input type="text" id="manual-token"
-                        placeholder="Paste QR token here…"
-                        class="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
-                        onkeypress="if(event.key==='Enter') checkInManual()">
-                    <button onclick="checkInManual()"
-                        class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-md active:scale-95 flex items-center space-x-1.5 whitespace-nowrap"
-                        style="background:linear-gradient(135deg,#083344,#0891B2)">
-                        <i class="fas fa-sign-in-alt text-xs"></i>
-                        <span>Check In</span>
-                    </button>
+                <!-- Manual token input — camera-failure fallback -->
+                <div id="manual-block" class="hidden">
+                    <!-- Divider -->
+                    <div class="flex items-center mb-4 mt-3">
+                        <div class="flex-1 border-t border-gray-100"></div>
+                        <span class="px-3 text-xs text-slate-400 font-medium bg-white">enter code manually</span>
+                        <div class="flex-1 border-t border-gray-100"></div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="manual-token"
+                            placeholder="Type the appointment code from the QR"
+                            class="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors"
+                            onkeypress="if(event.key==='Enter') checkInManual()">
+                        <button onclick="checkInManual()"
+                            class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-md active:scale-95 flex items-center space-x-1.5 whitespace-nowrap"
+                            style="background:linear-gradient(135deg,#083344,#0891B2)">
+                            <i class="fas fa-sign-in-alt text-xs"></i>
+                            <span>Check In</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2.5">
+                        Use this only if the camera will not start. Ask the patient to read out their appointment code.
+                    </p>
                 </div>
-                <p class="text-xs text-slate-400 mt-2.5">
-                    Token is the part after <code class="bg-gray-100 text-slate-600 px-1.5 py-0.5 rounded-md">?token=</code> in the QR URL
-                </p>
             </div>
         </div>
     </div>
@@ -788,9 +807,16 @@
                         <p class="text-cyan-100/80 text-xs mt-0.5" id="record-modal-subtitle">Fill in consultation details</p>
                     </div>
                 </div>
-                <button onclick="closeRecordModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-colors">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-view-history" onclick="openPatientHistoryFromDrawer()"
+                        class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <i class="fas fa-clock-rotate-left"></i>
+                        <span>View History</span>
+                    </button>
+                    <button onclick="closeRecordModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-colors">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Scrollable body -->
@@ -829,29 +855,27 @@
                     <input type="hidden" id="record-appointment-id">
                     <input type="hidden" id="record-patient-id">
 
-                    <!-- ─ Chief Complaint + Symptoms ─ -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
-                                <i class="fas fa-comment-medical text-[#0891B2]"></i>
-                                <span>Chief Complaint</span>
-                            </label>
-                            <textarea id="rec-chief-complaint" rows="3"
-                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
-                                placeholder="Primary reason for visit…"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
-                                <i class="fas fa-thermometer-half text-[#0891B2]"></i>
-                                <span>Symptoms</span>
-                            </label>
-                            <textarea id="rec-symptoms" rows="3"
-                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
-                                placeholder="List symptoms…"></textarea>
-                        </div>
+                    <!-- ─ Chief Complaint (read-only from triage) + Symptoms ─ -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-comment-medical text-[#0891B2]"></i>
+                            <span>Chief Complaint <span class="text-slate-400 normal-case font-normal">(recorded at triage)</span></span>
+                        </label>
+                        <div id="rec-chief-complaint-display"
+                            class="w-full border border-gray-100 rounded-xl px-3.5 py-2.5 text-sm bg-slate-50 text-slate-700 leading-relaxed min-h-[40px]">—</div>
                     </div>
 
-                    <!-- ─ Vital Signs ─ -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
+                            <i class="fas fa-thermometer-half text-[#0891B2]"></i>
+                            <span>Symptoms</span>
+                        </label>
+                        <textarea id="rec-symptoms" rows="3"
+                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none bg-[#F8FFFE] transition-colors leading-relaxed"
+                            placeholder="List symptoms…"></textarea>
+                    </div>
+
+                    <!-- ─ Vital Signs (read-only — recorded by staff in triage) ─ -->
                     <div class="rounded-2xl border border-gray-100 overflow-hidden">
                         <div class="px-4 py-3 border-b border-gray-100 flex items-center space-x-2"
                              style="background:linear-gradient(135deg,#FFF1F2,#FFF8F8)">
@@ -859,36 +883,9 @@
                                 <i class="fas fa-heartbeat text-red-500 text-xs"></i>
                             </div>
                             <span class="text-xs font-bold text-[#083344] uppercase tracking-wide">Vital Signs</span>
+                            <span id="vitals-recorded-meta" class="hidden text-[10px] text-slate-400 ml-auto"></span>
                         </div>
-                        <div class="p-4 bg-white">
-                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                <div class="vital-field">
-                                    <label>Blood Pressure</label>
-                                    <input type="text" id="rec-bp" placeholder="120/80"
-                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
-                                </div>
-                                <div class="vital-field">
-                                    <label>Temp °C</label>
-                                    <input type="text" id="rec-temp" placeholder="36.5"
-                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
-                                </div>
-                                <div class="vital-field">
-                                    <label>Heart Rate</label>
-                                    <input type="text" id="rec-hr" placeholder="72 bpm"
-                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
-                                </div>
-                                <div class="vital-field">
-                                    <label>Weight kg</label>
-                                    <input type="text" id="rec-weight" placeholder="kg"
-                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
-                                </div>
-                                <div class="vital-field">
-                                    <label>Height cm</label>
-                                    <input type="text" id="rec-height" placeholder="cm"
-                                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
-                                </div>
-                            </div>
-                        </div>
+                        <div id="vitals-readout" class="p-4 bg-white text-sm text-slate-500">Loading…</div>
                     </div>
 
                     <!-- ─ Diagnosis ─ -->
@@ -935,15 +932,108 @@
                         </div>
                     </div>
 
-                    <!-- ─ Follow-up Date ─ -->
-                    <div class="max-w-xs">
-                        <label class="block text-xs font-semibold text-[#083344] mb-1.5 uppercase tracking-wide flex items-center space-x-1">
-                            <i class="fas fa-calendar-plus text-[#0891B2]"></i>
-                            <span>Follow-up Date</span>
-                        </label>
-                        <input type="date" id="rec-followup"
-                            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-[#F8FFFE] transition-colors">
+                    <!-- ─ Refer to specialist (optional) ─ -->
+                    <div class="rounded-2xl border border-gray-100 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center space-x-2"
+                             style="background:linear-gradient(135deg,#EFF6FF,#F8FBFF)">
+                            <div class="w-6 h-6 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                                <i class="fas fa-share-from-square text-blue-500 text-xs"></i>
+                            </div>
+                            <span class="text-xs font-bold text-[#083344] uppercase tracking-wide">Refer to Specialist</span>
+                            <label class="ml-auto inline-flex items-center gap-2 text-xs">
+                                <input type="checkbox" id="ref-enable">
+                                <span class="text-slate-600 normal-case">This visit needs a referral</span>
+                            </label>
+                        </div>
+                        <div id="ref-body" class="hidden p-4 bg-white space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-slate-600">Specialty</span>
+                                    <select id="ref-specialty" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        <option value="">Choose a specialty…</option>
+                                        <option>ENT</option>
+                                        <option>Cardiology</option>
+                                        <option>OB-GYN</option>
+                                        <option>Pediatrics</option>
+                                        <option>General Surgery</option>
+                                        <option>Dermatology</option>
+                                        <option>Orthopedics</option>
+                                        <option>Ophthalmology</option>
+                                        <option>Neurology</option>
+                                        <option>Other</option>
+                                    </select>
+                                </label>
+                                <label class="block" id="ref-specialty-other-wrap" style="display:none">
+                                    <span class="text-xs font-semibold text-slate-600">Specify specialty</span>
+                                    <input id="ref-specialty-other" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                </label>
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-slate-600">Suggested specialist (optional)</span>
+                                    <input id="ref-suggested" placeholder="e.g., Dr. dela Cruz at St Luke's" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                </label>
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-slate-600">Urgency</span>
+                                    <select id="ref-urgency" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        <option value="routine" selected>Routine</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="emergency">Emergency</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <label class="block">
+                                <span class="text-xs font-semibold text-slate-600">Reason for referral</span>
+                                <textarea id="ref-reason" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="Justification, observed symptoms…"></textarea>
+                            </label>
+                            <div class="flex justify-end gap-2 items-center">
+                                <span id="ref-status" class="text-xs text-slate-400 mr-auto"></span>
+                                <button type="button" id="ref-print-btn" class="hidden px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50">
+                                    <i class="fa-solid fa-print mr-1"></i> Print referral
+                                </button>
+                                <button type="button" id="ref-save-btn" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">
+                                    Save referral
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- ─ Schedule follow-up (optional) ─ -->
+                    <div class="rounded-2xl border border-gray-100 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center space-x-2"
+                             style="background:linear-gradient(135deg,#F0FDF4,#F7FFFA)">
+                            <div class="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                                <i class="fas fa-calendar-plus text-emerald-600 text-xs"></i>
+                            </div>
+                            <span class="text-xs font-bold text-[#083344] uppercase tracking-wide">Schedule Follow-up</span>
+                            <label class="ml-auto inline-flex items-center gap-2 text-xs">
+                                <input type="checkbox" id="fu-enable">
+                                <span class="text-slate-600 normal-case">Schedule a follow-up appointment</span>
+                            </label>
+                        </div>
+                        <div id="fu-body" class="hidden p-4 bg-white space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-slate-600">Date</span>
+                                    <input type="date" id="fu-date" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                </label>
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-slate-600">Time</span>
+                                    <input type="time" id="fu-time" step="900" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                </label>
+                                <label class="block">
+                                    <span class="text-xs font-semibold text-slate-600">Reason (optional)</span>
+                                    <input id="fu-reason" placeholder="(auto-filled if blank)" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                </label>
+                            </div>
+                            <div class="flex justify-end gap-2 items-center">
+                                <span id="fu-status" class="text-xs text-slate-400 mr-auto"></span>
+                                <button type="button" id="fu-save-btn" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
+                                    Save follow-up
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hidden compatibility input — older save-medical-record paths still expect rec-followup. -->
+                    <input type="hidden" id="rec-followup" value="">
 
                     <!-- ─ Actions ─ -->
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100">
@@ -965,8 +1055,85 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════
+     DOCTOR VITALS FALLBACK MODAL
+     (Used when staff missed vitals capture; writes to triage_assessments
+      via the same /api/staff/save-vitals.php endpoint.)
+════════════════════════════════════════════════════ -->
+<div id="modal-doctor-vitals" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-outfit font-semibold text-[#083344] text-lg">Record Vitals — <span id="dv-patient-name" class="text-cyan-700"></span></h3>
+            <button data-close-doctor-vitals class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <form id="form-doctor-vitals" class="px-6 py-5 space-y-4">
+            <input type="hidden" name="appointment_id" id="dv-appt-id">
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Chief complaint <span class="text-red-500">*</span></span>
+                <textarea name="chief_complaint" required rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="block"><span class="text-xs font-semibold text-slate-600">Blood pressure <span class="text-red-500">*</span></span><input name="blood_pressure" placeholder="120/80" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></label>
+                <label class="block"><span class="text-xs font-semibold text-slate-600">Temperature (°C)</span><input name="temperature" type="number" step="0.1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></label>
+                <label class="block"><span class="text-xs font-semibold text-slate-600">Heart rate (bpm)</span><input name="heart_rate" type="number" step="1" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></label>
+                <label class="block"><span class="text-xs font-semibold text-slate-600">O₂ saturation (%)</span><input name="oxygen_saturation" type="number" step="1" min="0" max="100" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></label>
+                <label class="block"><span class="text-xs font-semibold text-slate-600">Weight (kg) <span class="text-red-500">*</span></span><input name="weight" type="number" step="0.1" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></label>
+                <label class="block"><span class="text-xs font-semibold text-slate-600">Height (cm) <span class="text-red-500">*</span></span><input name="height_cm" type="number" step="1" required class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></label>
+            </div>
+            <label class="block">
+                <span class="text-xs font-semibold text-slate-600">Notes</span>
+                <textarea name="notes" rows="2" class="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"></textarea>
+            </label>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" data-close-doctor-vitals class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700">Save vitals</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Scripts -->
 <script src="../js/auth.js?v=3.0"></script>
 <script src="../js/doctor-dashboard.js?v=3.0"></script>
+<script src="../js/notifications-bell.js?v=1.0"></script>
+<script src="../js/weekly-schedule.js?v=1.0"></script>
+<script src="../js/day-cancel.js?v=1.0"></script>
+<script>document.addEventListener('DOMContentLoaded', () => {
+  NotificationsBell.mount('#bell-container');
+  if (document.getElementById('weekly-schedule-container')) {
+    WeeklySchedule.mount('#weekly-schedule-container', { role: 'doctor' });
+  }
+  if (window.DayCancel) DayCancel.init({ role: 'doctor' });
+});</script>
+
+<!-- ═══════════════════════════════════════════════════
+     PATIENT HISTORY MODAL (same UI used in admin)
+════════════════════════════════════════════════════ -->
+<div id="modal-patient-history" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 gap-3 flex-wrap">
+            <div class="min-w-0">
+                <h3 class="font-outfit font-bold text-[#083344] text-lg">Patient History</h3>
+                <p id="ph-patient-meta" class="text-xs text-slate-500 mt-0.5">Loading…</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <input id="ph-search" type="search" placeholder="Filter visits…"
+                    class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs w-48"
+                    oninput="filterPatientHistoryTimeline(this.value)">
+                <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="ph-content" class="px-6 py-4">
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                <p class="text-sm mt-2">Loading history…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

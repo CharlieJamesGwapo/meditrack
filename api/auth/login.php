@@ -48,6 +48,12 @@ try {
         }
     }
 
+    // Rotate the session ID on login to defeat session-fixation attacks. An
+    // attacker who managed to plant a known PHPSESSID on the user's browser
+    // pre-auth (e.g., via XSS on a sibling app or a same-origin subdomain)
+    // would otherwise still hold the post-login session.
+    session_regenerate_id(true);
+
     // Set session
     $_SESSION['user_id']    = $user['id'];
     $_SESSION['email']      = $user['email'];

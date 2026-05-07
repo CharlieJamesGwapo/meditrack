@@ -15,7 +15,7 @@ try {
 
     $stmt = $db->prepare("
         SELECT d.id, d.user_id, d.full_name, d.specialization, d.license_number,
-               d.consultation_fee, d.experience_years, d.bio, d.status,
+               d.consultation_fee, d.experience_years, d.bio, d.profile_picture, d.status,
                d.created_at, d.updated_at,
                u.email, u.username, u.last_login,
                (SELECT COUNT(*) FROM appointments a WHERE a.doctor_id = d.id AND a.status NOT IN ('cancelled','no_show')) as total_appointments,

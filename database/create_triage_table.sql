@@ -2,11 +2,14 @@
 CREATE TABLE IF NOT EXISTS triage_assessments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     patient_id INT NOT NULL,
+    appointment_id INT NULL,
     chief_complaint TEXT NOT NULL,
     blood_pressure VARCHAR(20),
     temperature DECIMAL(4,1),
     heart_rate INT,
     weight DECIMAL(5,2),
+    height_cm INT NULL,
+    oxygen_saturation TINYINT UNSIGNED NULL,
     priority_level ENUM('low', 'medium', 'high') DEFAULT 'low',
     notes TEXT,
     recorded_by INT NOT NULL,
@@ -14,11 +17,13 @@ CREATE TABLE IF NOT EXISTS triage_assessments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
     FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
     INDEX idx_patient_id (patient_id),
     INDEX idx_recorded_by (recorded_by),
     INDEX idx_priority (priority_level),
-    INDEX idx_recorded_at (recorded_at)
-);
+    INDEX idx_recorded_at (recorded_at),
+    UNIQUE KEY uniq_triage_appointment (appointment_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Add priority_level column to appointments table if it doesn't exist
 ALTER TABLE appointments 

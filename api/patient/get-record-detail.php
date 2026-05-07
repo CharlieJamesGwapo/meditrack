@@ -27,11 +27,19 @@ try {
                p.full_name as patient_name, p.date_of_birth, p.gender,
                p.contact_number, p.blood_group, p.allergies,
                d.full_name as doctor_name, d.specialization, d.license_number,
-               a.appointment_number, a.appointment_date, a.appointment_time, a.status
+               a.appointment_number, a.appointment_date, a.appointment_time, a.status,
+               t.chief_complaint  AS triage_chief_complaint,
+               t.blood_pressure   AS triage_bp,
+               t.temperature      AS triage_temp,
+               t.heart_rate       AS triage_hr,
+               t.weight           AS triage_weight,
+               t.height_cm        AS triage_height,
+               t.oxygen_saturation AS triage_o2
         FROM medical_records mr
         JOIN appointments a ON mr.appointment_id = a.id
         JOIN patients p ON mr.patient_id = p.id
         JOIN doctors d ON mr.doctor_id = d.id
+   LEFT JOIN triage_assessments t ON t.appointment_id = mr.appointment_id
         WHERE mr.id = :id
     ";
 
@@ -67,11 +75,27 @@ try {
         sendJSON(['success' => false, 'message' => 'Record not found'], 404);
     }
 
-    // Parse vital signs
-    if (!empty($record['vital_signs'])) {
+    // Vitals: prefer triage_assessments (C1 source of truth); fall back to
+    // legacy medical_records.vital_signs JSON for pre-C1 rows.
+    if ($record['triage_bp'] !== null) {
+        $record['vital_signs'] = [
+            'bp'                => $record['triage_bp'],
+            'temperature'       => $record['triage_temp'],
+            'heart_rate'        => $record['triage_hr'],
+            'weight'            => $record['triage_weight'],
+            'height'            => $record['triage_height'],
+            'oxygen_saturation' => $record['triage_o2'],
+        ];
+    } elseif (!empty($record['vital_signs'])) {
         $record['vital_signs'] = json_decode($record['vital_signs'], true) ?? [];
     } else {
         $record['vital_signs'] = [];
+    }
+    if (empty($record['chief_complaint']) && !empty($record['triage_chief_complaint'])) {
+        $record['chief_complaint'] = $record['triage_chief_complaint'];
+    }
+    foreach (['triage_chief_complaint','triage_bp','triage_temp','triage_hr','triage_weight','triage_height','triage_o2'] as $k) {
+        unset($record[$k]);
     }
 
     sendJSON(['success' => true, 'record' => $record]);

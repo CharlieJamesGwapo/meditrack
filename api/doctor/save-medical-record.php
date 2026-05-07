@@ -41,37 +41,27 @@ try {
         sendJSON(['success' => false, 'message' => 'Patient must be checked in before saving a medical record'], 400);
     }
 
-    $patient_id       = $appointment['patient_id'];
-    $chief_complaint  = sanitizeInput($input['chief_complaint'] ?? '');
-    $symptoms         = sanitizeInput($input['symptoms'] ?? '');
-    $diagnosis        = sanitizeInput($input['diagnosis'] ?? '');
-    $prescription     = sanitizeInput($input['prescription'] ?? '');
+    // Doctor's record no longer captures chief_complaint or vital_signs — those are
+    // recorded by staff at triage (triage_assessments). Any incoming chief_complaint
+    // or vital_signs values are silently ignored for backward compatibility.
+    $patient_id        = $appointment['patient_id'];
+    $symptoms          = sanitizeInput($input['symptoms'] ?? '');
+    $diagnosis         = sanitizeInput($input['diagnosis'] ?? '');
+    $prescription      = sanitizeInput($input['prescription'] ?? '');
     $lab_tests_ordered = sanitizeInput($input['lab_tests_ordered'] ?? '');
-    $notes            = sanitizeInput($input['notes'] ?? '');
-    $follow_up_date   = sanitizeInput($input['follow_up_date'] ?? '') ?: null;
-
-    // Build vital_signs JSON — accept nested object or top-level fields
-    $vs = $input['vital_signs'] ?? [];
-    $vital_signs = json_encode([
-        'bp'          => sanitizeInput($vs['bp'] ?? $input['bp'] ?? ''),
-        'temperature' => sanitizeInput($vs['temperature'] ?? $vs['temp'] ?? $input['temperature'] ?? ''),
-        'heart_rate'  => sanitizeInput($vs['heart_rate'] ?? $input['heart_rate'] ?? ''),
-        'weight'      => sanitizeInput($vs['weight'] ?? $input['weight'] ?? ''),
-        'height'      => sanitizeInput($vs['height'] ?? $input['height'] ?? '')
-    ]);
+    $notes             = sanitizeInput($input['notes'] ?? '');
+    $follow_up_date    = sanitizeInput($input['follow_up_date'] ?? '') ?: null;
 
     $db->beginTransaction();
 
     // INSERT or UPDATE (ON DUPLICATE KEY — appointment_id is UNIQUE)
     $stmt = $db->prepare("
         INSERT INTO medical_records
-            (appointment_id, patient_id, doctor_id, chief_complaint, symptoms, vital_signs, diagnosis, prescription, lab_tests_ordered, notes, follow_up_date)
+            (appointment_id, patient_id, doctor_id, symptoms, diagnosis, prescription, lab_tests_ordered, notes, follow_up_date)
         VALUES
-            (:aid, :pid, :did, :cc, :sym, :vs, :diag, :rx, :lab, :notes, :fud)
+            (:aid, :pid, :did, :sym, :diag, :rx, :lab, :notes, :fud)
         ON DUPLICATE KEY UPDATE
-            chief_complaint    = VALUES(chief_complaint),
             symptoms           = VALUES(symptoms),
-            vital_signs        = VALUES(vital_signs),
             diagnosis          = VALUES(diagnosis),
             prescription       = VALUES(prescription),
             lab_tests_ordered  = VALUES(lab_tests_ordered),
@@ -82,9 +72,7 @@ try {
         ':aid'   => $appointment_id,
         ':pid'   => $patient_id,
         ':did'   => $doctor_id,
-        ':cc'    => $chief_complaint,
         ':sym'   => $symptoms,
-        ':vs'    => $vital_signs,
         ':diag'  => $diagnosis,
         ':rx'    => $prescription,
         ':lab'   => $lab_tests_ordered,

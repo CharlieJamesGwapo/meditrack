@@ -4,10 +4,6 @@
  * Single Doctor System
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 $env = require __DIR__ . '/../env.php';
 
 if (($env['ENVIRONMENT'] ?? 'production') === 'production') {
@@ -16,6 +12,23 @@ if (($env['ENVIRONMENT'] ?? 'production') === 'production') {
 } else {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
+}
+
+// Harden the session cookie before session_start. HttpOnly blocks JS access
+// (mitigates XSS-driven session theft). SameSite=Lax mitigates most CSRF.
+// Secure is only enforced in production so local XAMPP (HTTP) keeps working.
+if (session_status() === PHP_SESSION_NONE) {
+    $secureCookie = (($env['ENVIRONMENT'] ?? 'production') === 'production')
+        || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => $secureCookie,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
 }
 
 date_default_timezone_set('Asia/Manila');
@@ -39,6 +52,8 @@ define('MAX_FILE_SIZE', 5242880);
 define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png']);
 
 define('ITEMS_PER_PAGE', 20);
+define('CANCEL_BROADCAST_LIMIT', 20);
+define('NO_SHOW_GRACE_MINUTES', 15);
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');

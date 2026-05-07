@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Record — Internal Medicine OPD</title>
+    <title>Medical Record — Consultation OPD</title>
+    <link rel="icon" type="image/png" href="../assets/images/medicare.png">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -72,11 +73,43 @@
             box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
         }
 
-        /* ── Clinic header gradient ── */
-        .clinic-header {
-            background: linear-gradient(135deg, #0d4f6e 0%, #0891b2 60%, #22d3ee 100%);
-            padding: 28px 36px;
-            color: white;
+        /* ── Hospital letterhead (Republic of the Philippines / Surigao del Sur / Bislig District Hospital) ── */
+        .clinic-letterhead {
+            padding: 24px 36px 4px;
+            text-align: center;
+            background: #fff;
+        }
+        .clinic-letterhead img {
+            max-width: 720px;
+            width: 100%;
+            height: auto;
+            display: inline-block;
+        }
+        /* Metadata strip below the letterhead */
+        .meta-strip {
+            padding: 12px 36px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #0d4f6e;
+            background: #fff;
+        }
+        .meta-strip .appt-num { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 18px; color: #0d4f6e; letter-spacing: 0.04em; }
+        .meta-strip .appt-date { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #475569; margin-top: 2px; }
+        .meta-strip .appt-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #ECFEFF;
+            border: 1px solid #67e8f9;
+            color: #0e7490;
+            margin-top: 0;
         }
 
         /* ── Section cards ── */
@@ -183,7 +216,8 @@
 
         /* ── Mobile responsive ── */
         @media (max-width: 640px) {
-            .clinic-header { padding: 20px 20px; }
+            .clinic-letterhead { padding: 16px 16px 4px; }
+            .meta-strip { padding: 10px 16px 12px; }
             .section-card { padding: 16px 20px; }
             .info-row td:first-child { width: 96px; font-size: 11px; }
             .info-row td:last-child { font-size: 12px; }
@@ -203,9 +237,9 @@
     <div class="action-bar no-print">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">
-                <i class="fas fa-heart-pulse text-xl" style="color:#0891b2;"></i>
+                <img src="../assets/images/medicare.png" alt="Logo" style="width:28px;height:28px;border-radius:6px;">
                 <div>
-                    <span class="outfit font-bold text-gray-800 text-sm">IM-OPD</span>
+                    <span class="outfit font-bold text-gray-800 text-sm">OPD</span>
                     <span class="hidden sm:inline text-gray-400 text-sm ml-1.5">— Medical Record</span>
                 </div>
             </div>
@@ -267,31 +301,20 @@
     <!-- ── Print Document ── -->
     <div id="printContent" class="hidden print-page">
 
-        <!-- Clinic Header with gradient banner -->
-        <div class="clinic-header">
-            <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                <!-- Left: Clinic branding -->
-                <div>
-                    <div class="flex items-center gap-2.5 mb-1">
-                        <i class="fas fa-heart-pulse text-2xl" style="color:#a5f3fc;"></i>
-                        <h1 class="text-2xl font-bold tracking-wide" style="font-family:'Outfit',sans-serif;">IM-OPD</h1>
-                    </div>
-                    <p class="text-sm" style="color:rgba(255,255,255,0.80); font-family:'DM Sans',sans-serif;">Internal Medicine OPD Management System</p>
-                    <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.55); font-family:'DM Sans',sans-serif;">Official Medical Record Document</p>
-                </div>
-                <!-- Right: Appointment info -->
-                <div class="sm:text-right">
-                    <p id="hdrApptNum"
-                       class="font-bold text-lg tracking-wide outfit"
-                       style="color:#a5f3fc;"></p>
-                    <p id="hdrDate"
-                       class="text-sm mt-0.5"
-                       style="color:rgba(255,255,255,0.80); font-family:'DM Sans',sans-serif;"></p>
-                    <div class="appt-badge">
-                        <i class="fas fa-circle-check text-xs"></i>
-                        <span style="font-family:'DM Sans',sans-serif;">Official Record</span>
-                    </div>
-                </div>
+        <!-- Official letterhead — Republic of the Philippines / Surigao del Sur / Bislig District Hospital -->
+        <div class="clinic-letterhead">
+            <img src="../assets/images/medical-certificate-letterhead.jpg" alt="Bislig District Hospital — Republic of the Philippines, Province of Surigao del Sur">
+        </div>
+
+        <!-- Appointment metadata strip below the letterhead -->
+        <div class="meta-strip">
+            <div>
+                <p id="hdrApptNum" class="appt-num"></p>
+                <p id="hdrDate" class="appt-date"></p>
+            </div>
+            <div class="appt-badge">
+                <i class="fas fa-circle-check text-xs"></i>
+                <span style="font-family:'DM Sans',sans-serif;">Official Record</span>
             </div>
         </div>
 
@@ -439,7 +462,7 @@
         <!-- Document Footer -->
         <div class="section-card" style="background:#f8fafc; text-align:center; padding-top:18px; padding-bottom:22px;">
             <p class="text-xs text-gray-400 mb-1" style="font-family:'DM Sans',sans-serif;">
-                This is a computer-generated document from Internal Medicine OPD Management System.
+                This is a computer-generated document from Consultation OPD Management System.
             </p>
             <p class="text-xs text-gray-400" style="font-family:'DM Sans',sans-serif;">
                 Printed on: <span id="printDate" class="font-medium text-gray-500"></span>
@@ -585,7 +608,7 @@
             }));
 
             // Update browser tab title
-            document.title = `Medical Record${r.appointment_number ? ' #' + r.appointment_number : ''} — Internal Medicine OPD`;
+            document.title = `Medical Record${r.appointment_number ? ' #' + r.appointment_number : ''} — Consultation OPD`;
         }
 
         // ── Helpers ──

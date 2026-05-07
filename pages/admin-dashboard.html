@@ -6,7 +6,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Admin Dashboard — Internal Medicine OPD</title>
+    <title>Admin Dashboard — Consultation OPD</title>
+    <link rel="icon" type="image/png" href="../assets/images/medicare.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -402,11 +403,11 @@
     <!-- Logo -->
     <div class="px-5 py-5 flex items-center gap-3 flex-shrink-0"
          style="border-bottom:1px solid rgba(255,255,255,0.09);">
-        <div class="logo-ring w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-heartbeat text-cyan-300 text-lg"></i>
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img src="../assets/images/medicare.png" alt="Logo" style="width:40px;height:40px;border-radius:10px;">
         </div>
         <div>
-            <h1 class="text-[1.05rem] font-bold font-outfit text-white leading-tight tracking-wide">IM-OPD</h1>
+            <h1 class="text-[1.05rem] font-bold font-outfit text-white leading-tight tracking-wide">OPD</h1>
             <p class="text-[0.65rem] font-medium" style="color:rgba(103,232,249,0.75);">Admin Panel</p>
         </div>
     </div>
@@ -438,10 +439,15 @@
             <i class="fas fa-user-md w-4 text-center text-sm"></i>
             <span class="text-sm">Manage Doctors</span>
         </button>
+        <button onclick="switchTab('staff')" data-tab="staff"
+                class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
+            <i class="fa-solid fa-user-nurse w-4 text-center text-sm"></i>
+            <span class="text-sm">Manage Staff</span>
+        </button>
         <button onclick="switchTab('schedule')" data-tab="schedule"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
             <i class="fas fa-clock w-4 text-center text-sm"></i>
-            <span class="text-sm">Doctor Schedule</span>
+            <span class="text-sm">OPD Schedule</span>
         </button>
         <button onclick="switchTab('reports')" data-tab="reports"
                 class="nav-item w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg">
@@ -501,6 +507,7 @@
 
             <!-- Right: admin badge + logout -->
             <div class="flex items-center gap-2.5">
+                <div id="bell-container"></div>
                 <span class="hidden sm:flex header-admin-badge">
                     <i class="fas fa-user-shield text-[0.65rem]"></i>
                     <span id="headerAdminName">Admin</span>
@@ -586,12 +593,24 @@
         ════════════════════════════════ -->
         <div id="tab-appointments" class="tab-panel">
 
-            <div class="mb-6">
-                <div class="section-eyebrow">
-                    <div class="section-eyebrow-dot"></div>
-                    <h3 class="section-title">Appointments</h3>
+            <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <div class="section-eyebrow">
+                        <div class="section-eyebrow-dot"></div>
+                        <h3 class="section-title">Appointments</h3>
+                    </div>
+                    <p class="section-sub ml-3">View and manage all clinic appointments</p>
                 </div>
-                <p class="section-sub ml-3">View and manage all clinic appointments</p>
+                <div id="day-cancel-mount"></div>
+            </div>
+
+            <!-- Weekly schedule -->
+            <div class="mb-6">
+                <div class="mb-3">
+                    <label class="text-xs font-semibold text-gray-600">View doctor's week:</label>
+                    <select id="admin-weekly-doctor" class="ml-2 border border-gray-300 rounded-lg px-2 py-1 text-sm"><option value="">Loading…</option></select>
+                </div>
+                <div id="weekly-schedule-container"></div>
             </div>
 
             <!-- Filters -->
@@ -738,6 +757,52 @@
             </div>
         </div>
 
+        <!-- ════════════════════════════════
+             TAB: MANAGE STAFF
+        ════════════════════════════════ -->
+        <div id="tab-staff" class="tab-panel">
+
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <div class="section-eyebrow">
+                        <div class="section-eyebrow-dot" style="background:#0891B2;"></div>
+                        <h3 class="section-title">Manage Staff</h3>
+                    </div>
+                    <p class="section-sub ml-3">Add, view, or deactivate clinic staff members</p>
+                </div>
+                <button id="btn-add-staff" class="btn-primary flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl whitespace-nowrap">
+                    <i class="fas fa-user-plus"></i> Add Staff
+                </button>
+            </div>
+
+            <!-- Table card -->
+            <div class="card">
+                <div class="overflow-x-auto">
+                    <table class="data-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Username</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-tbody">
+                            <tr>
+                                <td colspan="7" class="text-center py-14 text-slate-400">
+                                    <i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>
+                                    Loading staff…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ═══ Doctor Add/Edit Modal ═══ -->
         <div id="doctorModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(8,51,68,0.6);backdrop-filter:blur(6px);">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" style="box-shadow:0 25px 60px rgba(8,51,68,0.3);">
@@ -757,6 +822,20 @@
                 <!-- Modal Body -->
                 <form id="doctorForm" onsubmit="saveDoctorForm(event)" class="px-6 py-5 space-y-4">
                     <input type="hidden" id="docEditId" value="">
+                    <!-- Hidden field — set after a successful upload-doctor-photo.php call -->
+                    <input type="hidden" id="docProfilePicture" value="">
+
+                    <!-- Profile photo picker -->
+                    <div class="flex items-center gap-4">
+                        <div id="docPhotoPreview" class="w-20 h-20 rounded-2xl bg-cyan-50 border-2 border-dashed border-cyan-200 flex items-center justify-center text-cyan-400 overflow-hidden flex-shrink-0">
+                            <i class="fas fa-user-md text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <label class="filter-label">Profile Photo</label>
+                            <input type="file" id="docPhotoInput" accept="image/jpeg,image/png,image/webp" class="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer">
+                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, or WEBP. Max 5 MB. Optional.</p>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="sm:col-span-2">
@@ -804,15 +883,67 @@
             </div>
         </div>
 
+        <!-- ═══ Add Staff Modal ═══ -->
+        <div id="modal-add-staff" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(8,51,68,0.6);backdrop-filter:blur(6px);">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" style="box-shadow:0 25px 60px rgba(8,51,68,0.3);">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#0891B2,#0E7490);">
+                            <i class="fa-solid fa-user-nurse text-white text-sm"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-sm font-outfit">Add Staff Member</h3>
+                    </div>
+                    <button id="btn-close-staff-modal" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 transition">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <form id="form-add-staff" class="px-6 py-5 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="filter-label">Full Name <span class="text-red-400">*</span></label>
+                            <input type="text" name="full_name" required class="filter-input w-full" placeholder="Juan Dela Cruz">
+                        </div>
+                        <div>
+                            <label class="filter-label">Email <span class="text-red-400">*</span></label>
+                            <input type="email" name="email" required class="filter-input w-full" placeholder="staff@clinic.com">
+                        </div>
+                        <div>
+                            <label class="filter-label">Username <span class="text-xs text-gray-400 normal-case">(optional, auto-generated)</span></label>
+                            <input type="text" name="username" class="filter-input w-full" placeholder="Auto-generated if blank">
+                        </div>
+                        <div>
+                            <label class="filter-label">Contact Number</label>
+                            <input type="text" name="contact_number" class="filter-input w-full" placeholder="09xxxxxxxxx">
+                        </div>
+                        <div>
+                            <label class="filter-label">Password <span class="text-red-400">*</span></label>
+                            <input type="password" name="password" minlength="6" required class="filter-input w-full" placeholder="Min 6 characters">
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex gap-3 pt-3 border-t border-gray-100">
+                        <button type="button" id="btn-cancel-staff-modal" class="flex-1 btn-ghost py-2.5 rounded-xl text-sm">Cancel</button>
+                        <button type="submit" class="flex-1 btn-primary py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-user-plus"></i> <span>Add Staff</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- ════════════════════════════════
-             TAB: DOCTOR SCHEDULE
+             TAB: OPD SCHEDULE
         ════════════════════════════════ -->
         <div id="tab-schedule" class="tab-panel">
 
             <div class="mb-6">
                 <div class="section-eyebrow">
                     <div class="section-eyebrow-dot"></div>
-                    <h3 class="section-title">Doctor Schedule</h3>
+                    <h3 class="section-title">OPD Schedule</h3>
                 </div>
                 <p class="section-sub ml-3">Set weekly availability for the clinic doctor</p>
             </div>
@@ -1013,7 +1144,7 @@
 <div id="moreDropdown">
     <button data-tab="schedule" onclick="switchTab('schedule');closeMoreMenu()">
         <i class="fas fa-clock w-5" style="color:#0891b2;"></i>
-        Doctor Schedule
+        OPD Schedule
     </button>
     <button data-tab="reports" onclick="switchTab('reports');closeMoreMenu()">
         <i class="fas fa-chart-bar w-5" style="color:#f97316;"></i>
@@ -1028,5 +1159,65 @@
 <!-- Scripts -->
 <script src="../js/auth.js?v=3.0"></script>
 <script src="../js/admin-dashboard.js?v=3.0"></script>
+<script src="../js/notifications-bell.js?v=1.0"></script>
+<script src="../js/weekly-schedule.js?v=1.0"></script>
+<script src="../js/day-cancel.js?v=1.0"></script>
+<script>document.addEventListener('DOMContentLoaded', async () => {
+  NotificationsBell.mount('#bell-container');
+
+  // Populate admin weekly doctor selector
+  const sel = document.querySelector('#admin-weekly-doctor');
+  if (sel) {
+    try {
+      const r = await fetch('../api/admin/get-doctors.php', { credentials: 'same-origin' });
+      const data = await r.json();
+      const list = (data && (data.doctors || data.data)) || [];
+      if (Array.isArray(list) && list.length) {
+        sel.innerHTML = list.map(d => `<option value="${d.id}">${d.full_name || d.name || ('Doctor #' + d.id)}</option>`).join('');
+      } else {
+        sel.innerHTML = '<option value="">No doctors</option>';
+      }
+    } catch (e) { sel.innerHTML = '<option value="">Failed</option>'; }
+  }
+
+  if (document.getElementById('weekly-schedule-container')) {
+    const weekly = WeeklySchedule.mount('#weekly-schedule-container', {
+      role: 'admin',
+      doctorIdGetter: () => (sel && sel.value ? Number(sel.value) : null),
+    });
+    if (sel && weekly) sel.addEventListener('change', () => weekly.refresh());
+  }
+  if (window.DayCancel) DayCancel.init({ role: 'admin' });
+});</script>
+
+<!-- ═══════════════════════════════════════════════════
+     PATIENT HISTORY MODAL (admin / doctor share this UI)
+════════════════════════════════════════════════════ -->
+<div id="modal-patient-history" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 gap-3 flex-wrap">
+            <div class="min-w-0">
+                <h3 class="font-outfit font-bold text-[#083344] text-lg">Patient History</h3>
+                <p id="ph-patient-meta" class="text-xs text-slate-500 mt-0.5">Loading…</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <input id="ph-search" type="search" placeholder="Filter visits…"
+                    class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs w-48"
+                    oninput="filterPatientHistoryTimeline(this.value)">
+                <button onclick="document.getElementById('modal-patient-history').classList.add('hidden')"
+                    class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div id="ph-content" class="px-6 py-4">
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                <p class="text-sm mt-2">Loading history…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

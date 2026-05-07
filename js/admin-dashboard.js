@@ -1,6 +1,6 @@
 /**
  * admin-dashboard.js
- * Internal Medicine OPD Management System
+ * Consultation OPD Management System
  * Complete admin dashboard logic
  */
 
@@ -85,7 +85,8 @@ function switchTab(tab) {
         appointments: 'Appointments',
         patients:     'Patients',
         doctors:      'Manage Doctors',
-        schedule:     'Doctor Schedule',
+        staff:        'Manage Staff',
+        schedule:     'OPD Schedule',
         reports:      'Reports',
         activity:     'Activity Logs',
     };
@@ -101,6 +102,7 @@ function switchTab(tab) {
         case 'appointments': loadAppointments(); break;
         case 'patients':     loadPatients();     break;
         case 'doctors':      loadDoctors();      break;
+        case 'staff':        loadStaff();        break;
         case 'schedule':     loadSchedule();     break;
         case 'reports':      loadReports();      break;
         case 'activity':     loadActivityLogs(); break;
@@ -343,11 +345,15 @@ async function loadAppointments() {
                 <td class="px-4 py-3 text-gray-600">${date}</td>
                 <td class="px-4 py-3 text-gray-600">${time}</td>
                 <td class="px-4 py-3">${badge}</td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 whitespace-nowrap">
                     ${canCancel
                         ? `<button onclick="cancelAppointment(${a.id}, '${apptNo}')"
-                                   class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition">
+                                   class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded-lg text-xs font-semibold transition mr-1">
                                <i class="fas fa-ban mr-1"></i>Cancel
+                           </button>
+                           <button onclick="adminMarkNoShow(${a.id}, '${escHtml(patient)}')"
+                                   class="bg-slate-50 hover:bg-amber-100 text-slate-600 hover:text-amber-700 border border-slate-200 px-3 py-1 rounded-lg text-xs font-semibold transition">
+                               <i class="fas fa-user-slash mr-1"></i>No-show
                            </button>`
                         : `<span class="text-gray-300 text-xs">—</span>`}
                 </td>
@@ -488,7 +494,11 @@ function renderPatientsTable(patients) {
                     ${status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-3 whitespace-nowrap">
+                <button onclick="viewPatientHistory(${p.patient_id})"
+                        class="bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 px-3 py-1 rounded-lg text-xs font-semibold transition mr-1">
+                    <i class="fas fa-clock-rotate-left mr-1"></i>History
+                </button>
                 <button onclick="togglePatientStatus(${p.patient_id}, '${escHtml(p.full_name || '')}', '${newStatus}')"
                         class="${toggleCls} px-3 py-1 rounded-lg text-xs font-semibold transition">
                     ${toggleLabel}
@@ -546,7 +556,7 @@ async function togglePatientStatus(id, name, newStatus) {
 }
 
 /* ══════════════════════════════════════════════
-   DOCTOR SCHEDULE TAB
+   OPD SCHEDULE TAB
 ══════════════════════════════════════════════ */
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -690,7 +700,7 @@ async function saveSchedule(e) {
 
         if (!data || !data.success) throw new Error(data?.message || 'Failed to save schedule');
 
-        showToast('success', 'Schedule Saved', 'Doctor schedule has been updated successfully.');
+        showToast('success', 'Schedule Saved', 'OPD schedule has been updated successfully.');
         loadSchedule();
 
     } catch (err) {
@@ -1088,12 +1098,16 @@ function renderDoctorsList(doctors) {
             ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"><i class="fas fa-circle text-[0.4rem]"></i> Active</span>'
             : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600"><i class="fas fa-circle text-[0.4rem]"></i> Inactive</span>';
 
+        const photoHtml = doc.profile_picture
+            ? `<img src="/meditrack/uploads/${escHtml(doc.profile_picture)}" alt="${escHtml(doc.full_name)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${getInitials(doc.full_name)}';this.parentElement.style.color='#fff';">`
+            : getInitials(doc.full_name);
+
         return `
         <div class="card p-5 hover:shadow-lg transition-shadow" style="border-left:4px solid ${isActive ? '#0891B2' : '#cbd5e1'};">
             <div class="flex items-start justify-between gap-3 mb-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm" style="background:linear-gradient(135deg,${isActive ? '#0891B2,#0E7490' : '#94A3B8,#64748B'});">
-                        ${getInitials(doc.full_name)}
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm overflow-hidden" style="background:linear-gradient(135deg,${isActive ? '#0891B2,#0E7490' : '#94A3B8,#64748B'});">
+                        ${photoHtml}
                     </div>
                     <div class="min-w-0">
                         <p class="font-bold text-gray-800 truncate font-outfit">${escHtml(doc.full_name)}</p>
@@ -1151,8 +1165,10 @@ function openDoctorModal(doctorId = null) {
 
     form.reset();
     document.getElementById('docEditId').value = '';
+    document.getElementById('docProfilePicture').value = '';
     document.getElementById('docSpecialization').value = 'Internal Medicine';
     document.getElementById('docFee').value = '500';
+    resetDocPhotoPreview();
 
     if (doctorId) {
         // Edit mode
@@ -1171,6 +1187,10 @@ function openDoctorModal(doctorId = null) {
             document.getElementById('docFee').value = doc.consultation_fee || '500';
             document.getElementById('docExperience').value = doc.experience_years || '0';
             document.getElementById('docBio').value = doc.bio || '';
+            if (doc.profile_picture) {
+                document.getElementById('docProfilePicture').value = doc.profile_picture;
+                showDocPhotoPreview('/meditrack/uploads/' + doc.profile_picture);
+            }
         }
     } else {
         // Add mode
@@ -1183,6 +1203,67 @@ function openDoctorModal(doctorId = null) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     document.body.style.overflow = 'hidden';
+}
+
+// ─── Doctor photo helpers ────────────────────────────────────────────────────
+function resetDocPhotoPreview() {
+    const preview = document.getElementById('docPhotoPreview');
+    if (preview) {
+        preview.innerHTML = '<i class="fas fa-user-md text-2xl"></i>';
+        preview.style.background = '#ECFEFF';
+    }
+    const fileInput = document.getElementById('docPhotoInput');
+    if (fileInput) fileInput.value = '';
+}
+
+function showDocPhotoPreview(src) {
+    const preview = document.getElementById('docPhotoPreview');
+    if (!preview) return;
+    preview.innerHTML = `<img src="${src}" alt="Doctor photo" style="width:100%;height:100%;object-fit:cover;">`;
+    preview.style.background = '#fff';
+}
+
+// Wire up the file input once on DOM ready (preview locally before upload)
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('docPhotoInput');
+    if (!fileInput) return;
+    fileInput.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        if (f.size > 5 * 1024 * 1024) {
+            showError('Photo too large (max 5 MB).');
+            fileInput.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = ev => showDocPhotoPreview(ev.target.result);
+        reader.readAsDataURL(f);
+    });
+});
+
+async function uploadDoctorPhoto(doctorId) {
+    const fileInput = document.getElementById('docPhotoInput');
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) return null;
+    const fd = new FormData();
+    fd.append('photo', file);
+    if (doctorId) fd.append('doctor_id', String(doctorId));
+    // apiRequest sets JSON Content-Type — for multipart, fetch directly.
+    try {
+        const res = await fetch(API_BASE + '/admin/upload-doctor-photo.php', {
+            method: 'POST',
+            credentials: 'include',
+            body: fd
+        });
+        const data = await res.json().catch(() => null);
+        if (data && data.success) return data.filename;
+        showError(data?.message || 'Photo upload failed.');
+        return null;
+    } catch (err) {
+        console.error('upload photo error', err);
+        showError('Photo upload failed (network error).');
+        return null;
+    }
 }
 
 function closeDoctorModal() {
@@ -1206,7 +1287,9 @@ async function saveDoctorForm(event) {
         license_number:   document.getElementById('docLicense').value.trim(),
         consultation_fee: parseFloat(document.getElementById('docFee').value) || 0,
         experience_years: parseInt(document.getElementById('docExperience').value) || 0,
-        bio:              document.getElementById('docBio').value.trim()
+        bio:              document.getElementById('docBio').value.trim(),
+        // Existing filename from edit mode (preserved unless a new photo is uploaded below)
+        profile_picture:  document.getElementById('docProfilePicture').value || null
     };
 
     const pwd = document.getElementById('docPassword').value;
@@ -1229,12 +1312,31 @@ async function saveDoctorForm(event) {
     }
 
     try {
+        // If editing and a new photo was picked, upload first so we can pass the new filename in the payload.
+        if (editId) {
+            const newPic = await uploadDoctorPhoto(parseInt(editId));
+            if (newPic) payload.profile_picture = newPic;
+        }
+        // Otherwise (add mode) we upload after creating the doctor so we have a doctor_id to associate.
+
         const data = await apiRequest(url, {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
         if (data && data.success) {
+            // Add mode: now that we have a doctor_id, upload the photo if one was selected.
+            if (!editId && data.doctor_id) {
+                const newPic = await uploadDoctorPhoto(parseInt(data.doctor_id));
+                if (newPic) {
+                    // Re-call update-doctor so the doctors row carries the filename even if upload-doctor-photo
+                    // already wrote it directly to the DB. Ensures consistency on retry/idempotency.
+                    await apiRequest('/admin/update-doctor.php', {
+                        method: 'POST',
+                        body: JSON.stringify({ doctor_id: data.doctor_id, profile_picture: newPic })
+                    });
+                }
+            }
             closeDoctorModal();
             showToast('success', 'Success', successMsg);
             loadDoctors();
@@ -1347,6 +1449,113 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ══════════════════════════════════════════════
+   TAB: MANAGE STAFF
+══════════════════════════════════════════════ */
+async function loadStaff() {
+    const tbody = document.getElementById('staff-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-14 text-slate-400"><i class="fas fa-spinner fa-spin mr-2" style="color:#0891B2;"></i>Loading staff…</td></tr>';
+    try {
+        const data = await apiRequest('/admin/get-staff.php');
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load staff');
+        if (!data.staff || !data.staff.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#888">No staff yet — add one to start.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.staff.map(s => `
+            <tr>
+                <td>${escHtml(s.full_name)}</td>
+                <td>${escHtml(s.email)}</td>
+                <td>${escHtml(s.username)}</td>
+                <td>${escHtml(s.contact_number || '—')}</td>
+                <td>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${s.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}">
+                        <i class="fas fa-circle text-[0.4rem]"></i> ${escHtml(s.status)}
+                    </span>
+                </td>
+                <td>${s.last_login ? new Date(s.last_login).toLocaleString() : '—'}</td>
+                <td>
+                    <button class="flex items-center justify-center gap-1 px-3 py-1.5 ${s.status === 'active' ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'} rounded-lg text-xs font-semibold transition"
+                            data-toggle-staff="${s.user_id}" data-current="${s.status}">
+                        ${s.status === 'active' ? '<i class="fas fa-ban"></i> Deactivate' : '<i class="fas fa-check-circle"></i> Activate'}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        tbody.querySelectorAll('[data-toggle-staff]').forEach(btn =>
+            btn.addEventListener('click', () => toggleStaffStatus(+btn.dataset.toggleStaff, btn.dataset.current))
+        );
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8" style="color:#c00"><i class="fas fa-exclamation-circle mr-2"></i>${escHtml(err.message)}</td></tr>`;
+        console.error(err);
+    }
+}
+
+async function toggleStaffStatus(user_id, current) {
+    const next = current === 'active' ? 'inactive' : 'active';
+    try {
+        const data = await apiRequest('/admin/update-staff-status.php', {
+            method: 'POST',
+            body: JSON.stringify({ user_id, status: next })
+        });
+        if (data && data.success) {
+            loadStaff();
+        } else {
+            Swal.fire('Error', data?.message || 'Failed to update status.', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+    }
+}
+
+// Wire up Staff modal open/close and form submit after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    const staffModal       = document.getElementById('modal-add-staff');
+    const btnAddStaff      = document.getElementById('btn-add-staff');
+    const btnCloseStaff    = document.getElementById('btn-close-staff-modal');
+    const btnCancelStaff   = document.getElementById('btn-cancel-staff-modal');
+    const formAddStaff     = document.getElementById('form-add-staff');
+
+    function openStaffModal()  { if (staffModal) staffModal.classList.remove('hidden'); }
+    function closeStaffModal() { if (staffModal) staffModal.classList.add('hidden'); }
+
+    if (btnAddStaff)    btnAddStaff.addEventListener('click', openStaffModal);
+    if (btnCloseStaff)  btnCloseStaff.addEventListener('click', closeStaffModal);
+    if (btnCancelStaff) btnCancelStaff.addEventListener('click', closeStaffModal);
+
+    // Close on backdrop click
+    if (staffModal) {
+        staffModal.addEventListener('click', e => {
+            if (e.target === staffModal) closeStaffModal();
+        });
+    }
+
+    if (formAddStaff) {
+        formAddStaff.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const fd = new FormData(ev.target);
+            const body = Object.fromEntries(fd.entries());
+            try {
+                const data = await apiRequest('/admin/add-staff.php', {
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                });
+                if (!data || !data.success) {
+                    Swal.fire('Error', data?.message || 'Failed to add staff.', 'error');
+                    return;
+                }
+                closeStaffModal();
+                ev.target.reset();
+                Swal.fire('Added', `Staff member created (username: ${escHtml(data.username)}).`, 'success');
+                loadStaff();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        });
+    }
+});
+
+/* ══════════════════════════════════════════════
    HELPERS — MISC
 ══════════════════════════════════════════════ */
 function showToast(icon, title, text = '') {
@@ -1380,3 +1589,238 @@ function escHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+
+// ─── Patient History (Batch C addition) ────────────────────────────────
+async function viewPatientHistory(patientId) {
+    const modal   = document.getElementById('modal-patient-history');
+    const content = document.getElementById('ph-content');
+    const meta    = document.getElementById('ph-patient-meta');
+    if (!modal || !content) return;
+
+    modal.classList.remove('hidden');
+    content.innerHTML = `
+        <div class="text-center py-10 text-slate-400">
+            <i class="fas fa-spinner fa-spin text-2xl"></i>
+            <p class="text-sm mt-2">Loading history…</p>
+        </div>`;
+    meta.textContent = 'Loading…';
+
+    try {
+        const data = await apiRequest('/admin/get-patient-history.php?patient_id=' + patientId);
+        if (!data || !data.success) throw new Error(data?.message || 'Failed to load history');
+        renderPatientHistory(data.patient, data.history);
+    } catch (e) {
+        content.innerHTML = `<div class="text-center py-10 text-red-600">
+            <i class="fas fa-circle-exclamation text-2xl"></i>
+            <p class="text-sm mt-2">${escHtml(e.message)}</p>
+        </div>`;
+    }
+}
+
+function renderPatientHistory(patient, history) {
+    const meta = document.getElementById('ph-patient-meta');
+    const content = document.getElementById('ph-content');
+
+    // Patient meta line
+    const ageStr = patient.age != null ? `${patient.age}y` : '';
+    const parts = [
+        patient.gender, ageStr, patient.blood_group ? 'Blood ' + patient.blood_group : '',
+        patient.contact_number, patient.email
+    ].filter(Boolean);
+    meta.innerHTML = `<strong class="text-[#083344]">${escHtml(patient.full_name)}</strong> &middot; ${parts.map(escHtml).join(' &middot; ')}`;
+
+    if (!history.length) {
+        content.innerHTML = `
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-folder-open text-3xl mb-3"></i>
+                <p class="text-sm">No appointment history yet.</p>
+            </div>`;
+        return;
+    }
+
+    // Summary chips
+    const stats = history.reduce((s, h) => {
+        s.total++;
+        if (h.appointment.status === 'completed') s.completed++;
+        if (h.appointment.status === 'cancelled') s.cancelled++;
+        if (h.medical_record) s.records++;
+        if (h.certificate) s.certs++;
+        if (h.referral) s.referrals++;
+        if (h.appointment.is_followup) s.followups++;
+        return s;
+    }, { total: 0, completed: 0, cancelled: 0, records: 0, certs: 0, referrals: 0, followups: 0 });
+
+    const summaryHtml = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">
+            ${[
+                ['Visits', stats.total, 'cyan'],
+                ['Completed', stats.completed, 'emerald'],
+                ['Cancelled', stats.cancelled, 'red'],
+                ['Records', stats.records, 'blue'],
+                ['Certs', stats.certs, 'green'],
+                ['Referrals', stats.referrals, 'amber'],
+                ['Follow-ups', stats.followups, 'purple'],
+            ].map(([label, n, color]) => `
+                <div class="rounded-lg bg-${color}-50 border border-${color}-100 px-3 py-2 text-center">
+                    <div class="text-lg font-bold text-${color}-700">${n}</div>
+                    <div class="text-[10px] uppercase tracking-wide text-${color}-600 font-semibold">${label}</div>
+                </div>
+            `).join('')}
+        </div>`;
+
+    // Timeline
+    const timelineHtml = history.map(h => renderHistoryEntry(h)).join('');
+
+    content.innerHTML = summaryHtml + '<div id="ph-timeline" class="space-y-3">' + timelineHtml + '</div>';
+    const search = document.getElementById('ph-search');
+    if (search) search.value = '';
+}
+
+function filterPatientHistoryTimeline(q) {
+    const tl = document.getElementById('ph-timeline');
+    if (!tl) return;
+    const norm = (q || '').toLowerCase().trim();
+    tl.querySelectorAll('[data-appt-search]').forEach(el => {
+        el.style.display = (!norm || el.dataset.apptSearch.includes(norm)) ? '' : 'none';
+    });
+}
+window.filterPatientHistoryTimeline = filterPatientHistoryTimeline;
+
+function renderHistoryEntry(h) {
+    const a = h.appointment;
+    const statusBadgeClass = {
+        scheduled:   'bg-blue-50 text-blue-700 border-blue-200',
+        checked_in:  'bg-amber-50 text-amber-700 border-amber-200',
+        in_progress: 'bg-purple-50 text-purple-700 border-purple-200',
+        completed:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+        cancelled:   'bg-red-50 text-red-700 border-red-200',
+        no_show:     'bg-gray-50 text-gray-700 border-gray-200',
+    }[a.status] || 'bg-gray-50 text-gray-700 border-gray-200';
+
+    const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const timeStr = (a.appointment_time || '').substring(0, 5);
+
+    const v = h.vitals;
+    const vitalsHtml = v ? `
+        <div class="bg-rose-50 border border-rose-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-rose-700 mb-1.5"><i class="fas fa-heartbeat mr-1"></i>Vitals</div>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
+                ${[
+                    ['BP',   v.blood_pressure],
+                    ['Temp', v.temperature ? v.temperature + '°C' : null],
+                    ['HR',   v.heart_rate ? v.heart_rate + 'bpm' : null],
+                    ['SpO₂', v.oxygen_saturation ? v.oxygen_saturation + '%' : null],
+                    ['Wt',   v.weight ? v.weight + 'kg' : null],
+                    ['Ht',   v.height_cm ? v.height_cm + 'cm' : null],
+                ].map(([k, val]) => val ? `<div><span class="text-rose-500">${k}:</span> <span class="font-semibold">${escHtml(val)}</span></div>` : '').join('')}
+            </div>
+            ${v.chief_complaint ? `<div class="text-xs text-slate-600 mt-2"><strong>Chief complaint:</strong> ${escHtml(v.chief_complaint)}</div>` : ''}
+        </div>` : '';
+
+    const r = h.medical_record;
+    const recordHtml = r ? `
+        <div class="bg-cyan-50 border border-cyan-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-cyan-700 mb-1.5"><i class="fas fa-stethoscope mr-1"></i>Medical Record</div>
+            <div class="space-y-1.5 text-xs">
+                ${r.symptoms     ? `<div><strong>Symptoms:</strong> ${escHtml(r.symptoms)}</div>` : ''}
+                ${r.diagnosis    ? `<div><strong>Diagnosis:</strong> ${escHtml(r.diagnosis)}</div>` : ''}
+                ${r.prescription ? `<div><strong>Prescription:</strong> ${escHtml(r.prescription)}</div>` : ''}
+                ${r.lab_tests_ordered ? `<div><strong>Labs:</strong> ${escHtml(r.lab_tests_ordered)}</div>` : ''}
+                ${r.notes        ? `<div class="text-slate-500 italic">${escHtml(r.notes)}</div>` : ''}
+            </div>
+        </div>` : '';
+
+    const c = h.certificate;
+    const certHtml = c ? `
+        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start gap-2">
+            <div class="flex-1">
+                <div class="text-[10px] uppercase tracking-wide font-bold text-emerald-700 mb-1.5"><i class="fas fa-file-medical mr-1"></i>Medical Certificate</div>
+                <div class="text-xs text-slate-700">
+                    <strong>${escHtml(c.diagnosis)}</strong> &middot; Rest from ${escHtml(c.rest_period_start)} to ${escHtml(c.rest_period_end)} (${c.rest_days} day${c.rest_days == 1 ? '' : 's'})
+                    ${c.requested_by ? ` &middot; <span class="text-slate-500">requested by ${escHtml(c.requested_by)}</span>` : ''}
+                </div>
+            </div>
+            <a href="print-certificate.html?appointment_id=${a.id}" target="_blank"
+                class="px-2 py-1 rounded-md bg-white border border-emerald-300 text-emerald-700 text-[11px] font-semibold hover:bg-emerald-100">
+                <i class="fas fa-print"></i> Print
+            </a>
+        </div>` : '';
+
+    const ref = h.referral;
+    const refHtml = ref ? `
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
+            <div class="flex-1">
+                <div class="text-[10px] uppercase tracking-wide font-bold text-blue-700 mb-1.5"><i class="fas fa-share-from-square mr-1"></i>Referral</div>
+                <div class="text-xs text-slate-700">
+                    <strong>${escHtml(ref.specialty === 'Other' && ref.specialty_other ? ref.specialty_other : ref.specialty)}</strong>
+                    &middot; <span class="uppercase font-semibold text-blue-700">${escHtml(ref.urgency)}</span>
+                    <div class="text-slate-600 mt-1">${escHtml(ref.reason)}</div>
+                    ${ref.suggested_specialist ? `<div class="text-slate-500 mt-1">Suggested: ${escHtml(ref.suggested_specialist)}</div>` : ''}
+                </div>
+            </div>
+            <a href="print-referral.html?appointment_id=${a.id}" target="_blank"
+                class="px-2 py-1 rounded-md bg-white border border-blue-300 text-blue-700 text-[11px] font-semibold hover:bg-blue-100">
+                <i class="fas fa-print"></i> Print
+            </a>
+        </div>` : '';
+
+    const cancelHtml = a.status === 'cancelled' ? `
+        <div class="bg-red-50 border border-red-100 rounded-lg p-3">
+            <div class="text-[10px] uppercase tracking-wide font-bold text-red-700 mb-1.5"><i class="fas fa-times-circle mr-1"></i>Cancelled</div>
+            <div class="text-xs text-slate-700">
+                By <strong>${escHtml(a.cancelled_by || '—')}</strong>${a.cancel_reason ? ` &middot; ${escHtml(a.cancel_reason)}` : ''}
+                ${a.cancelled_at ? `<div class="text-slate-500 mt-1">${new Date(a.cancelled_at).toLocaleString()}</div>` : ''}
+            </div>
+        </div>` : '';
+
+    const searchBlob = ((a.appointment_number || '') + ' ' + (a.reason_for_visit || '') + ' ' + (h.doctor.full_name || '') + ' ' + (a.status || '') + ' ' + (r ? (r.diagnosis || '') + ' ' + (r.symptoms || '') + ' ' + (r.prescription || '') : '') + ' ' + (c ? (c.diagnosis || '') : '') + ' ' + (ref ? (ref.specialty || '') + ' ' + (ref.reason || '') : '')).toLowerCase();
+    return `
+        <div class="border border-slate-200 rounded-xl overflow-hidden" data-appt-search="${escHtml(searchBlob)}">
+            <div class="bg-slate-50 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-xs font-mono text-slate-500">#${escHtml(a.appointment_number || a.id)}</span>
+                    <span class="font-semibold text-[#083344] text-sm">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>
+                    ${a.is_followup ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-semibold uppercase">Follow-up</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500">Dr. ${escHtml(h.doctor.full_name)}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${statusBadgeClass}">${escHtml(a.status)}</span>
+                </div>
+            </div>
+            <div class="p-3 space-y-2.5">
+                ${a.reason_for_visit ? `<div class="text-xs"><strong class="text-slate-700">Reason:</strong> <span class="text-slate-600">${escHtml(a.reason_for_visit)}</span></div>` : ''}
+                ${vitalsHtml}
+                ${recordHtml}
+                ${certHtml}
+                ${refHtml}
+                ${cancelHtml}
+            </div>
+        </div>`;
+}
+
+window.viewPatientHistory = viewPatientHistory;
+
+// ─── Admin mark-no-show ────────────────────────────────────────
+async function adminMarkNoShow(appointmentId, patientName) {
+    const result = await Swal.fire({
+        title: 'Mark as no-show?',
+        html: `<strong>${patientName || 'This patient'}</strong> will be marked as <strong>no-show</strong>. The slot will become available for other patients.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark no-show',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
+    const data = await apiRequest('/staff/mark-noshow.php', {
+        method: 'POST',
+        body: JSON.stringify({ appointment_id: appointmentId })
+    });
+    if (!data || !data.success) {
+        Swal.fire('Error', data?.message || 'Failed to mark no-show', 'error');
+        return;
+    }
+    showToast && showToast('success', 'Marked no-show', data.message);
+    if (typeof loadAppointments === 'function') loadAppointments();
+}
+window.adminMarkNoShow = adminMarkNoShow;

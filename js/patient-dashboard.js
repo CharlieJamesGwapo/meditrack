@@ -1,5 +1,5 @@
 /**
- * patient-dashboard.js — Internal Medicine OPD Management System
+ * patient-dashboard.js — Consultation OPD Management System
  * Patient Portal
  */
 
@@ -220,6 +220,7 @@ function renderSlots(slots, dateValue) {
         btn.type = 'button';
         btn.textContent = slot.display;
         btn.className = 'slot-btn px-2 py-2 rounded-lg text-sm font-medium text-center';
+        if (slot.time) btn.dataset.slotTime = slot.time;
 
         if (slot.booked) {
             btn.classList.add('booked');
@@ -239,7 +240,46 @@ function renderSlots(slots, dateValue) {
 
         grid.appendChild(btn);
     });
+
+    // Honor a pending deep-link slot (set by handleBookingDeepLink on page load)
+    if (window.__pendingBookSlot) {
+        const wantTime = window.__pendingBookSlot;
+        window.__pendingBookSlot = null;
+        const target = grid.querySelector(`button[data-slot-time="${wantTime}"]`);
+        if (target && target.classList.contains('available')) {
+            const slot = slots.find(s => s.time === wantTime);
+            if (slot) selectSlot(slot, target);
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'Slot taken',
+                text: 'That slot was just taken — pick another one below.',
+                confirmButtonColor: '#0891B2',
+                timer: 4000
+            });
+        }
+    }
 }
+
+// Apply ?book_date=&book_time= deep-link from a slot-broadcast notification.
+// Triggered once at page load — sets the date input and stashes the desired
+// time in window.__pendingBookSlot, which renderSlots() consumes after
+// the slot list arrives from the server.
+function handleBookingDeepLink() {
+    const params = new URLSearchParams(location.search);
+    const date = params.get('book_date');
+    const time = params.get('book_time');
+    if (!date) return;
+    const dateInput = document.getElementById('appointmentDate');
+    if (!dateInput) return;
+    dateInput.value = date;
+    if (time) window.__pendingBookSlot = time;
+    if (typeof onDateChange === 'function') onDateChange(date);
+    // Switch to the booking tab if the dashboard uses tabs (best-effort).
+    const bookTab = document.querySelector('[data-tab="book"], a[href="#book"]');
+    if (bookTab && typeof bookTab.click === 'function') bookTab.click();
+}
+window.addEventListener('load', handleBookingDeepLink);
 
 function selectSlot(slot, btnEl) {
     // Deselect previous
@@ -291,7 +331,7 @@ async function bookAppointment() {
             let htmlContent = `<p class="text-gray-600 mb-3">Your appointment has been confirmed!</p>
                 <div class="text-left bg-gray-50 rounded-lg p-3 text-sm space-y-1">
                     <p><span class="font-semibold">Number:</span> ${escHtml(appt.appointment_number || '')}</p>
-                    <p><span class="font-semibold">Doctor:</span> ${escHtml(appt.doctor_name ? 'Dr. ' + appt.doctor_name : 'Doctor')}</p>
+                    <p><span class="font-semibold">Doctor:</span> ${escHtml(appt.doctor_name || 'Doctor')}</p>
                     <p><span class="font-semibold">Date:</span> ${appt.appointment_date ? formatDate(appt.appointment_date) : ''}</p>
                     <p><span class="font-semibold">Time:</span> ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}</p>
                 </div>
@@ -417,24 +457,41 @@ function renderAppointments(appointments) {
         const isScheduled = appt.status === 'scheduled' || appt.status === 'confirmed' || appt.status === 'pending';
         const isCompleted = appt.status === 'completed';
         const isCancelled = appt.status === 'cancelled';
+        const canCancel   = isScheduled && canCancelAppointment(appt);
 
         let actionBtns = '';
         if (isScheduled) {
+            const cancelCtrl = canCancel
+                ? `<button onclick="cancelAppointment(${appt.id}, '${apptNum}')"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </button>`
+                : `<span class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-500 border border-gray-200 rounded-lg text-xs italic">
+                    <i class="fas fa-lock"></i> Cancellation window closed
+                </span>`;
             actionBtns = `
                 <button onclick="showQRModal(${appt.id})"
                     class="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-lg text-xs font-semibold transition">
                     <i class="fas fa-qrcode"></i> View QR
                 </button>
-                <button onclick="cancelAppointment(${appt.id}, '${apptNum}')"
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold transition">
-                    <i class="fas fa-times-circle"></i> Cancel
-                </button>`;
+                ${cancelCtrl}`;
         } else if (isCompleted) {
+            const referralBtn = appt.has_referral && Number(appt.has_referral) > 0
+                ? `<a href="print-referral.html?appointment_id=${appt.id}" target="_blank"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-share-from-square"></i> Print Referral
+                </a>` : '';
+            const certBtn = appt.has_certificate && Number(appt.has_certificate) > 0
+                ? `<a href="print-certificate.html?appointment_id=${appt.id}" target="_blank"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold transition">
+                    <i class="fas fa-file-medical"></i> Print Certificate
+                </a>` : '';
             actionBtns = `
                 <button onclick="switchTab('records')"
                     class="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-semibold transition">
                     <i class="fas fa-file-medical"></i> View Record
-                </button>`;
+                </button>
+                ${certBtn}${referralBtn}`;
         }
 
         return `
@@ -449,7 +506,10 @@ function renderAppointments(appointments) {
                         ${spec ? `<p class="text-xs text-teal-600">${spec}</p>` : ''}
                     </div>
                 </div>
-                <span class="flex-shrink-0 ${badge.bg} ${badge.text} text-xs font-semibold px-2.5 py-1 rounded-full">${badge.label}</span>
+                <div class="flex-shrink-0 flex items-center gap-1.5">
+                    ${appt.is_followup ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold uppercase tracking-wide">Follow-up</span>' : ''}
+                    <span class="${badge.bg} ${badge.text} text-xs font-semibold px-2.5 py-1 rounded-full">${badge.label}</span>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 mb-3 text-sm">
@@ -474,6 +534,14 @@ function renderAppointments(appointments) {
             ${actionBtns ? `<div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">${actionBtns}</div>` : ''}
         </div>`;
     }).join('');
+}
+
+const CANCEL_CUTOFF_HOURS = 2;
+function canCancelAppointment(appt) {
+    if (!appt || !appt.appointment_date || !appt.appointment_time) return false;
+    const apptTs = new Date(`${appt.appointment_date}T${appt.appointment_time}`).getTime();
+    if (Number.isNaN(apptTs)) return false;
+    return Date.now() <= apptTs - CANCEL_CUTOFF_HOURS * 3600 * 1000;
 }
 
 async function cancelAppointment(appointmentId, apptNumber) {
@@ -816,7 +884,7 @@ async function showQRModal(appointmentId) {
     // Populate modal header info
     setTextContent('qrApptNumber', appt ? `Appointment: ${appt.appointment_number || '#' + appointmentId}` : '');
     setTextContent('qrApptInfo', appt
-        ? `Dr. ${appt.doctor_name || ''} \u2022 ${appt.appointment_date ? formatDate(appt.appointment_date) : ''} ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}`
+        ? `${appt.doctor_name || ''} \u2022 ${appt.appointment_date ? formatDate(appt.appointment_date) : ''} ${appt.appointment_time ? formatTime(appt.appointment_time) : ''}`
         : '');
 
     // Open modal
@@ -912,19 +980,125 @@ async function regenerateQR() {
 }
 
 function downloadQR() {
-    // Try canvas first (client-side generated)
-    const canvas = document.getElementById('qrCanvas');
-    if (canvas && !canvas.classList.contains('hidden')) {
+    const sourceCanvas = document.getElementById('qrCanvas');
+    const apptNumberEl = document.getElementById('qrApptNumber');
+    const apptInfoEl   = document.getElementById('qrApptInfo');
+
+    // Composite path: works when the QR was rendered to <canvas>.
+    // Mirrors the on-screen card so the saved PNG matches what the patient saw on the modal.
+    if (sourceCanvas && !sourceCanvas.classList.contains('hidden')) {
         try {
+            const eyebrow = (apptNumberEl?.textContent || '').trim();
+            const title   = (apptInfoEl?.textContent || '').trim();
+            const footer  = 'Show this QR code at the clinic for check-in';
+
+            const W = 520;
+            const eyebrowSize = 14;
+            const titleSize   = 22;
+            const footerSize  = 13;
+            const qrSize      = 320;
+            const cardPad     = 18;            // padding inside the QR card around the QR
+            const cardSize    = qrSize + cardPad * 2;
+            const padTop      = 36;
+            const padBottom   = 36;
+            const titleSpace  = 32;            // space below title
+            const gapBeforeQR = 24;            // space between title and QR card
+            const gapAfterQR  = 24;            // space between QR card and footer
+
+            // Helper to draw a rounded rectangle path.
+            function roundRect(c, x, y, w, h, r) {
+                c.beginPath();
+                c.moveTo(x + r, y);
+                c.lineTo(x + w - r, y);
+                c.quadraticCurveTo(x + w, y, x + w, y + r);
+                c.lineTo(x + w, y + h - r);
+                c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                c.lineTo(x + r, y + h);
+                c.quadraticCurveTo(x, y + h, x, y + h - r);
+                c.lineTo(x, y + r);
+                c.quadraticCurveTo(x, y, x + r, y);
+                c.closePath();
+            }
+
+            const H = padTop + eyebrowSize + 14 + titleSize + titleSpace
+                      + gapBeforeQR + cardSize + gapAfterQR
+                      + footerSize + padBottom;
+
+            const out = document.createElement('canvas');
+            out.width  = W;
+            out.height = H;
+            const ctx = out.getContext('2d');
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Eyebrow (uppercase, gray) — "APPOINTMENT: APT-..."
+            ctx.fillStyle = '#9CA3AF';
+            ctx.font = `600 ${eyebrowSize}px 'Outfit', system-ui, sans-serif`;
+            ctx.fillText(eyebrow.toUpperCase(), W / 2, padTop);
+
+            // Title (bold, dark) — "Dr. <name> • <date> • <time>"
+            ctx.fillStyle = '#1F2937';
+            ctx.font = `700 ${titleSize}px 'Outfit', system-ui, sans-serif`;
+            ctx.fillText(title, W / 2, padTop + eyebrowSize + 14);
+
+            // QR card backdrop — light grey rounded rectangle (matches the on-screen card)
+            const cardX = (W - cardSize) / 2;
+            const cardY = padTop + eyebrowSize + 14 + titleSize + titleSpace + gapBeforeQR;
+            ctx.fillStyle = '#FAFAFA';
+            roundRect(ctx, cardX, cardY, cardSize, cardSize, 16);
+            ctx.fill();
+            ctx.strokeStyle = '#E2E8F0';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // QR pixels, drawn inside the card padding
+            const qrX = cardX + cardPad;
+            const qrY = cardY + cardPad;
+            ctx.drawImage(sourceCanvas, qrX, qrY, qrSize, qrSize);
+
+            // Footer with leading info icon (matches the small blue circle on the modal)
+            ctx.font = `400 ${footerSize}px 'DM Sans', system-ui, sans-serif`;
+            const footerY = cardY + cardSize + gapAfterQR;
+            const textW   = ctx.measureText(footer).width;
+            const iconR   = 7;                                   // info circle radius
+            const iconGap = 8;                                   // gap between icon and text
+            const totalW  = iconR * 2 + iconGap + textW;
+            const iconX   = (W - totalW) / 2 + iconR;            // circle center x
+            const iconY   = footerY + footerSize / 2;            // circle center y (mid-line)
+
+            ctx.fillStyle = '#22D3EE';
+            ctx.beginPath();
+            ctx.arc(iconX, iconY, iconR, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `700 ${footerSize - 2}px 'Outfit', system-ui, sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.fillText('i', iconX, iconY + 0.5);
+            ctx.textBaseline = 'top';
+
+            // Footer text, left-aligned to the right of the icon
+            ctx.fillStyle = '#6B7280';
+            ctx.font = `400 ${footerSize}px 'DM Sans', system-ui, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText(footer, iconX + iconR + iconGap, footerY);
+
             const link = document.createElement('a');
             link.download = `QR-Appointment-${currentQRApptId}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = out.toDataURL('image/png');
             link.click();
             return;
-        } catch (e) { console.error('Canvas download error:', e); }
+        } catch (e) {
+            console.error('Composite QR download error:', e);
+            // fall through to img fallback below
+        }
     }
 
-    // Fallback to img element
+    // Fallback path: server-provided image, no canvas to composite.
     const img = document.getElementById('qrImage');
     if (!img || !img.src) { showError('No QR code to download.'); return; }
     const link = document.createElement('a');

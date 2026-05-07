@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/NoShowSweeper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     sendJSON(['success' => false, 'message' => 'Method not allowed'], 405);
@@ -12,6 +13,7 @@ if (!isLoggedIn() || !hasRole('admin')) {
 try {
     $database = new Database();
     $db = $database->getConnection();
+    NoShowSweeper::sweep($db);  // self-healing: stale scheduled → no_show
 
     $filter_date   = sanitizeInput($_GET['date'] ?? '');
     $filter_status = sanitizeInput($_GET['status'] ?? '');

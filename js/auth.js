@@ -1,5 +1,5 @@
 /**
- * auth.js — Shared auth utilities for Internal Medicine OPD Management System
+ * auth.js — Shared auth utilities for Consultation OPD Management System
  */
 
 const API_BASE = '/meditrack/api';
