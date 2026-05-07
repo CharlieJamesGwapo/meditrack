@@ -261,7 +261,7 @@ INSERT INTO users (email, username, password_hash, role, status) VALUES
 ('doctor@meditrack.com', 'doctor', '$2y$10$2FTVv59RqkEEMwSYHwQWvOztHURKjWLTpaZ25d/FFWWAmgnP6Ryoi', 'doctor', 'active');
 
 INSERT INTO doctors (user_id, full_name, specialization, license_number, consultation_fee, experience_years, bio) VALUES
-(2, 'Dr. Maria Santos', 'Internal Medicine', 'PRC-IM-2024-001', 500.00, 10, 'Board-certified Internal Medicine specialist with 10 years of clinical experience.');
+(2, 'Xelca Mae B. Bechayda', 'Medical Officer III', 'PRC-MO-2024-001', 500.00, 5, 'Medical Officer III at Bislig District Hospital — Internal Medicine OPD.');
 
 INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration, max_patients, is_active) VALUES
 (1, 1, '08:00:00', '17:00:00', 30, 20, 1),
