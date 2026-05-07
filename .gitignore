@@ -8,7 +8,6 @@ env.*.bak
 Thumbs.db
 
 # Editor files
-.vscode/
 .idea/
 
 # PHP composer
@@ -29,3 +28,5 @@ error_log
 /hospitalbg.jpg
 /medical_certifcate_logo.jpg
 /medicare.png
+config.bat
+node_modules
