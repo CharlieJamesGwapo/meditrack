@@ -3,14 +3,76 @@
 -- Equivalent to running 2026-05-06-batch-c1.sql, c2.sql, c3.sql in order.
 -- Idempotent: re-running on a partially-migrated DB does not error.
 --
+-- Includes a PREFLIGHT step that creates triage_assessments and notifications
+-- if missing, so this can run on older production DBs that pre-date those
+-- tables. (CREATE TABLE IF NOT EXISTS — no-op when they already exist.)
+--
 -- Usage in phpMyAdmin:
 --   1. Select your database (e.g. stjohnba_meditrack) in the left pane
 --   2. Click the SQL tab at the top
 --   3. Paste this entire file's contents
 --   4. Click Go
---
--- Run BEFORE swapping to the new code if you want zero downtime.
--- Safe to run AFTER deploy too (existing pages keep working).
+
+-- ============================================================================
+-- PREFLIGHT — create dependency tables that older prod DBs may be missing
+-- ============================================================================
+
+-- triage_assessments: required by C1 (which adds appointment_id, height_cm,
+-- oxygen_saturation columns and a unique key + FK). If the table doesn't
+-- exist the C1 ALTERs error with #1146.
+CREATE TABLE IF NOT EXISTS triage_assessments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    patient_id INT NOT NULL,
+    appointment_id INT NULL,
+    chief_complaint TEXT NOT NULL,
+    blood_pressure VARCHAR(20),
+    temperature DECIMAL(4,1),
+    heart_rate INT,
+    weight DECIMAL(5,2),
+    height_cm INT NULL,
+    oxygen_saturation TINYINT UNSIGNED NULL,
+    priority_level ENUM('low', 'medium', 'high') DEFAULT 'low',
+    notes TEXT,
+    recorded_by INT NOT NULL,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+    INDEX idx_patient_id (patient_id),
+    INDEX idx_recorded_by (recorded_by),
+    INDEX idx_priority (priority_level),
+    INDEX idx_recorded_at (recorded_at),
+    UNIQUE KEY uniq_triage_appointment (appointment_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- notifications: required by C2 (cancel_broadcasts.notification_id FK).
+-- Also used by the Notifier across the whole app.
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    related_id INT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_type (type),
+    INDEX idx_is_read (is_read),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- appointments.priority_level: harmless if it already exists.
+SET @col := (
+  SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema = DATABASE() AND table_name = 'appointments' AND column_name = 'priority_level'
+);
+SET @sql := IF(@col = 0,
+  "ALTER TABLE appointments ADD COLUMN priority_level ENUM('low','medium','high') DEFAULT 'low' AFTER status",
+  'SELECT 1');
+PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;
 
 -- ============================================================================
 -- BATCH C1 — staff role, vitals extension, medical certificates
